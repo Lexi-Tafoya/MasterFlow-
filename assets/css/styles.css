@@ -1163,3 +1163,455 @@ dialog::backdrop { background: rgba(5, 17, 31, 0.52); backdrop-filter: blur(2px)
   .meta-row { display: grid; }
   .meta-row strong { max-width: none; text-align: left; }
 }
+
+
+/* =========================================================
+   MasterFlow Request Canvas
+   Continuous AI conversation with Live Understanding
+   ========================================================= */
+
+.request-canvas {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+
+/*
+ * The conversation is hidden until the employee
+ * submits the first request.
+ */
+.request-canvas .chat-panel {
+  display: none;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.request-canvas .chat-panel.open {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Canvas header */
+
+.chat-panel-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: #fbfcfd;
+}
+
+.chat-panel-header > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.chat-panel-header strong {
+  font-size: 14px;
+}
+
+.chat-panel-header small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.chat-panel-header .chat-status {
+  flex: 0 0 auto;
+}
+
+/* Conversation and understanding columns */
+
+.request-canvas-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(280px, 0.75fr);
+}
+
+.conversation-pane {
+  min-width: 0;
+  min-height: 0;
+  background: #fff;
+}
+
+/*
+ * Only this area scrolls.
+ * The employee input remains underneath the canvas.
+ */
+.request-canvas .chat-body {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
+.request-canvas .bubble {
+  width: fit-content;
+  max-width: min(88%, 720px);
+  padding: 12px 14px;
+  border-radius: 15px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.request-canvas .bubble.user {
+  justify-self: end;
+  border-bottom-right-radius: 5px;
+  background: var(--navy);
+  color: #fff;
+}
+
+.request-canvas .bubble.ai {
+  justify-self: start;
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 5px;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.request-canvas .bubble.ai strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.request-canvas .bubble.ai > div + div {
+  margin-top: 8px;
+}
+
+.request-canvas .chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/*
+ * Keep interpretation cards usable inside
+ * the narrower conversation column.
+ */
+.request-canvas .ai-summary {
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+}
+
+/* Live Understanding panel */
+
+.understanding-panel {
+  min-width: 0;
+  min-height: 0;
+  padding: 18px;
+  overflow-y: auto;
+  border-left: 1px solid var(--line);
+  background:
+    linear-gradient(
+      180deg,
+      #f8fafc 0%,
+      var(--surface-2) 100%
+    );
+}
+
+.understanding-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.understanding-header > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.understanding-header strong {
+  font-size: 14px;
+}
+
+.understanding-header small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.understanding-percent {
+  min-width: 48px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--teal-soft);
+  color: var(--teal-dark);
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.understanding-progress {
+  height: 8px;
+  margin-top: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dfe6ed;
+}
+
+.understanding-progress > span {
+  width: 0;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      90deg,
+      var(--teal),
+      #2e9f9b
+    );
+  transition: width 180ms ease;
+}
+
+.understanding-list {
+  display: grid;
+  margin: 17px 0 0;
+}
+
+.understanding-list > div {
+  display: grid;
+  grid-template-columns:
+    112px
+    minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.understanding-list dt,
+.understanding-list dd {
+  margin: 0;
+}
+
+.understanding-list dt {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.understanding-list dd {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.understanding-impact {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #cfe5e3;
+  border-radius: 12px;
+  background: var(--teal-soft);
+}
+
+.understanding-impact small {
+  display: block;
+  color: var(--teal-dark);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.understanding-impact p {
+  margin: 5px 0 0;
+  color: #174f4d;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Keep the answer composer visible and compact */
+
+.request-canvas .request-composer {
+  margin: 0;
+  border-radius: 18px;
+}
+
+.request-canvas .request-composer textarea {
+  transition:
+    min-height 160ms ease,
+    font-size 160ms ease;
+}
+
+/*
+ * These selectors activate once the chat panel opens.
+ * The Canvas fits the conversation and composer into
+ * one continuous workspace.
+ */
+.request-canvas.active,
+.request-canvas:has(.chat-panel.open) {
+  height:
+    calc(
+      100vh -
+      var(--topbar-height) -
+      150px
+    );
+  min-height: 500px;
+  max-height: 720px;
+  grid-template-rows:
+    minmax(0, 1fr)
+    auto;
+}
+
+.request-canvas.active .request-composer,
+.request-canvas:has(.chat-panel.open)
+  .request-composer {
+  position: relative;
+  z-index: 20;
+  flex: 0 0 auto;
+  border-color: rgba(11, 123, 120, 0.45);
+  box-shadow:
+    0 12px 32px rgba(15, 34, 56, 0.11),
+    0 0 0 3px rgba(11, 123, 120, 0.06);
+}
+
+.request-canvas.active
+  .request-composer textarea,
+.request-canvas:has(.chat-panel.open)
+  .request-composer textarea {
+  min-height: 70px;
+  max-height: 104px;
+  padding-top: 14px;
+  resize: none;
+  font-size: 16px;
+}
+
+/* Make room for the active Canvas */
+
+body.page-home.request-active main,
+body.page-home:has(.chat-panel.open) main {
+  place-items: start center;
+  padding-top: 22px;
+  padding-bottom: 22px;
+}
+
+body.page-home.request-active .home-stage,
+body.page-home:has(.chat-panel.open)
+  .home-stage {
+  width: min(1120px, 100%);
+}
+
+body.page-home.request-active .home-symbol,
+body.page-home:has(.chat-panel.open)
+  .home-symbol {
+  display: none;
+}
+
+body.page-home.request-active
+  .home-stage > h1,
+body.page-home:has(.chat-panel.open)
+  .home-stage > h1 {
+  font-size: 24px;
+  text-align: left;
+}
+
+body.page-home.request-active
+  .home-question,
+body.page-home:has(.chat-panel.open)
+  .home-question {
+  display: none;
+}
+
+body.page-home.request-active
+  .home-stage > p,
+body.page-home:has(.chat-panel.open)
+  .home-stage > p {
+  max-width: none;
+  margin: 4px 0 14px;
+  font-size: 12px;
+  text-align: left;
+}
+
+body.page-home.request-active
+  .home-shortcuts,
+body.page-home.request-active
+  .prompt-examples,
+body.page-home:has(.chat-panel.open)
+  .home-shortcuts,
+body.page-home:has(.chat-panel.open)
+  .prompt-examples {
+  display: none;
+}
+
+/* Request Canvas responsive layout */
+
+@media (max-width: 900px) {
+  .request-canvas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .understanding-panel {
+    max-height: 230px;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .request-canvas.active,
+  .request-canvas:has(.chat-panel.open) {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .request-canvas .chat-body {
+    height: 360px;
+  }
+
+  .request-canvas.active .request-composer,
+  .request-canvas:has(.chat-panel.open)
+    .request-composer {
+    position: sticky;
+    bottom: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .chat-panel-header {
+    align-items: flex-start;
+    padding: 12px 14px;
+  }
+
+  .request-canvas .chat-body {
+    height: 330px;
+    padding: 14px;
+  }
+
+  .request-canvas .bubble {
+    max-width: 94%;
+  }
+
+  .understanding-panel {
+    padding: 14px;
+  }
+
+  .understanding-list > div {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .request-canvas .ai-summary {
+    grid-template-columns: 1fr;
+  }
+}

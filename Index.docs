@@ -1,0 +1,155 @@
+MASTERFLOW AI PROTOTYPE SPECIFICATION
+
+PURPOSE
+
+MasterFlow converts a natural-language employee request into a structured request that:
+
+- Routes to the correct queue
+- Preserves existing SLAs, approvals, and governance
+- Collects enough information for the receiving team to begin work
+- Asks only for information that is missing
+- Generates a clear receiver-ready summary
+
+
+PROTOTYPE SCOPE
+
+The prototype will support:
+
+- Intent detection
+- Template selection
+- Field extraction
+- Diagnostic questions
+- Work-readiness progress
+- Business-impact recommendations
+- Receiver-ready summaries
+- Existing routing and priority rules
+- Shipping-stopped P1 bypass
+
+The prototype will not include:
+
+- Live ServiceNow integration
+- Production databases
+- Authentication
+- ERP or Outlook integration
+- Production AI API dependency
+- Carrier APIs
+
+
+ROUTING READINESS
+
+Routing readiness answers:
+
+Does MasterFlow know where the request should go?
+
+A request is routing-ready when:
+
+- A template has been selected
+- A destination queue is known
+- Required routing information is collected
+- SLA and approval rules are known
+
+
+WORK READINESS
+
+Work readiness answers:
+
+Does the receiving team have enough information to begin working?
+
+A request is work-ready when:
+
+- Required diagnostic questions have been answered
+- Safety or containment information has been collected when applicable
+- The receiving team can understand what is happening
+- A receiver-ready summary can be generated
+
+
+CURRENT DIAGNOSTIC COVERAGE
+
+Printer Ink:
+- Supply status
+- Printing impact
+
+Help Desk / Printer Connectivity:
+- Exact symptom
+- Affected scope
+
+Equipment Out of Service:
+- Failure mode
+- Safety or containment status
+
+Warehouse Corrective Action:
+- Problem category
+- Immediate containment
+
+Stock Check:
+- Exact result needed
+
+Systems Intake:
+- Expected outcome
+- Affected scope
+
+HVAC:
+- Affected area
+- Safety concern
+
+General Triage:
+- Requested outcome
+- Affected scope
+
+
+CONVERSATION RULES
+
+MasterFlow should:
+
+- Ask one question at a time
+- Ask no more than two important diagnostic questions when possible
+- Never ask for information already provided
+- Allow the requester to answer “Not sure”
+- Explain why an important question is being asked
+- Ask routing questions before diagnostic questions
+- Never delay a Shipping Is Stopped P1 request
+- Never ask an employee to perform unsafe repairs
+
+
+RECEIVER BRIEF
+
+Every completed request should provide:
+
+- Request title
+- Requested outcome
+- Observed situation
+- Expected situation when applicable
+- Affected scope
+- Key identifiers
+- Business impact
+- Actions already taken
+- Safety or containment status
+- Missing information
+- Suggested first action
+
+The suggested first action is a recommendation, not a confirmed diagnosis.
+
+
+IMPLEMENTATION ORDER
+
+Pass 1:
+Diagnostic profiles in templates.js — COMPLETE
+
+Pass 2:
+Update request-engine.js to:
+- Extract diagnostic answers
+- Ask diagnostic questions
+- Calculate work readiness
+- Generate the Receiver Brief
+
+Pass 3:
+Update home.js to:
+- Show work-readiness progress
+- Show diagnostic information
+- Explain why questions are being asked
+
+Pass 4:
+Update smart-request.js to:
+- Display the Receiver Brief
+- Display diagnostic answers
+- Allow corrections

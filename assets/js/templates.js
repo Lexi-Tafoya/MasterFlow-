@@ -193,7 +193,739 @@
       ]
     }
   ];
+/*
+   * Diagnostic profiles define what the receiving team
+   * needs before a request is considered workable.
+   *
+   * templates.js owns the configuration.
+   * request-engine.js will decide what is already known
+   * and which question should be asked next.
+   */
+  const diagnosticProfiles = {
+    "printer-ink": {
+      requiredForWork: [
+        "supplyStatus",
+        "printingImpact"
+      ],
 
+      suggestedFirstAction:
+        "Confirm the printer identity and compatible supply, then replenish or replace the requested ink, toner, ribbon, or cartridge.",
+
+      questions: [
+        {
+          id: "supplyStatus",
+          label: "Supply status",
+          reportLabel:
+            "Current supply condition",
+
+          question:
+            "Is the printer supply getting low, or is it completely out?",
+
+          why:
+            "This tells IT whether the request is preventive or whether printing may already be unavailable.",
+
+          type: "select",
+
+          options: [
+            "Getting low",
+            "Completely out",
+            "Not sure"
+          ],
+
+          signals: {
+            "Getting low": [
+              "running low",
+              "getting low",
+              "low on ink",
+              "low on toner",
+              "almost out"
+            ],
+
+            "Completely out": [
+              "completely out",
+              "out of ink",
+              "out of toner",
+              "no ink",
+              "no toner"
+            ]
+          }
+        },
+
+        {
+          id: "printingImpact",
+          label: "Printing impact",
+          reportLabel:
+            "Current printing impact",
+
+          question:
+            "Can the station still print, or has printing stopped?",
+
+          why:
+            "This helps the receiving team prioritize the request correctly.",
+
+          type: "select",
+
+          options: [
+            "Still printing",
+            "Printing is stopped",
+            "Using another printer",
+            "Not sure"
+          ],
+
+          signals: {
+            "Still printing": [
+              "still printing",
+              "can still print"
+            ],
+
+            "Printing is stopped": [
+              "cannot print",
+              "can't print",
+              "printing stopped",
+              "won't print"
+            ],
+
+            "Using another printer": [
+              "another printer",
+              "backup printer",
+              "using a different printer"
+            ]
+          }
+        }
+      ]
+    },
+
+    "printer-connectivity": {
+      requiredForWork: [
+        "symptom",
+        "affectedScope"
+      ],
+
+      suggestedFirstAction:
+        "Begin with the reported symptom, verify power and connectivity, then check the shared print queue, device, network, or affected application.",
+
+      questions: [
+        {
+          id: "symptom",
+          label: "Observed symptom",
+          reportLabel:
+            "Observed behavior",
+
+          question:
+            "Which best describes what is happening?",
+
+          why:
+            "The exact symptom gives the Help Desk a useful starting point instead of only saying that something is not working.",
+
+          type: "select",
+
+          options: [
+            "No power or lights",
+            "Offline or disconnected",
+            "Job sends but nothing prints",
+            "Paper jam or feed problem",
+            "Slow, intermittent, error, or other"
+          ],
+
+          signals: {
+            "No power or lights": [
+              "no power",
+              "no lights",
+              "won't turn on",
+              "will not turn on"
+            ],
+
+            "Offline or disconnected": [
+              "offline",
+              "disconnected",
+              "not connected"
+            ],
+
+            "Job sends but nothing prints": [
+              "job sends",
+              "nothing prints",
+              "print job stuck",
+              "stays in the queue"
+            ],
+
+            "Paper jam or feed problem": [
+              "paper jam",
+              "jamming",
+              "won't feed",
+              "will not feed"
+            ],
+
+            "Slow, intermittent, error, or other": [
+              "slow",
+              "intermittent",
+              "error message",
+              "error code"
+            ]
+          }
+        },
+
+        {
+          id: "affectedScope",
+          label: "Affected scope",
+          reportLabel:
+            "Who or what is affected",
+
+          question:
+            "Is this affecting only you, one station or device, or multiple users?",
+
+          why:
+            "Scope helps the Help Desk distinguish an individual device problem from a wider service issue.",
+
+          type: "select",
+
+          options: [
+            "Only me",
+            "One station or device",
+            "Multiple users or stations",
+            "Not sure"
+          ],
+
+          signals: {
+            "Only me": [
+              "only me",
+              "just me"
+            ],
+
+            "One station or device": [
+              "one station",
+              "this station",
+              "one printer",
+              "this printer"
+            ],
+
+            "Multiple users or stations": [
+              "multiple users",
+              "multiple stations",
+              "everyone",
+              "all users",
+              "whole area"
+            ]
+          }
+        }
+      ]
+    },
+
+    "equipment-out-of-service": {
+      requiredForWork: [
+        "failureMode",
+        "safetyStatus"
+      ],
+
+      suggestedFirstAction:
+        "Confirm the equipment is safely removed from service, review the reported failure mode, and assign authorized Facilities or MHE support.",
+
+      questions: [
+        {
+          id: "failureMode",
+          label: "Equipment failure",
+          reportLabel:
+            "Observed equipment failure",
+
+          question:
+            "Which best describes what the equipment is doing?",
+
+          why:
+            "This gives Facilities the correct inspection path before arriving at the unit.",
+
+          type: "select",
+
+          options: [
+            "Will not start",
+            "Will not move",
+            "Will not lift or lower",
+            "Steering, brake, battery, or charging issue",
+            "Leak, damage, alarm, or other"
+          ],
+
+          signals: {
+            "Will not start": [
+              "won't start",
+              "will not start",
+              "does not start"
+            ],
+
+            "Will not move": [
+              "won't move",
+              "will not move",
+              "cannot move"
+            ],
+
+            "Will not lift or lower": [
+              "won't lift",
+              "will not lift",
+              "won't lower",
+              "will not lower"
+            ],
+
+            "Steering, brake, battery, or charging issue": [
+              "steering",
+              "brake",
+              "battery",
+              "charging"
+            ],
+
+            "Leak, damage, alarm, or other": [
+              "leak",
+              "damaged",
+              "damage",
+              "alarm",
+              "error code"
+            ]
+          }
+        },
+
+        {
+          id: "safetyStatus",
+          label: "Safety and containment",
+          reportLabel:
+            "Safety or containment status",
+
+          question:
+            "Has the equipment been taken out of service, and is there any leak, damage, smoke, odor, or alarm?",
+
+          why:
+            "This confirms immediate containment without asking the requester to attempt a repair.",
+
+          type: "select",
+
+          options: [
+            "Tagged out; no immediate hazard seen",
+            "Tagged out; hazard or damage is present",
+            "Not tagged out yet",
+            "Not sure"
+          ],
+
+          signals: {
+            "Tagged out; no immediate hazard seen": [
+              "tagged out",
+              "out of service tag",
+              "removed from service"
+            ],
+
+            "Tagged out; hazard or damage is present": [
+              "tagged out and leaking",
+              "tagged out with damage",
+              "smoke",
+              "burning smell"
+            ],
+
+            "Not tagged out yet": [
+              "not tagged",
+              "still in service"
+            ]
+          }
+        }
+      ]
+    },
+
+    "corrective-action-warehouse": {
+      requiredForWork: [
+        "problemCategory",
+        "containmentStatus"
+      ],
+
+      suggestedFirstAction:
+        "Review the reported problem, affected order or customer, containment already completed, and supporting evidence before beginning root-cause analysis.",
+
+      questions: [
+        {
+          id: "problemCategory",
+          label: "Problem category",
+          reportLabel:
+            "Corrective action category",
+
+          question:
+            "Which best describes the warehouse problem?",
+
+          why:
+            "A consistent category improves triage, reporting, and recurring-issue analysis.",
+
+          type: "select",
+
+          options: [
+            "Wrong part or quantity",
+            "Packaging or labeling error",
+            "Damage or condition issue",
+            "Shipping or process error",
+            "Repeat issue, customer concern, or other"
+          ],
+
+          signals: {
+            "Wrong part or quantity": [
+              "wrong part",
+              "wrong quantity",
+              "undershipped",
+              "overshipped",
+              "missing part"
+            ],
+
+            "Packaging or labeling error": [
+              "packaging error",
+              "wrong label",
+              "labeling error"
+            ],
+
+            "Damage or condition issue": [
+              "damaged",
+              "damage",
+              "condition issue"
+            ],
+
+            "Shipping or process error": [
+              "shipping error",
+              "process not followed",
+              "warehouse error"
+            ],
+
+            "Repeat issue, customer concern, or other": [
+              "repeat issue",
+              "recurring",
+              "customer complaint",
+              "customer concern"
+            ]
+          }
+        },
+
+        {
+          id: "containmentStatus",
+          label: "Containment completed",
+          reportLabel:
+            "Immediate containment",
+
+          question:
+            "What immediate containment has already been completed?",
+
+          why:
+            "Quality needs to know what was protected or placed on hold before beginning the investigation.",
+
+          type: "select",
+
+          options: [
+            "Order or shipment placed on hold",
+            "Inventory isolated or recounted",
+            "Customer or leadership notified",
+            "No containment completed yet",
+            "Not sure"
+          ],
+
+          signals: {
+            "Order or shipment placed on hold": [
+              "placed on hold",
+              "shipment on hold",
+              "order on hold"
+            ],
+
+            "Inventory isolated or recounted": [
+              "inventory isolated",
+              "quarantined",
+              "recounted",
+              "recount"
+            ],
+
+            "Customer or leadership notified": [
+              "customer notified",
+              "leadership notified",
+              "manager notified"
+            ],
+
+            "No containment completed yet": [
+              "no containment",
+              "nothing done yet"
+            ]
+          }
+        }
+      ]
+    },
+
+    "stock-check-phoenix": {
+      requiredForWork: [
+        "resultNeeded"
+      ],
+
+      suggestedFirstAction:
+        "Verify the requested stock attributes against the part number, then return the requested result with quantities, date codes, condition, packaging, or supporting photos as appropriate.",
+
+      questions: [
+        {
+          id: "resultNeeded",
+          label:
+            "Required stock-check result",
+
+          reportLabel:
+            "Result the requester needs",
+
+          question:
+            "What result should the warehouse send back?",
+
+          why:
+            "This prevents the warehouse from receiving a vague request to simply check the part.",
+
+          type: "select",
+
+          options: [
+            "Physical quantity by location",
+            "Date codes with quantities",
+            "Condition details or photos",
+            "Packaging details or photos",
+            "Full verification summary"
+          ],
+
+          signals: {
+            "Physical quantity by location": [
+              "physical quantity",
+              "count by location",
+              "quantity"
+            ],
+
+            "Date codes with quantities": [
+              "date codes",
+              "date code"
+            ],
+
+            "Condition details or photos": [
+              "condition",
+              "damaged"
+            ],
+
+            "Packaging details or photos": [
+              "packaging",
+              "package"
+            ],
+
+            "Full verification summary": [
+              "full verification",
+              "verify everything"
+            ]
+          }
+        }
+      ]
+    },
+
+    "systems-intake": {
+      requiredForWork: [
+        "expectedOutcome",
+        "affectedScope"
+      ],
+
+      suggestedFirstAction:
+        "Use the supplied example to reproduce the action, compare actual versus expected behavior, and identify whether the issue is isolated or affecting multiple users.",
+
+      questions: [
+        {
+          id: "expectedOutcome",
+          label: "Expected result",
+          reportLabel:
+            "Expected behavior",
+
+          question:
+            "What should the system do instead?",
+
+          why:
+            "Expected behavior helps Business Enablement distinguish a defect from an enhancement or process misunderstanding.",
+
+          type: "textarea",
+          options: []
+        },
+
+        {
+          id: "affectedScope",
+          label: "Affected scope",
+          reportLabel:
+            "Affected users or transactions",
+
+          question:
+            "Is this affecting one user or example, multiple users, or all transactions?",
+
+          why:
+            "Scope helps determine urgency and whether this may be a broader system incident.",
+
+          type: "select",
+
+          options: [
+            "One user or one example",
+            "Multiple users or examples",
+            "All users or transactions",
+            "Not sure"
+          ],
+
+          signals: {
+            "One user or one example": [
+              "only me",
+              "one order",
+              "one example"
+            ],
+
+            "Multiple users or examples": [
+              "multiple users",
+              "several users",
+              "multiple orders"
+            ],
+
+            "All users or transactions": [
+              "everyone",
+              "all users",
+              "all orders",
+              "all transactions"
+            ]
+          }
+        }
+      ]
+    },
+
+    "facilities-hvac": {
+      requiredForWork: [
+        "affectedScope",
+        "safetyConcern"
+      ],
+
+      suggestedFirstAction:
+        "Inspect the reported area and condition, beginning with any leak, smoke, burning odor, electrical concern, or product-risk indication.",
+
+      questions: [
+        {
+          id: "affectedScope",
+          label: "Affected area",
+          reportLabel:
+            "Area affected",
+
+          question:
+            "Is this limited to one room or station, or is a larger area affected?",
+
+          why:
+            "The affected area helps Facilities identify the likely equipment zone and urgency.",
+
+          type: "select",
+
+          options: [
+            "One room or station",
+            "Several rooms or stations",
+            "An entire department or warehouse area",
+            "Not sure"
+          ],
+
+          signals: {
+            "One room or station": [
+              "one room",
+              "one station",
+              "this room"
+            ],
+
+            "Several rooms or stations": [
+              "several rooms",
+              "multiple stations",
+              "several stations"
+            ],
+
+            "An entire department or warehouse area": [
+              "whole area",
+              "entire department",
+              "entire warehouse",
+              "all of packing"
+            ]
+          }
+        },
+
+        {
+          id: "safetyConcern",
+          label: "Safety concern",
+          reportLabel:
+            "Reported safety concern",
+
+          question:
+            "Is there any active leak, smoke, burning odor, electrical concern, or product risk?",
+
+          why:
+            "This identifies conditions that may require an urgent Facilities response.",
+
+          type: "select",
+
+          options: [
+            "No immediate safety concern",
+            "Active leak",
+            "Smoke, burning odor, or electrical concern",
+            "Product or temperature-sensitive material at risk",
+            "Not sure"
+          ],
+
+          signals: {
+            "No immediate safety concern": [
+              "no safety concern",
+              "no leak",
+              "no smoke"
+            ],
+
+            "Active leak": [
+              "active leak",
+              "leaking",
+              "water leak"
+            ],
+
+            "Smoke, burning odor, or electrical concern": [
+              "smoke",
+              "burning smell",
+              "burning odor",
+              "electrical"
+            ],
+
+            "Product or temperature-sensitive material at risk": [
+              "product at risk",
+              "temperature sensitive",
+              "inventory at risk"
+            ]
+          }
+        }
+      ]
+    },
+
+    "general-triage": {
+      requiredForWork: [
+        "requestedOutcome",
+        "affectedScope"
+      ],
+
+      suggestedFirstAction:
+        "Confirm the requested outcome and assign the closest responsible team without asking the employee to restart the intake process.",
+
+      questions: [
+        {
+          id: "requestedOutcome",
+          label: "Requested outcome",
+          reportLabel:
+            "What the requester needs",
+
+          question:
+            "What do you need MasterFlow to help complete, restore, correct, or provide?",
+
+          why:
+            "A clear desired outcome lets the triage team route the request without restarting the conversation.",
+
+          type: "textarea",
+          options: []
+        },
+
+        {
+          id: "affectedScope",
+          label: "Affected scope",
+          reportLabel:
+            "Who or what is affected",
+
+          question:
+            "Who, what process, or what business area is affected?",
+
+          why:
+            "This gives triage enough context to identify the responsible team and business impact.",
+
+          type: "textarea",
+          options: []
+        }
+      ]
+    }
+  };
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }
@@ -208,11 +940,40 @@
     }
   }
 
-  function getAll() {
+ function getAll() {
     const overrides = readOverrides();
-    return baseTemplates.map((template) => ({ ...clone(template), ...(overrides[template.id] || {}) }));
-  }
 
+    return baseTemplates.map(
+      (template) => {
+        const override =
+          overrides[template.id] || {};
+
+        const diagnostics =
+          diagnosticProfiles[
+            template.id
+          ] || {
+            requiredForWork: [],
+            suggestedFirstAction: "",
+            questions: []
+          };
+
+        return {
+          ...clone(template),
+          ...clone(override),
+
+          diagnostics: {
+            ...clone(diagnostics),
+
+            ...(override.diagnostics
+              ? clone(
+                  override.diagnostics
+                )
+              : {})
+          }
+        };
+      }
+    );
+  }
   function get(id) {
     return getAll().find((template) => template.id === id) || getAll().find((template) => template.id === "general-triage");
   }
