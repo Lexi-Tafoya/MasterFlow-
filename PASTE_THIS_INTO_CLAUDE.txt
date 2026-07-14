@@ -1,0 +1,11 @@
+This is an existing working MasterFlow prototype. Do not build it from scratch and do not change its plain HTML/CSS/JavaScript architecture.
+
+First read CLAUDE.md and FILE_MAP.md. Read docs/CLAUDE_PROJECT_SUMMARY.md only for business context. Then run the existing prototype with `python serve.py` and inspect the current behavior.
+
+Before editing anything, give me a concise assessment of:
+1. What already works end to end.
+2. What is intentionally simulated.
+3. The three smallest improvements that would most strengthen the hackathon demonstration.
+4. The exact files each improvement would require.
+
+Do not code until I approve one focused improvement. For later tasks, inspect only the target page, its matching page script, and shared files that are truly necessary. Preserve all locked product decisions in CLAUDE.md.

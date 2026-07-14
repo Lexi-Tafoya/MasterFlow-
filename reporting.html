@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MasterFlow - Reporting</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="workspace-page" data-page="reporting">
+  <div class="content-shell">
+    <main>
+      <div class="page-heading">
+        <div><h1>Reporting</h1><p>Show ticket usability and service performance alongside verified freight outcomes. Prototype figures are fictional.</p></div>
+        <div class="page-actions"><span class="badge badge-purple">Prototype data</span></div>
+      </div>
+
+      <section class="kpi-grid" aria-label="Operational reporting summary">
+        <div class="kpi"><div class="kpi-label">Ticket volume</div><div class="kpi-value" id="reportTicketVolume">0</div><div class="kpi-meta">Current demo records</div></div>
+        <div class="kpi"><div class="kpi-label">Open backlog</div><div class="kpi-value" id="reportOpenBacklog">0</div><div class="kpi-meta">All operational queues</div></div>
+        <div class="kpi"><div class="kpi-label">SLA compliance</div><div class="kpi-value" id="reportSlaCompliance">0%</div><div class="kpi-meta good">Response and resolution</div></div>
+        <div class="kpi"><div class="kpi-label">Active P1</div><div class="kpi-value" id="reportP1Open">0</div><div class="kpi-meta danger">Warehouse-impacting incidents</div></div>
+      </section>
+
+      <div class="grid grid-2 mt-18">
+        <section class="card">
+          <div class="card-header"><div><h2>Ticket volume by queue</h2><p>Helps managers balance backlog and staffing.</p></div><span class="badge badge-blue"><span id="resolvedCount">0</span>&nbsp;resolved</span></div>
+          <div class="card-body"><div class="chart-bars" id="ticketQueueChart"></div></div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><div><h2>Freight savings target</h2><p>Verified against final carrier charges in a production implementation.</p></div></div>
+          <div class="card-body">
+            <div class="kpi-value" id="reportVerifiedSavings">$0</div>
+            <div class="kpi-meta good" id="reportSavingsTarget">0% of target</div>
+            <div class="progress mt-12"><span id="savingsProgress" style="width:0%"></span></div>
+            <div class="progress-label"><span>Annual progress</span><strong id="savingsProgressLabel">0%</strong></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="grid grid-2 mt-18">
+        <section class="card">
+          <div class="card-header"><div><h2>Freight savings by action</h2><p>Illustrative year-to-date categories.</p></div><span class="badge badge-green">$126K baseline</span></div>
+          <div class="card-body"><div class="chart-bars" id="freightSavingsChart"></div></div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><div><h2>Operational guardrails</h2><p>Cost reduction should not degrade customer or warehouse outcomes.</p></div></div>
+          <div class="card-body metric-list">
+            <div><div class="metric-row"><span>On-time delivery</span><strong>97.2%</strong></div><div class="progress"><span style="width:97.2%"></span></div></div>
+            <div><div class="metric-row"><span>Customer promise-date changes</span><strong>0.7%</strong></div><div class="progress"><span style="width:70%"></span></div></div>
+            <div><div class="metric-row"><span>Freight spend reduction</span><strong>1.26%</strong></div><div class="progress"><span style="width:63%"></span></div></div>
+            <div><div class="metric-row"><span>First-contact ticket resolution</span><strong>62%</strong></div><div class="progress"><span style="width:62%"></span></div></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Leadership scorecard</h2><p>Measures that demonstrate lower administrative cost, better service visibility, and freight savings without service degradation.</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Measure</th><th>Current prototype view</th><th>Target</th><th>Interpretation</th><th>Owner</th></tr></thead><tbody>
+          <tr><td>Ticket platform annual cost</td><td>Baseline over $300K</td><td>Material reduction</td><td><span class="badge badge-amber">Validate vendor model</span></td><td>IT leadership</td></tr>
+          <tr><td>Freight spend reduction</td><td>1.26%</td><td>2.00%</td><td><span class="badge badge-green">On path</span></td><td>Logistics</td></tr>
+          <tr><td>On-time delivery</td><td>97.2%</td><td>At least 97%</td><td><span class="badge badge-green">Protected</span></td><td>Operations</td></tr>
+          <tr><td>Customer promise changes</td><td>0.7%</td><td>At most 1%</td><td><span class="badge badge-green">Within guardrail</span></td><td>Sales</td></tr>
+        </tbody></table></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/pages/reporting.js" defer></script>
+</body>
+</html>

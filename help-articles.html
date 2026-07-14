@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MasterFlow - Help articles</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="workspace-page" data-page="help-articles">
+  <div class="content-shell">
+    <main>
+      <div class="page-heading">
+        <div><h1>Help articles</h1><p>Search common solutions before creating a ticket. Self-service should save time without blocking employees who still need support.</p></div>
+        <div class="page-actions"><a class="btn btn-primary" href="index.html">Ask for help</a></div>
+      </div>
+
+      <div class="notice notice-info"><span>i</span><div><strong>Knowledge recommendations are assistance, not a gate.</strong><p>Employees can create a ticket at any time, and critical warehouse incidents always use the Shipping is stopped fast lane.</p></div></div>
+
+      <div class="toolbar mt-18">
+        <div class="toolbar-left"><input class="control search-control" id="articleSearch" type="search" placeholder="Search printers, laptop, email, barcode..." aria-label="Search help articles"></div>
+        <div class="toolbar-right"><select class="control" id="articleCategory" aria-label="Filter articles by category"><option value="all">All categories</option><option>Hardware</option><option>Device performance</option><option>Using MasterFlow</option><option>Warehouse operations</option><option>Access</option><option>Warehouse technology</option></select></div>
+      </div>
+
+      <section class="article-grid" id="articleGrid" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/pages/help-articles.js" defer></script>
+</body>
+</html>

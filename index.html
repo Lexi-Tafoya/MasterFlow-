@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MasterFlow prototype: simple AI-assisted internal request intake and operational work routing.">
+  <title>MasterFlow - Home</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="page-home" data-page="home">
+  <div class="content-shell">
+    <main>
+      <section class="home-stage" aria-labelledby="homeTitle">
+        <div class="home-symbol" aria-hidden="true">✦</div>
+        <h1 id="homeTitle">Good morning, Alexandra.</h1>
+<h2 class="home-question">What can I help you with today?</h2>
+<p>Describe what you need. MasterFlow will prepare the correct request and ask only for anything that is missing.</p>
+
+        <div class="request-composer" id="requestComposer">
+          <textarea id="askInput" rows="3" aria-label="Describe what you need" placeholder="How can I help you today?"></textarea>
+          <div class="composer-footer">
+            <div class="composer-left">
+              <button class="attach-button" id="attachButton" type="button" aria-label="Add an attachment" title="Add an attachment">＋</button>
+              <span class="composer-hint">Enter to continue · Shift+Enter for a new line</span>
+            </div>
+            <div class="composer-right">
+              <button class="send-button" id="askButton" type="button" aria-label="Continue to Smart Request" title="Continue">↑</button>
+            </div>
+          </div>
+          <div class="request-suggestions" id="requestSuggestions" aria-live="polite"></div>
+        </div>
+        <section class="chat-panel" id="chatPanel" aria-live="polite">
+          <div class="chat-panel-header">
+            <strong>MasterFlow Assistant</strong>
+            <span class="chat-status">● Ready</span>
+          </div>
+
+          <div class="chat-body" id="chatBody"></div>
+        </section>
+        <div class="home-shortcuts" aria-label="Quick actions">
+          <button class="home-shortcut critical" id="criticalHomeButton" type="button">
+            <span class="shortcut-icon">!</span>
+            <span><strong>Shipping is stopped</strong><small>Create an immediate P1 incident without an AI gate</small></span>
+          </button>
+          <a class="home-shortcut" href="my-tickets.html">
+            <span class="shortcut-icon">✓</span>
+            <span><strong>My requests</strong><small>Check status or add an update</small></span>
+          </a>
+          <a class="home-shortcut" href="help-articles.html">
+            <span class="shortcut-icon">?</span>
+            <span><strong>Help articles</strong><small>Try a quick self-service fix</small></span>
+          </a>
+        </div>
+
+        <div class="prompt-examples" aria-label="Example requests">
+          <button type="button" data-example="I need ink for the Zebra printer at Pack Station 14">
+            “I need toner for Pack Station 14.”
+          </button>
+        
+          <button type="button" data-example="Forklift FL-24 will not move near Receiving Door 5">
+            “Forklift FL-24 will not move.”
+          </button>
+        
+          <button type="button" data-example="Please stock check part 2888-2 for date codes in Phoenix">
+            “I need a stock check.”
+          </button>
+        
+          <button type="button" data-example="OMS is not refreshing the order hold status">
+            “OMS is not updating.”
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/templates.js" defer></script>
+  <script src="assets/js/request-engine.js" defer></script>
+<script src="assets/js/pages/home.js" defer></script>
+</body>
+</html>

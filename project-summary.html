@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MasterFlow product direction and Claude handoff summary.">
+  <title>MasterFlow - Project summary</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="workspace-page" data-page="project-summary">
+  <div class="content-shell">
+    <main>
+      <section class="summary-hero">
+        <div class="eyebrow">MasterFlow prototype direction</div>
+        <h1>One simple front door for support requests and operational freight decisions</h1>
+        <p>MasterFlow preserves existing business-team queues and request requirements, but removes the need for employees to hunt through a large ServiceNow catalog. It also gives Sales and Logistics one controlled workspace for freight opportunities that require human action.</p>
+      </section>
+
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>The core ticketing experience</h2><p>AI assembles the correct existing form; it does not eliminate required business information.</p></div></div>
+        <div class="card-body">
+          <div class="summary-flow">
+            <div class="summary-step"><strong>1. Describe</strong><span>Employee states the need in natural language.</span></div>
+            <div class="summary-step"><strong>2. Match</strong><span>AI suggests an existing catalog request and confidence.</span></div>
+            <div class="summary-step"><strong>3. Build</strong><span>Known profile and message details are pre-filled.</span></div>
+            <div class="summary-step"><strong>4. Confirm</strong><span>Employee supplies only missing required fields.</span></div>
+            <div class="summary-step"><strong>5. Route</strong><span>The request enters the existing team queue with an SLA.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid grid-2 mt-18">
+        <section class="card">
+          <div class="card-header"><div><h2>Locked product decisions</h2><p>These decisions should not be casually reversed during the one-week build.</p></div></div>
+          <div class="card-body">
+            <ul class="decision-list">
+              <li>Every employee can create requests; receiver and administrator functions are role-controlled.</li>
+              <li>The home page stays minimal: one request input, P1 fast lane, My Requests, and Help Articles.</li>
+              <li>Existing catalog routing to team queues is preserved. MasterFlow improves intake rather than replacing ownership.</li>
+              <li>Different catalog items keep different required fields through one configurable dynamic-form engine.</li>
+              <li>Low-confidence or unknown requests route to Megan Delia - Triage in Business Enablement.</li>
+              <li>Shipping-stopped incidents bypass AI and create a P1 immediately.</li>
+              <li>Common template, routing, approval, role, and SLA changes should not require specialized development.</li>
+              <li>Production permissions would come from SSO; the role switch is for demonstration only.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><div><h2>Demonstration request templates</h2><p>Four distinct forms prove that the engine can support very different business processes.</p></div></div>
+          <div class="card-body">
+            <div class="list">
+              <div class="list-row"><div><div class="list-title">Printer Ink Request</div><div class="list-meta"><span>IT Information</span><span>Printer, location, ink type, status</span></div></div><span class="badge badge-blue">Simple</span></div>
+              <div class="list-row"><div><div class="list-title">Equipment Out of Service</div><div class="list-meta"><span>Facilities</span><span>Location, urgency, MHE number, last user</span></div></div><span class="badge badge-red">Operational</span></div>
+              <div class="list-row"><div><div class="list-title">Corrective Action - Warehouse</div><div class="list-meta"><span>Quality</span><span>Problem, pending order, customer, evidence</span></div></div><span class="badge badge-purple">Governed</span></div>
+              <div class="list-row"><div><div class="list-title">Stock Check Phoenix</div><div class="list-meta"><span>DC Connect</span><span>Part, check type, control/order number</span></div></div><span class="badge badge-teal">Warehouse</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Freight optimization operating model</h2><p>Scan all eligible orders silently; create human work only when a decision, approval, investigation, or customer conversation is required.</p></div></div>
+        <div class="card-body">
+          <div class="grid grid-3">
+            <div class="rule-card"><h3>Below 70% confidence</h3><p>Normally record for analysis without interrupting operations. A high-value exception may be shown for human review.</p></div>
+            <div class="rule-card"><h3>70% to 89%</h3><p>Create a review item only when expected savings exceed the economic threshold and the decision can happen before cutoff.</p></div>
+            <div class="rule-card"><h3>90% or higher</h3><p>Potential automatic path only when customer promise, inventory, export, service, reliability, and approval guardrails all pass.</p></div>
+          </div>
+          <div class="notice notice-warning mt-18"><span>!</span><div><strong>No indefinite operational holds.</strong><p>A hold needs a named owner, decision deadline, and automatic release to the original approved shipping plan. Promise dates are never silently changed.</p></div></div>
+        </div>
+      </section>
+
+      <div class="grid grid-2 mt-18">
+        <section class="card">
+          <div class="card-header"><div><h2>Required judging flow</h2><p>The prototype must work end to end without live company integrations.</p></div></div>
+          <div class="card-body">
+            <ol class="decision-list">
+              <li>Create a natural-language printer request, review the dynamic form, submit it, and see the numbered record in My Requests and the receiving queue.</li>
+              <li>Use Shipping is stopped to create a P1 without relying on AI classification, then show the incident in the operational queue.</li>
+              <li>Open freight opportunity ABI173, explain the 67% confidence and failed guardrails, and record a controlled decision.</li>
+              <li>Open Request Template Manager and change a queue, SLA, trigger phrase, or required field without editing code.</li>
+            </ol>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><div><h2>Prototype boundaries</h2><p>These integrations are represented honestly rather than claimed as live.</p></div></div>
+          <div class="card-body">
+            <ul class="decision-list">
+              <li>Fictional or sanitized demonstration data only.</li>
+              <li>Browser localStorage simulates persistence; there is no production database.</li>
+              <li>AI classification is a deterministic prototype matcher, ready to be replaced by an approved model.</li>
+              <li>ERP, OMS, OnlineComponents.com, Outlook, carrier, and SSO connections are simulated.</li>
+              <li>No customer email is sent and no live order hold is written to an operational system.</li>
+              <li>Migration, security hardening, model governance, and production audit controls are future implementation work.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Claude Code handoff</h2><p>Keep prompts narrow so Claude reads only the files required for the current change.</p></div></div>
+        <div class="card-body">
+          <div class="code-note">Read CLAUDE.md and FILE_MAP.md first. This is an existing MasterFlow prototype; do not rebuild it or change the architecture. For the current task, inspect only the page file and its matching assets/js/pages file, plus shared files only when necessary. Preserve the locked business decisions in docs/CLAUDE_PROJECT_SUMMARY.md. Make one focused change, test it, and report the exact files changed.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+</body>
+</html>

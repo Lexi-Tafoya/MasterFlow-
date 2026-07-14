@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MasterFlow no-code request template manager prototype.">
+  <title>MasterFlow - Request templates</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="workspace-page" data-page="admin-templates">
+  <div class="content-shell">
+    <main>
+      <div class="page-heading">
+        <div><h1>Request Template Manager</h1><p>Authorized administrators can change request fields, routing, SLAs, and AI trigger phrases without changing application code.</p></div>
+        <div class="page-actions"><span class="badge badge-purple">Administrator only</span><button class="btn btn-secondary" id="resetTemplates" type="button">Reset templates</button></div>
+      </div>
+
+      <div class="notice notice-info"><span>i</span><div><strong>One dynamic form engine supports many catalog items.</strong><p>The employee describes a need, MasterFlow selects a template, pre-fills known information, and renders the fields configured here. Existing queue ownership is preserved.</p></div></div>
+
+      <div class="template-manager mt-18">
+        <aside class="card template-list-card">
+          <div class="card-header"><div><h2>Request types</h2><p id="templateCount">Loading…</p></div></div>
+          <div class="card-body">
+            <div class="field"><label for="templateSearch">Search templates</label><input class="input" id="templateSearch" type="search" placeholder="Printer, stock check, facilities…"></div>
+            <div class="template-list mt-12" id="templateList" role="listbox" aria-label="Request templates"></div>
+          </div>
+        </aside>
+
+        <form class="card template-editor" id="templateForm" novalidate>
+          <div class="card-header">
+            <div><div class="eyebrow">Selected template</div><h2 id="editorTitle">Choose a request type</h2><p>Changes are saved in this browser and immediately affect the Smart Request Builder.</p></div>
+            <button class="btn btn-primary" type="submit">Save template</button>
+          </div>
+          <div class="card-body" id="templateEditorBody">
+            <div class="empty-state">Select a request template to configure it.</div>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/templates.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/pages/admin-templates.js" defer></script>
+</body>
+</html>

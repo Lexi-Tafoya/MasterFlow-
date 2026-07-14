@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MasterFlow request confirmation.">
+  <title>MasterFlow - Request submitted</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="workspace-page" data-page="request-submitted">
+  <div class="content-shell">
+    <main>
+      <div class="page narrow confirmation-page">
+        <div class="progress-steps" aria-label="Request progress">
+          <div class="progress-step complete"><span class="progress-number">1</span><span>Describe</span></div>
+          <span class="progress-line complete"></span>
+          <div class="progress-step complete"><span class="progress-number">2</span><span>Review</span></div>
+          <span class="progress-line complete"></span>
+          <div class="progress-step active complete"><span class="progress-number">3</span><span>Submitted</span></div>
+        </div>
+
+        <section class="confirmation-hero card" aria-labelledby="confirmationTitle">
+          <div class="confirmation-check" aria-hidden="true">✓</div>
+          <div class="eyebrow">Request created</div>
+          <h1 id="confirmationTitle">Your request is on its way</h1>
+          <p id="confirmationCopy">MasterFlow created the request and routed it to the correct queue.</p>
+          <div class="confirmation-number" id="ticketNumber">Loading ticket…</div>
+        </section>
+
+        <section class="card mt-18" id="ticketSummaryCard">
+          <div class="card-header"><div><h2>What happens next</h2><p>The receiving team can update the request and communicate with you from the same record.</p></div><span class="badge badge-blue" id="ticketStatus">New</span></div>
+          <div class="card-body">
+            <div class="confirmation-grid">
+              <div class="detail-cell"><small>Request</small><strong id="ticketTitle">—</strong></div>
+              <div class="detail-cell"><small>Assigned queue</small><strong id="ticketQueue">—</strong></div>
+              <div class="detail-cell"><small>Priority</small><strong id="ticketPriority">—</strong></div>
+              <div class="detail-cell"><small>Response target</small><strong id="ticketSla">—</strong></div>
+              <div class="detail-cell"><small>Requested for</small><strong id="ticketRequester">—</strong></div>
+              <div class="detail-cell"><small>Created through</small><strong id="ticketSource">—</strong></div>
+            </div>
+            <div class="notice notice-success mt-18"><span>✓</span><div><strong>No category hunting was required.</strong><p>The selected request template supplied its required fields, queue, priority, and SLA. The employee can track updates in My Requests.</p></div></div>
+          </div>
+          <div class="card-footer confirmation-actions">
+            <a class="btn btn-secondary" href="index.html">Create another request</a>
+            <a class="btn btn-primary" href="my-tickets.html">View My Requests</a>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/pages/request-submitted.js" defer></script>
+</body>
+</html>

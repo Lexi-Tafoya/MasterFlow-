@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MasterFlow - My requests</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="workspace-page" data-page="my-tickets">
+  <div class="content-shell">
+    <main>
+      <div class="page-heading">
+        <div><h1>My requests</h1><p>See updates, answer questions, and follow each request through completion. Future email replies will stay in the same request conversation.</p></div>
+        <div class="page-actions"><a class="btn btn-primary" href="index.html">+ New request</a></div>
+      </div>
+
+      <section class="kpi-grid" aria-label="Ticket summary">
+        <div class="kpi"><div class="kpi-label">Open tickets</div><div class="kpi-value" id="openTicketCount">0</div><div class="kpi-meta">Requests still in progress</div></div>
+        <div class="kpi"><div class="kpi-label">Waiting on me</div><div class="kpi-value" id="waitingTicketCount">0</div><div class="kpi-meta warn" id="waitingTicketMeta">Nothing is waiting on you</div></div>
+        <div class="kpi"><div class="kpi-label">Closed or resolved</div><div class="kpi-value" id="closedTicketCount">0</div><div class="kpi-meta good">Visible for reference</div></div>
+        <div class="kpi"><div class="kpi-label">Communication</div><div class="kpi-value" style="font-size:23px">Site + Email</div><div class="kpi-meta">One closed feedback loop</div></div>
+      </section>
+
+      <section class="card mt-18">
+        <div class="card-header">
+          <div><h2>My recent requests</h2><p>Open any request to see routing, SLA, and conversation history.</p></div>
+        </div>
+        <div class="card-body">
+          <div class="toolbar">
+            <div class="toolbar-left"><input class="control search-control" id="ticketSearch" type="search" placeholder="Search my requests" aria-label="Search my requests"></div>
+            <div class="toolbar-right"><select class="control" id="ticketStatusFilter" aria-label="Filter tickets by status"><option value="all">Open and recent</option><option value="open">Open only</option><option value="closed">Closed or resolved</option></select></div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ticket</th><th>Category</th><th>Priority</th><th>Status</th><th>Assigned team</th><th>Last update</th></tr></thead>
+            <tbody id="myTicketsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/pages/my-tickets.js" defer></script>
+</body>
+</html>

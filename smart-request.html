@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MasterFlow | Smart Request Builder</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="workspace-page" data-page="smart-request">
+  <div class="content-shell">
+    <main>
+      <div class="page smart-request-page">
+        <div class="progress-steps" aria-label="Request progress">
+          <div class="progress-step complete"><span class="progress-number">1</span><span>Describe</span></div>
+          <span class="progress-line complete"></span>
+          <div class="progress-step active"><span class="progress-number">2</span><span>Review</span></div>
+          <span class="progress-line"></span>
+          <div class="progress-step"><span class="progress-number">3</span><span>Submitted</span></div>
+        </div>
+
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">Smart Request Builder</div>
+            <h1>Review what MasterFlow prepared</h1>
+            <p>The selected existing request template controls the queue, SLA, required fields, and knowledge suggestions. Correct anything before submitting.</p>
+          </div>
+          <a class="btn btn-secondary" href="index.html">Cancel</a>
+        </div>
+
+        <div class="builder-grid">
+          <section class="card">
+            <div class="card-header">
+              <div><h2 id="requestTitle">Request details</h2><p>Fields marked with an asterisk are required by the selected template.</p></div>
+              <button class="btn btn-secondary btn-sm" id="chooseDifferent" type="button">Choose different request</button>
+            </div>
+            <div class="card-body">
+              <div class="request-source"><strong>You said</strong><p id="sourceText"></p></div>
+              <form id="requestForm" novalidate>
+                <div class="dynamic-fields" id="dynamicFields"></div>
+                <div class="actions between mt-18">
+                  <button class="btn btn-secondary" id="startOver" type="button">Start over</button>
+                  <button class="btn btn-primary" type="submit">Submit request</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <aside class="grid interpretation-column">
+            <section class="card">
+              <div class="card-header ai-heading">
+                <div><div class="eyebrow">AI interpretation</div><h2 id="interpretationTitle">Request matched</h2></div>
+                <div class="confidence-ring" id="confidenceRing" data-value="0%" style="--confidence:0%"></div>
+              </div>
+              <div class="card-body">
+                <p class="muted small" id="interpretationReason"></p>
+                <p class="routing-summary" id="routingSummary"></p>
+                <div id="confidenceAlert" class="notice notice-warning mt-12" hidden></div>
+                <details class="routing-details mt-18">
+                  <summary>Routing &amp; SLA details</summary>
+                  <div class="meta-list mt-12">
+                    <div class="meta-row"><span>Catalog</span><strong id="catalogValue"></strong></div>
+                    <div class="meta-row"><span>Receiving queue</span><strong id="queueValue"></strong></div>
+                    <div class="meta-row"><span>Suggested priority</span><strong id="priorityValue"></strong></div>
+                    <div class="meta-row"><span>Requested for</span><strong>Alexandra Tafoya</strong></div>
+                    <div class="meta-row"><span>Response target</span><strong id="responseSlaValue"></strong></div>
+                    <div class="meta-row"><span>Resolution target</span><strong id="resolutionSlaValue"></strong></div>
+                  </div>
+                </details>
+              </div>
+            </section>
+
+            <section class="card" id="articlePanel">
+              <div class="card-header"><div><h3>Suggested self-service</h3><p>Your request draft stays available while you try this.</p></div></div>
+              <div class="card-body"><div class="article-card compact"><strong id="articleTitle"></strong><p id="articleSummary"></p><button class="btn btn-secondary btn-sm" id="articleResolved" type="button">This solved my issue</button></div></div>
+            </section>
+
+            <div class="notice notice-info"><span>i</span><div><strong>Human confirmation stays in control.</strong><p>AI suggestions are editable. Shipping-stopped incidents use the direct P1 path and do not depend on classification confidence.</p></div></div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="requestPickerDialog" aria-labelledby="requestPickerTitle">
+    <div class="dialog-header"><div><h2 id="requestPickerTitle">Choose a different request</h2><p>Override the AI selection without starting over.</p></div><button class="close-button" type="button" data-close-picker aria-label="Close">×</button></div>
+    <div class="dialog-body">
+      <div class="field"><label for="requestPickerSearch">Search request types</label><input class="input" id="requestPickerSearch" placeholder="Printer, stock check, facilities…"></div>
+      <div class="request-picker mt-18" id="requestPicker"></div>
+    </div>
+    <div class="dialog-footer"><button class="btn btn-secondary" type="button" data-close-picker>Cancel</button></div>
+  </dialog>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/templates.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/pages/smart-request.js" defer></script>
+</body>
+</html>
