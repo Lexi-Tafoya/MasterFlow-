@@ -12,7 +12,128 @@
   const title = document.getElementById("editorTitle");
   let activeId = "printer-ink";
   let workingTemplate = null;
+  const ROLE_STORAGE_KEY =
+    "masterflowAdminRoleV1";
 
+  const FEEDBACK_STORAGE_KEY =
+    "masterflowFlowFeedbackV1";
+
+  const PROPOSAL_STORAGE_KEY =
+    "masterflowFlowProposalsV1";
+
+  const roleSelect =
+    document.getElementById(
+      "adminRoleSelect"
+    );
+
+  const resetButton =
+    document.getElementById(
+      "resetTemplates"
+    );
+
+  const ROLE_CONTEXTS = {
+    "platform-admin": {
+      eyebrow:
+        "Enterprise administrator",
+
+      title:
+        "Megan Delia governs MasterFlow",
+
+      description:
+        "Company-wide ownership, guarded changes, access, routing policy, and platform health.",
+
+      badge:
+        "Enterprise scope",
+
+      badgeClass:
+        "badge-purple",
+
+      permissions: [
+        "All request flows",
+        "Governed settings",
+        "Ownership and approvals"
+      ],
+
+      ownedTemplateIds: ["*"],
+      managedQueues: ["*"],
+
+      canEditTemplates: true,
+      canEditGovernedFields: true
+    },
+
+    "category-owner": {
+      eyebrow:
+        "Request category owner",
+
+      title:
+        "Design actionable IT request flows",
+
+      description:
+        "Teach MasterFlow what IT needs, improve questions and recognition, and test the employee and receiver experience.",
+
+      badge:
+        "IT category scope",
+
+      badgeClass:
+        "badge-teal",
+
+      permissions: [
+        "Owned request flows",
+        "Questions and evidence",
+        "Recognition and guidance"
+      ],
+
+      ownedTemplateIds: [
+        "printer-ink",
+        "printer-connectivity",
+        "systems-intake"
+      ],
+
+      managedQueues: [],
+
+      canEditTemplates: true,
+      canEditGovernedFields: false
+    },
+
+    "queue-manager": {
+      eyebrow:
+        "Queue manager",
+
+      title:
+        "Monitor intake quality for IT queues",
+
+      description:
+        "Review which request flows feed the team, identify missing information, and recommend improvements without changing governed behavior.",
+
+      badge:
+        "Managed queues",
+
+      badgeClass:
+        "badge-blue",
+
+      permissions: [
+        "Queue-related flows",
+        "Read-only flow details",
+        "Submit improvement feedback"
+      ],
+
+      ownedTemplateIds: [],
+
+      managedQueues: [
+        "IT Help Desk",
+        "IT Information",
+        "Business Enablement - Systems Intake"
+      ],
+
+      canEditTemplates: false,
+      canEditGovernedFields: false
+    }
+  };
+
+  let activeRoleId =
+    window.localStorage.getItem(
+      ROLE_STORAGE_KEY
+    ) || "platform-admin";
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }
@@ -20,14 +141,219 @@
   function safeId(value) {
     return String(value || "field").replace(/[^a-zA-Z0-9_-]/g, "-");
   }
+  function readStoredArray(key) {
+    try {
+      const value =
+        JSON.parse(
+          window.localStorage.getItem(
+            key
+          ) || "[]"
+        );
 
-  function renderList() {
+      return Array.isArray(value)
+        ? value
+        : [];
+    } catch (error) {
+      console.warn(
+        `MasterFlow could not read ${key}.`,
+        error
+      );
+
+      return [];
+    }
+  }
+
+  function roleContext() {
+    return (
+      ROLE_CONTEXTS[activeRoleId] ||
+      ROLE_CONTEXTS["platform-admin"]
+    );
+  }
+
+  function roleOwnsEverything(role) {
+    return (
+      role.ownedTemplateIds.includes("*") ||
+      role.managedQueues.includes("*")
+    );
+  }
+
+  function canSeeTemplate(template) {
+    const role = roleContext();
+
+    if (roleOwnsEverything(role)) {
+      return true;
+    }
+
+    return (
+      role.ownedTemplateIds.includes(
+        template.id
+      ) ||
+      role.managedQueues.includes(
+        template.queue
+      )
+    );
+  }
+
+  function canEditTemplate(template) {
+    const role = roleContext();
+
+    if (
+      !role.canEditTemplates ||
+      !template
+    ) {
+      return false;
+    }
+
+    return (
+      role.ownedTemplateIds.includes("*") ||
+      role.ownedTemplateIds.includes(
+        template.id
+      )
+    );
+  }
+
+  function getVisibleTemplates() {
+    return Templates
+      .getAll()
+      .filter(canSeeTemplate);
+  }
+
+  function itemIsInRoleScope(item) {
+    const role = roleContext();
+
+    if (roleOwnsEverything(role)) {
+      return true;
+    }
+
+    return (
+      role.ownedTemplateIds.includes(
+        item.templateId
+      ) ||
+      role.managedQueues.includes(
+        item.queue
+      )
+    );
+  }
+
+  function renderRoleSummary() {
+    const role = roleContext();
+
+    document.body.dataset.adminRole =
+      activeRoleId;
+
+    roleSelect.value =
+      activeRoleId;
+
+    const badge =
+      document.getElementById(
+        "adminRoleBadge"
+      );
+
+    badge.className =
+      `badge ${role.badgeClass}`;
+
+    badge.textContent =
+      role.badge;
+
+    document.getElementById(
+      "adminRoleEyebrow"
+    ).textContent =
+      role.eyebrow;
+
+    document.getElementById(
+      "adminRoleTitle"
+    ).textContent =
+      role.title;
+
+    document.getElementById(
+      "adminRoleDescription"
+    ).textContent =
+      role.description;
+
+    document.getElementById(
+      "adminRolePermissions"
+    ).innerHTML =
+      role.permissions
+        .map(
+          (permission) => `
+            <span class="flow-permission-chip">
+              ${UI.escapeHtml(permission)}
+            </span>
+          `
+        )
+        .join("");
+
+    const visibleTemplates =
+      getVisibleTemplates();
+
+    document.getElementById(
+      "visibleFlowCount"
+    ).textContent =
+      String(
+        visibleTemplates.length
+      );
+
+    document.getElementById(
+      "visibleFlowHint"
+    ).textContent =
+      `of ${Templates.getAll().length} company request flows`;
+
+    const feedback =
+      readStoredArray(
+        FEEDBACK_STORAGE_KEY
+      ).filter(itemIsInRoleScope);
+
+    document.getElementById(
+      "feedbackSignalCount"
+    ).textContent =
+      String(feedback.length);
+
+    const proposals =
+      readStoredArray(
+        PROPOSAL_STORAGE_KEY
+      )
+        .filter(itemIsInRoleScope)
+        .filter(
+          (proposal) =>
+            ![
+              "published",
+              "rejected"
+            ].includes(
+              proposal.status
+            )
+        );
+
+    document.getElementById(
+      "pendingProposalCount"
+    ).textContent =
+      String(proposals.length);
+
+    document.getElementById(
+      "governedControlCount"
+    ).textContent =
+      role.canEditGovernedFields
+        ? "Full"
+        : role.canEditTemplates
+          ? "Approval"
+          : "View";
+
+    resetButton.hidden = false;
     const query = search.value.toLowerCase().trim();
-    const templates = Templates.getAll().filter((template) => {
-      const text = `${template.name} ${template.catalog} ${template.queue}`.toLowerCase();
-      return !query || text.includes(query);
+
+    const allTemplates = Templates.getAll();
+    const visibleTemplates = allTemplates.filter(canSeeTemplate);
+
+    if (!visibleTemplates.some((template) => template.id === activeId)) {
+      activeId = visibleTemplates[0]?.id || "";
+      workingTemplate = activeId ? clone(Templates.get(activeId)) : null;
+    }
+
+    const templates = visibleTemplates.filter((template) => {
+      const text = `${template.name} ${template.catalog} ${template.queue}`;
+      return !query || text.toLowerCase().includes(query);
     });
-    document.getElementById("templateCount").textContent = `${Templates.getAll().length} configured request types`;
+
+    document.getElementById("templateCount").textContent = `${visibleTemplates.length} visible of ${allTemplates.length} configured request types`;
     list.innerHTML = templates.map((template) => `
       <button class="template-list-item${template.id === activeId ? " active" : ""}" type="button" role="option" aria-selected="${template.id === activeId}" data-template-id="${UI.escapeHtml(template.id)}">
         <strong>${UI.escapeHtml(template.name)}</strong>
@@ -64,7 +390,78 @@
         <input type="hidden" data-field-prop="profileValue" value="${UI.escapeHtml(field.profileValue || "")}">
       </div>`;
   }
+  function applyRolePermissions() {
+    const role = roleContext();
 
+    const editable =
+      Boolean(
+        workingTemplate &&
+        canEditTemplate(
+          workingTemplate
+        )
+      );
+
+    const submitButton =
+      form.querySelector(
+        'button[type="submit"]'
+      );
+
+    body.classList.toggle(
+      "flow-readonly",
+      !editable
+    );
+
+    if (!editable) {
+      body
+        .querySelectorAll(
+          "input, textarea, select, button"
+        )
+        .forEach((control) => {
+          control.disabled = true;
+        });
+    }
+
+    if (
+      editable &&
+      !role.canEditGovernedFields
+    ) {
+      [
+        "templateCatalog",
+        "templateQueue",
+        "templatePriority",
+        "responseSla",
+        "resolutionSla"
+      ].forEach((id) => {
+        const control =
+          document.getElementById(id);
+
+        if (!control) {
+          return;
+        }
+
+        control.disabled = true;
+
+        control.title =
+          "This change requires enterprise governance.";
+
+        control
+          .closest(".field")
+          ?.classList.add(
+            "flow-governed-field"
+          );
+      });
+    }
+
+    submitButton.disabled =
+      !editable;
+
+    submitButton.textContent =
+      !editable
+        ? "Read-only view"
+        : role.canEditGovernedFields
+          ? "Save flow"
+          : "Save low-risk changes";
+  }
   function renderEditor() {
     if (!workingTemplate) workingTemplate = clone(Templates.get(activeId));
     title.textContent = workingTemplate.name;
@@ -100,6 +497,7 @@
       workingTemplate.fields.splice(Number(button.dataset.removeField), 1);
       renderEditor();
     }));
+    applyRolePermissions();
   }
 
   function collectFields() {
@@ -126,7 +524,23 @@
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    if (!workingTemplate || !form.reportValidity()) return;
+
+    if (
+      !workingTemplate ||
+      !canEditTemplate(
+        workingTemplate
+      )
+    ) {
+      UI.showToast(
+        "This role can review the flow, but cannot edit it."
+      );
+
+      return;
+    }
+
+    if (!form.reportValidity()) {
+      return;
+    }
     const fields = collectFields();
     if (fields.some((field) => !field.label)) {
       UI.showToast("Every field needs a label.");
@@ -149,15 +563,65 @@
     renderEditor();
     UI.showToast(`${workingTemplate.name} saved. The Smart Request Builder now uses this configuration.`);
   });
+  roleSelect.addEventListener(
+    "change",
+    () => {
+      activeRoleId =
+        roleSelect.value;
 
+      window.localStorage.setItem(
+        ROLE_STORAGE_KEY,
+        activeRoleId
+      );
+
+      const firstVisible =
+        getVisibleTemplates()[0];
+
+      if (firstVisible) {
+        activeId =
+          firstVisible.id;
+
+        workingTemplate =
+          clone(
+            Templates.get(
+              activeId
+            )
+          );
+      }
+
+      renderRoleSummary();
+      renderList();
+      renderEditor();
+
+      UI.showToast(
+        `Flow Studio is now showing the ${roleContext().badge.toLowerCase()} view.`
+      );
+    }
+  );
   search.addEventListener("input", renderList);
   document.getElementById("resetTemplates").addEventListener("click", () => {
     if (!window.confirm("Reset all request-template changes in this browser?")) return;
     Templates.reset();
     activeId = "printer-ink";
-    workingTemplate = clone(Templates.get(activeId));
-    renderList();
-    renderEditor();
+  roleSelect.value =
+    activeRoleId;
+
+  const firstVisibleTemplate =
+    getVisibleTemplates()[0];
+
+  if (firstVisibleTemplate) {
+    activeId =
+      firstVisibleTemplate.id;
+  }
+
+  workingTemplate =
+    clone(
+      Templates.get(activeId)
+    );
+
+  renderRoleSummary();
+  renderList();
+  renderEditor();
     UI.showToast("Request templates reset to the prototype defaults.");
   });
 
