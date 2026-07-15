@@ -2,73 +2,829 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MasterFlow - Reporting</title>
-  <link rel="stylesheet" href="assets/css/styles.css">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <meta
+    name="description"
+    content="MasterFlow Intelligence reporting for intake quality, AI classification health, workflow performance, continuous improvement, and governance."
+  >
+
+  <title>MasterFlow - Intelligence</title>
+
+  <link
+    rel="stylesheet"
+    href="assets/css/styles.css"
+  >
 </head>
-<body class="workspace-page" data-page="reporting">
+
+<body
+  class="workspace-page reporting-page"
+  data-page="reporting"
+>
   <div class="content-shell">
     <main>
+      <!-- MASTERFLOW INTELLIGENCE: PAGE HEADING -->
       <div class="page-heading">
-        <div><h1>Reporting</h1><p>Show ticket usability and service performance alongside verified freight outcomes. Prototype figures are fictional.</p></div>
-        <div class="page-actions"><span class="badge badge-purple">Prototype data</span></div>
+        <div>
+          <div class="eyebrow">
+            Operational intelligence
+          </div>
+
+          <h1>MasterFlow Intelligence</h1>
+
+          <p>
+            Measure whether requests arrive ready for work, identify
+            where employees and receivers experience friction, and
+            prioritize the request flows that should improve next.
+          </p>
+        </div>
+
+        <div class="page-actions">
+          <span
+            class="badge badge-purple"
+            id="reportingScopeBadge"
+          >
+            Enterprise view
+          </span>
+
+          <span class="badge badge-gray">
+            Live prototype data
+          </span>
+        </div>
       </div>
 
-      <section class="kpi-grid" aria-label="Operational reporting summary">
-        <div class="kpi"><div class="kpi-label">Ticket volume</div><div class="kpi-value" id="reportTicketVolume">0</div><div class="kpi-meta">Current demo records</div></div>
-        <div class="kpi"><div class="kpi-label">Open backlog</div><div class="kpi-value" id="reportOpenBacklog">0</div><div class="kpi-meta">All operational queues</div></div>
-        <div class="kpi"><div class="kpi-label">SLA compliance</div><div class="kpi-value" id="reportSlaCompliance">0%</div><div class="kpi-meta good">Response and resolution</div></div>
-        <div class="kpi"><div class="kpi-label">Active P1</div><div class="kpi-value" id="reportP1Open">0</div><div class="kpi-meta danger">Warehouse-impacting incidents</div></div>
+      <div
+        class="notice notice-info"
+        id="reportingScopeNotice"
+      >
+        <span aria-hidden="true">i</span>
+
+        <div>
+          <strong id="reportingScopeTitle">
+            Company-wide intake and workflow intelligence
+          </strong>
+
+          <p id="reportingScopeDescription">
+            Megan can review performance across all request flows,
+            queues, feedback signals, and governed improvements.
+          </p>
+        </div>
+      </div>
+
+      <!-- MASTERFLOW INTELLIGENCE: EXECUTIVE OUTCOMES -->
+      <section
+        class="kpi-grid mt-18"
+        aria-label="MasterFlow outcome summary"
+      >
+        <article class="kpi">
+          <div class="kpi-label">
+            Requests submitted
+          </div>
+
+          <div
+            class="kpi-value"
+            id="reportTicketVolume"
+          >
+            0
+          </div>
+
+          <div class="kpi-meta">
+            Current prototype records
+          </div>
+        </article>
+
+        <article class="kpi">
+          <div class="kpi-label">
+            Work-ready at arrival
+          </div>
+
+          <div
+            class="kpi-value"
+            id="reportWorkReadyRate"
+          >
+            0%
+          </div>
+
+          <div
+            class="kpi-meta good"
+            id="reportWorkReadyMeta"
+          >
+            Ready without receiver follow-up
+          </div>
+        </article>
+
+        <article class="kpi">
+          <div class="kpi-label">
+            Average classification confidence
+          </div>
+
+          <div
+            class="kpi-value"
+            id="reportAverageConfidence"
+          >
+            0%
+          </div>
+
+          <div
+            class="kpi-meta"
+            id="reportConfidenceMeta"
+          >
+            Across classified requests
+          </div>
+        </article>
+
+        <article class="kpi">
+          <div class="kpi-label">
+            Average clarification turns
+          </div>
+
+          <div
+            class="kpi-value"
+            id="reportAverageClarifications"
+          >
+            0.0
+          </div>
+
+          <div
+            class="kpi-meta"
+            id="reportClarificationMeta"
+          >
+            Questions before submission
+          </div>
+        </article>
+
+        <article class="kpi">
+          <div class="kpi-label">
+            Returned for information
+          </div>
+
+          <div
+            class="kpi-value"
+            id="reportReturnedRate"
+          >
+            0%
+          </div>
+
+          <div
+            class="kpi-meta warn"
+            id="reportReturnedMeta"
+          >
+            Requests needing employee follow-up
+          </div>
+        </article>
+
+        <article class="kpi">
+          <div class="kpi-label">
+            General Triage rate
+          </div>
+
+          <div
+            class="kpi-value"
+            id="reportTriageRate"
+          >
+            0%
+          </div>
+
+          <div
+            class="kpi-meta"
+            id="reportTriageMeta"
+          >
+            Requests requiring human routing
+          </div>
+        </article>
       </section>
 
+      <!-- MASTERFLOW INTELLIGENCE: FLOW PERFORMANCE -->
       <div class="grid grid-2 mt-18">
         <section class="card">
-          <div class="card-header"><div><h2>Ticket volume by queue</h2><p>Helps managers balance backlog and staffing.</p></div><span class="badge badge-blue"><span id="resolvedCount">0</span>&nbsp;resolved</span></div>
-          <div class="card-body"><div class="chart-bars" id="ticketQueueChart"></div></div>
-        </section>
+          <div class="card-header">
+            <div>
+              <h2>Request-flow performance</h2>
 
-        <section class="card">
-          <div class="card-header"><div><h2>Freight savings target</h2><p>Verified against final carrier charges in a production implementation.</p></div></div>
+              <p>
+                Compare volume and work readiness across the request
+                flows employees use most often.
+              </p>
+            </div>
+
+            <span class="badge badge-blue">
+              <span id="resolvedCount">0</span>
+              &nbsp;completed
+            </span>
+          </div>
+
           <div class="card-body">
-            <div class="kpi-value" id="reportVerifiedSavings">$0</div>
-            <div class="kpi-meta good" id="reportSavingsTarget">0% of target</div>
-            <div class="progress mt-12"><span id="savingsProgress" style="width:0%"></span></div>
-            <div class="progress-label"><span>Annual progress</span><strong id="savingsProgressLabel">0%</strong></div>
+            <div
+              class="chart-bars"
+              id="reportFlowPerformanceChart"
+              aria-live="polite"
+            >
+              <div class="empty-state">
+                Flow-performance data is loading.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Intake-quality outcomes</h2>
+
+              <p>
+                System-level measures that show whether MasterFlow is
+                reducing preventable receiver effort.
+              </p>
+            </div>
+
+            <span class="badge badge-teal">
+              Intake quality
+            </span>
+          </div>
+
+          <div class="card-body metric-list">
+            <div>
+              <div class="metric-row">
+                <span>Routing-ready at submission</span>
+
+                <strong id="reportRoutingReadyRate">
+                  0%
+                </strong>
+              </div>
+
+              <div class="progress">
+                <span
+                  id="reportRoutingReadyProgress"
+                  style="width:0%"
+                ></span>
+              </div>
+            </div>
+
+            <div>
+              <div class="metric-row">
+                <span>Work-ready at submission</span>
+
+                <strong id="reportWorkReadyDetail">
+                  0%
+                </strong>
+              </div>
+
+              <div class="progress">
+                <span
+                  id="reportWorkReadyProgress"
+                  style="width:0%"
+                ></span>
+              </div>
+            </div>
+
+            <div>
+              <div class="metric-row">
+                <span>SLA compliance</span>
+
+                <strong id="reportSlaCompliance">
+                  0%
+                </strong>
+              </div>
+
+              <div class="progress">
+                <span
+                  id="reportSlaProgress"
+                  style="width:0%"
+                ></span>
+              </div>
+            </div>
+
+            <div>
+              <div class="metric-row">
+                <span>Requests completed</span>
+
+                <strong id="reportCompletionRate">
+                  0%
+                </strong>
+              </div>
+
+              <div class="progress">
+                <span
+                  id="reportCompletionProgress"
+                  style="width:0%"
+                ></span>
+              </div>
+            </div>
           </div>
         </section>
       </div>
 
+      <!-- MASTERFLOW INTELLIGENCE: AI HEALTH -->
       <div class="grid grid-2 mt-18">
         <section class="card">
-          <div class="card-header"><div><h2>Freight savings by action</h2><p>Illustrative year-to-date categories.</p></div><span class="badge badge-green">$126K baseline</span></div>
-          <div class="card-body"><div class="chart-bars" id="freightSavingsChart"></div></div>
+          <div class="card-header">
+            <div>
+              <h2>AI classification health</h2>
+
+              <p>
+                Requests that need recognition, routing, or confidence
+                improvements.
+              </p>
+            </div>
+
+            <span
+              class="badge badge-amber"
+              id="reportLowConfidenceBadge"
+            >
+              0 low confidence
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div
+              class="list"
+              id="reportLowConfidenceList"
+              aria-live="polite"
+            >
+              <div class="empty-state">
+                Low-confidence requests are loading.
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="card">
-          <div class="card-header"><div><h2>Operational guardrails</h2><p>Cost reduction should not degrade customer or warehouse outcomes.</p></div></div>
-          <div class="card-body metric-list">
-            <div><div class="metric-row"><span>On-time delivery</span><strong>97.2%</strong></div><div class="progress"><span style="width:97.2%"></span></div></div>
-            <div><div class="metric-row"><span>Customer promise-date changes</span><strong>0.7%</strong></div><div class="progress"><span style="width:70%"></span></div></div>
-            <div><div class="metric-row"><span>Freight spend reduction</span><strong>1.26%</strong></div><div class="progress"><span style="width:63%"></span></div></div>
-            <div><div class="metric-row"><span>First-contact ticket resolution</span><strong>62%</strong></div><div class="progress"><span style="width:62%"></span></div></div>
+          <div class="card-header">
+            <div>
+              <h2>Recognition opportunities</h2>
+
+              <p>
+                Employee wording that can become new aliases, trigger
+                phrases, or clearer request guidance.
+              </p>
+            </div>
+
+            <span class="badge badge-purple">
+              Teach MasterFlow
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div
+              class="list"
+              id="reportRecognitionList"
+              aria-live="polite"
+            >
+              <div class="empty-state">
+                Recognition opportunities are loading.
+              </div>
+            </div>
           </div>
         </section>
       </div>
 
-      <section class="card mt-18">
-        <div class="card-header"><div><h2>Leadership scorecard</h2><p>Measures that demonstrate lower administrative cost, better service visibility, and freight savings without service degradation.</p></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Measure</th><th>Current prototype view</th><th>Target</th><th>Interpretation</th><th>Owner</th></tr></thead><tbody>
-          <tr><td>Ticket platform annual cost</td><td>Baseline over $300K</td><td>Material reduction</td><td><span class="badge badge-amber">Validate vendor model</span></td><td>IT leadership</td></tr>
-          <tr><td>Freight spend reduction</td><td>1.26%</td><td>2.00%</td><td><span class="badge badge-green">On path</span></td><td>Logistics</td></tr>
-          <tr><td>On-time delivery</td><td>97.2%</td><td>At least 97%</td><td><span class="badge badge-green">Protected</span></td><td>Operations</td></tr>
-          <tr><td>Customer promise changes</td><td>0.7%</td><td>At most 1%</td><td><span class="badge badge-green">Within guardrail</span></td><td>Sales</td></tr>
-        </tbody></table></div>
+      <!-- MASTERFLOW INTELLIGENCE: CONTINUOUS IMPROVEMENT -->
+      <div class="grid grid-2 mt-18">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Common missing information</h2>
+
+              <p>
+                Facts that repeatedly cause receiver follow-up or delay
+                the start of work.
+              </p>
+            </div>
+
+            <span class="badge badge-amber">
+              Work-readiness gaps
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div
+              class="chart-bars"
+              id="reportMissingInformationChart"
+              aria-live="polite"
+            >
+              <div class="empty-state">
+                Information-gap data is loading.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Receiver and manager feedback</h2>
+
+              <p>
+                Operational observations about recognition, routing,
+                question wording, missing information, and Receiver
+                Brief quality.
+              </p>
+            </div>
+
+            <span
+              class="badge badge-teal"
+              id="reportFeedbackCount"
+            >
+              0 signals
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div
+              class="list"
+              id="reportFeedbackList"
+              aria-live="polite"
+            >
+              <div class="empty-state">
+                Feedback signals are loading.
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- MASTERFLOW INTELLIGENCE: BUSINESS IMPACT -->
+      <div class="grid grid-2 mt-18">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Business impact</h2>
+
+              <p>
+                Measures connecting intake quality to lower
+                administrative effort and faster operational response.
+              </p>
+            </div>
+
+            <span class="badge badge-green">
+              Outcome focused
+            </span>
+          </div>
+
+          <div class="card-body metric-list">
+            <div>
+              <div class="metric-row">
+                <span>Estimated receiver follow-ups avoided</span>
+
+                <strong id="reportFollowupsAvoided">
+                  0
+                </strong>
+              </div>
+
+              <div class="progress">
+                <span
+                  id="reportFollowupsAvoidedProgress"
+                  style="width:0%"
+                ></span>
+              </div>
+            </div>
+
+            <div>
+              <div class="metric-row">
+                <span>Estimated handling minutes avoided</span>
+
+                <strong id="reportMinutesAvoided">
+                  0
+                </strong>
+              </div>
+
+              <div class="progress">
+                <span
+                  id="reportMinutesAvoidedProgress"
+                  style="width:0%"
+                ></span>
+              </div>
+            </div>
+
+            <div>
+              <div class="metric-row">
+                <span>Active P1 guardrail events</span>
+
+                <strong id="reportP1Open">
+                  0
+                </strong>
+              </div>
+
+              <div class="progress">
+                <span
+                  id="reportP1Progress"
+                  style="width:0%"
+                ></span>
+              </div>
+            </div>
+
+            <div>
+              <div class="metric-row">
+                <span>Current ticket-platform cost baseline</span>
+
+                <strong id="reportPlatformCost">
+                  $0
+                </strong>
+              </div>
+
+              <div class="progress">
+                <span
+                  id="reportPlatformCostProgress"
+                  style="width:100%"
+                ></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Highest-value improvement</h2>
+
+              <p>
+                The strongest current opportunity based on request
+                gaps, receiver feedback, and classification health.
+              </p>
+            </div>
+
+            <span class="badge badge-blue">
+              Recommended next
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div
+              class="notice notice-info"
+              id="reportTopImprovement"
+            >
+              <span aria-hidden="true">i</span>
+
+              <div>
+                <strong>
+                  Improvement recommendation is loading.
+                </strong>
+
+                <p>
+                  MasterFlow will identify the request-flow change
+                  most likely to reduce employee and receiver effort.
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="detail-grid mt-18"
+              id="reportImprovementEvidence"
+            ></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- MASTERFLOW INTELLIGENCE: GOVERNANCE -->
+      <section
+        class="card mt-18"
+        id="reportGovernanceSection"
+        hidden
+      >
+        <div class="card-header">
+          <div>
+            <h2>Enterprise governance</h2>
+
+            <p>
+              Governed changes, approval activity, thresholds, and
+              platform controls visible to Megan Delia.
+            </p>
+          </div>
+
+          <span class="badge badge-purple">
+            Megan only
+          </span>
+        </div>
+
+        <div class="card-body">
+          <section
+            class="kpi-grid"
+            aria-label="Enterprise governance summary"
+          >
+            <article class="kpi">
+              <div class="kpi-label">
+                Pending flow proposals
+              </div>
+
+              <div
+                class="kpi-value"
+                id="reportPendingProposals"
+              >
+                0
+              </div>
+
+              <div class="kpi-meta warn">
+                Awaiting a governance decision
+              </div>
+            </article>
+
+            <article class="kpi">
+              <div class="kpi-label">
+                New feedback signals
+              </div>
+
+              <div
+                class="kpi-value"
+                id="reportNewFeedback"
+              >
+                0
+              </div>
+
+              <div class="kpi-meta">
+                Not yet converted into improvements
+              </div>
+            </article>
+
+            <article class="kpi">
+              <div class="kpi-label">
+                Pending ticket approvals
+              </div>
+
+              <div
+                class="kpi-value"
+                id="reportPendingApprovals"
+              >
+                0
+              </div>
+
+              <div class="kpi-meta warn">
+                Waiting on an authorized decision
+              </div>
+            </article>
+
+            <article class="kpi">
+              <div class="kpi-label">
+                Governed control exceptions
+              </div>
+
+              <div
+                class="kpi-value"
+                id="reportGovernanceExceptions"
+              >
+                0
+              </div>
+
+              <div class="kpi-meta danger">
+                Requires enterprise review
+              </div>
+            </article>
+          </section>
+
+          <div
+            class="list mt-18"
+            id="reportGovernanceList"
+            aria-live="polite"
+          >
+            <div class="empty-state">
+              Governance activity is loading.
+            </div>
+          </div>
+        </div>
       </section>
+
+      <!-- MASTERFLOW INTELLIGENCE: FLOW DETAIL -->
+      <section class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>Request-flow scorecard</h2>
+
+            <p>
+              A single view of flow volume, classification health,
+              readiness, returned requests, and improvement signals.
+            </p>
+          </div>
+
+          <span class="badge badge-blue">
+            Flow comparison
+          </span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Request flow</th>
+                <th>Volume</th>
+                <th>Avg. confidence</th>
+                <th>Routing ready</th>
+                <th>Work ready</th>
+                <th>Returned for info</th>
+                <th>Feedback</th>
+              </tr>
+            </thead>
+
+            <tbody id="reportFlowTableBody">
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">
+                    Request-flow performance is loading.
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MASTERFLOW INTELLIGENCE: ACTION PRIORITIES -->
+      <section class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>Improvement priorities</h2>
+
+            <p>
+              The clearest opportunities to improve recognition,
+              intake quality, work readiness, and governance.
+            </p>
+          </div>
+
+          <span class="badge badge-teal">
+            Observe → Improve
+          </span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Priority</th>
+                <th>Opportunity</th>
+                <th>Evidence</th>
+                <th>Recommended action</th>
+                <th>Owner</th>
+              </tr>
+            </thead>
+
+            <tbody id="reportImprovementTableBody">
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state">
+                    Improvement priorities are loading.
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="card-footer mt-18">
+        <span class="muted small">
+          Reporting reflects current local prototype records.
+          Production reporting would use governed historical data,
+          time-period filters, and audited ownership.
+        </span>
+
+        <span
+          class="muted small"
+          id="reportGeneratedAt"
+        ></span>
+      </div>
+
+      <!--
+        Compatibility elements for the previous reporting.js.
+        These remain hidden and prevent errors until reporting.js
+        is replaced with the matching MasterFlow Intelligence logic.
+      -->
+      <div hidden aria-hidden="true">
+        <span id="reportOpenBacklog">0</span>
+        <span id="reportVerifiedSavings">$0</span>
+        <span id="reportSavingsTarget">0%</span>
+        <span id="savingsProgress"></span>
+        <span id="savingsProgressLabel">0%</span>
+        <div id="ticketQueueChart"></div>
+        <div id="freightSavingsChart"></div>
+      </div>
     </main>
   </div>
 
-  <script src="assets/js/store.js" defer></script>
-  <script src="assets/js/layout.js" defer></script>
-  <script src="assets/js/pages/reporting.js" defer></script>
+  <script
+    src="assets/js/store.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/templates.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/layout.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/pages/receiver-feedback.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/pages/reporting.js"
+    defer
+  ></script>
 </body>
 </html>
