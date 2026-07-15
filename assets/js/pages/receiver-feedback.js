@@ -7,7 +7,13 @@
   if (!Store || !UI || !UI.layoutReady) return;
 
   const FEEDBACK_KEY = "masterflowFlowFeedbackV1";
-  const CLOSED_STATUSES = new Set(["Resolved", "Closed", "Cancelled"]);
+const CLOSED_STATUSES = new Set([
+  "Resolved",
+  "Closed",
+  "Cancelled",
+  "Approved",
+  "Rejected"
+]);
   const FLOW_GAP_EXCLUSIONS = new Set(["Assigned owner", "Confirmed routing", "Requester response"]);
   const ISSUE_TYPES = new Set([
     "missing-information",
