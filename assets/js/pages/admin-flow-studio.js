@@ -1,20 +1,43 @@
 (function () {
   "use strict";
 
-  if (document.body.dataset.page !== "admin-templates") return;
-
-  const Templates = window.MasterFlowTemplates;
-  const Engine = window.MasterFlowRequestEngine;
-  const UI = window.MasterFlowUI;
-
-  if (!Templates || !Engine || !UI || !UI.layoutReady) {
-    console.error(
-      "MasterFlow Flow Studio could not start because a dependency is missing."
-    );
+  if (
+    document.body.dataset.page !==
+    "admin-templates"
+  ) {
     return;
   }
 
-  const ROLE_KEY = "masterflowAdminRoleV1";
+  const Templates =
+    window.MasterFlowTemplates;
+
+  const Engine =
+    window.MasterFlowRequestEngine;
+
+  const UI =
+    window.MasterFlowUI;
+
+  if (
+    !Templates ||
+    !Engine ||
+    !UI ||
+    !UI.layoutReady
+  ) {
+    console.error(
+      "MasterFlow Flow Studio could not start because a dependency is missing."
+    );
+
+    return;
+  }
+
+  const ROLE_KEY =
+    "masterflowAdminRoleV1";
+
+  const FEEDBACK_KEY =
+    "masterflowFlowFeedbackV1";
+
+  const PROPOSALS_KEY =
+    "masterflowFlowProposalsV1";
 
   const ROLE_IDS = new Set([
     "platform-admin",
@@ -25,47 +48,100 @@
   // FLOW STUDIO M1: ROLE MODEL
   const ROLES = {
     "platform-admin": {
-      label: "Megan Delia — Enterprise Administrator",
-      badge: "Enterprise scope",
-      badgeClass: "badge-purple",
+      label:
+        "Megan Delia — Enterprise Administrator",
+
+      eyebrow:
+        "Enterprise administrator",
+
+      badge:
+        "Enterprise scope",
+
+      badgeClass:
+        "badge-purple",
+
       description:
         "View and edit every request flow, including governed routing, priority, SLA, approval, P1, and safety controls.",
+
+      permissions: [
+        "All request flows",
+        "Governed settings",
+        "Ownership and approvals"
+      ],
+
       templateIds: ["*"],
       queues: ["*"],
+
       canEdit: true,
       canEditGoverned: true,
       canReset: true
     },
 
     "category-owner": {
-      label: "IT Request Category Owner",
-      badge: "Owned IT flows",
-      badgeClass: "badge-teal",
+      label:
+        "IT Request Category Owner",
+
+      eyebrow:
+        "Request category owner",
+
+      badge:
+        "Owned IT flows",
+
+      badgeClass:
+        "badge-teal",
+
       description:
         "Teach and test the IT flows you own. Request wording, recognition, questions, options, and work-readiness content are editable; governed controls stay locked.",
+
+      permissions: [
+        "Owned request flows",
+        "Questions and evidence",
+        "Recognition and guidance"
+      ],
+
       templateIds: [
         "printer-ink",
         "printer-connectivity",
         "systems-intake"
       ],
+
       queues: [],
+
       canEdit: true,
       canEditGoverned: false,
       canReset: false
     },
 
     "queue-manager": {
-      label: "IT Help Desk Queue Manager",
-      badge: "Managed IT queues",
-      badgeClass: "badge-blue",
+      label:
+        "IT Help Desk Queue Manager",
+
+      eyebrow:
+        "Queue manager",
+
+      badge:
+        "Managed IT queues",
+
+      badgeClass:
+        "badge-blue",
+
       description:
         "Review and test flows entering IT Help Desk, IT Information, and Business Enablement - Systems Intake. Configuration is read-only.",
+
+      permissions: [
+        "Managed-queue flows",
+        "Read-only flow details",
+        "Flow testing"
+      ],
+
       templateIds: [],
+
       queues: [
         "IT Help Desk",
         "IT Information",
         "Business Enablement - Systems Intake"
       ],
+
       canEdit: false,
       canEditGoverned: false,
       canReset: false
@@ -84,29 +160,99 @@
     '[data-field-prop="locked"]'
   ];
 
-  let roleId = ROLE_IDS.has(
-    window.localStorage.getItem(ROLE_KEY)
-  )
-    ? window.localStorage.getItem(ROLE_KEY)
-    : "platform-admin";
+  function byId(id) {
+    return document.getElementById(id);
+  }
 
-  let activeTemplateId = "printer-ink";
-  let renderQueued = false;
+  function query(
+    selector,
+    root = document
+  ) {
+    return root.querySelector(selector);
+  }
+
+  function queryAll(
+    selector,
+    root = document
+  ) {
+    return Array.from(
+      root.querySelectorAll(selector)
+    );
+  }
 
   function escapeHtml(value) {
     return UI.escapeHtml(
-      String(value == null ? "" : value)
+      String(
+        value == null
+          ? ""
+          : value
+      )
     );
+  }
+
+  const storedRole =
+    window.localStorage.getItem(
+      ROLE_KEY
+    );
+
+  let roleId =
+    ROLE_IDS.has(storedRole)
+      ? storedRole
+      : "platform-admin";
+
+  let activeTemplateId =
+    "printer-ink";
+
+  let renderQueued = false;
+
+  function readLocalArray(key) {
+    try {
+      const value = JSON.parse(
+        window.localStorage.getItem(
+          key
+        ) || "[]"
+      );
+
+      return Array.isArray(value)
+        ? value
+        : [];
+    } catch (error) {
+      console.warn(
+        `MasterFlow could not read ${key}.`,
+        error
+      );
+
+      return [];
+    }
   }
 
   function role() {
     return ROLES[roleId];
   }
 
-  function templateInScope(template) {
+  function allTemplates() {
+    const templates =
+      Templates.getAll();
+
+    return Array.isArray(templates)
+      ? templates
+      : [];
+  }
+
+  function activeTemplate() {
+    return Templates.get(
+      activeTemplateId
+    );
+  }
+
+  function templateInScope(
+    template
+  ) {
     const current = role();
 
-    if (!template) return false;
+    if (!template) {
+      return false;
+    }
 
     if (
       current.templateIds.includes("*") ||
@@ -116,97 +262,95 @@
     }
 
     return (
-      current.templateIds.includes(template.id) ||
-      current.queues.includes(template.queue)
+      current.templateIds.includes(
+        template.id
+      ) ||
+      current.queues.includes(
+        template.queue
+      )
     );
   }
 
   function visibleTemplates() {
-    return Templates
-      .getAll()
-      .filter(templateInScope);
-  }
-
-  function activeTemplate() {
-    return Templates.get(activeTemplateId);
+    return allTemplates().filter(
+      templateInScope
+    );
   }
 
   // FLOW STUDIO M1: PAGE SHELL
   function addRoleSelector() {
-    if (
-      document.getElementById(
-        "adminRoleSelect"
-      )
-    ) {
+    if (byId("adminRoleSelect")) {
       return;
     }
 
     const title =
-      document.querySelector(
-        ".flow-studio-title"
-      );
+      query(".flow-studio-title");
 
-    if (!title) return;
+    if (!title) {
+      return;
+    }
 
     title.insertAdjacentHTML(
       "afterend",
       `
         <aside
           class="flow-role-panel"
-          aria-labelledby="flowRoleLabel"
+          aria-labelledby="adminRoleTitle"
         >
           <div class="flow-role-panel-header">
             <div>
               <div
                 class="eyebrow"
-                id="flowRoleLabel"
+                id="adminRoleEyebrow"
               >
-                View as
+                Enterprise administrator
               </div>
 
-              <strong>Flow Studio role</strong>
+              <strong id="adminRoleTitle">
+                Megan Delia — Enterprise Administrator
+              </strong>
             </div>
 
             <span
               class="badge badge-purple"
-              id="flowRoleBadge"
+              id="adminRoleBadge"
             >
               Enterprise scope
             </span>
           </div>
 
-          <label
-            class="sr-only"
-            for="adminRoleSelect"
-          >
-            View Flow Studio as
-          </label>
+          <div class="field">
+            <label for="adminRoleSelect">
+              View as
+            </label>
 
-          <select
-            class="select"
-            id="adminRoleSelect"
-          >
-            <option value="platform-admin">
-              Megan Delia — Enterprise Administrator
-            </option>
+            <select
+              class="select"
+              id="adminRoleSelect"
+            >
+              <option value="platform-admin">
+                Megan Delia — Enterprise Administrator
+              </option>
 
-            <option value="category-owner">
-              IT Request Category Owner
-            </option>
+              <option value="category-owner">
+                IT Request Category Owner
+              </option>
 
-            <option value="queue-manager">
-              IT Help Desk Queue Manager
-            </option>
-          </select>
+              <option value="queue-manager">
+                IT Help Desk Queue Manager
+              </option>
+            </select>
+          </div>
 
           <p
             class="flow-role-description"
-            id="flowRoleDescription"
+            id="adminRoleDescription"
           ></p>
 
           <div
-            class="flow-role-scope"
-            id="flowRoleScope"
+            class="flow-role-permissions"
+            id="adminRolePermissions"
+            aria-label="Role permissions"
           ></div>
         </aside>
       `
@@ -214,20 +358,16 @@
   }
 
   function addFlowTest() {
-    if (
-      document.getElementById(
-        "flowTestCard"
-      )
-    ) {
+    if (byId("flowTestCard")) {
       return;
     }
 
     const manager =
-      document.querySelector(
-        ".template-manager"
-      );
+      query(".template-manager");
 
-    if (!manager) return;
+    if (!manager) {
+      return;
+    }
 
     manager.insertAdjacentHTML(
       "beforebegin",
@@ -248,8 +388,8 @@
               </h2>
 
               <p>
-                Run the live request engine without
-                creating a ticket.
+                Run the live request engine
+                without creating a ticket.
               </p>
             </div>
 
@@ -296,24 +436,108 @@
     );
   }
 
+  // FLOW STUDIO M2: HUMAN-READABLE FLOW CARD
+  function addFlowCard() {
+    if (byId("flowCard")) {
+      return;
+    }
+
+    const manager =
+      query(".template-manager");
+
+    if (!manager) {
+      console.error(
+        "Flow Studio could not find .template-manager."
+      );
+
+      return;
+    }
+
+    manager.insertAdjacentHTML(
+      "beforebegin",
+      `
+        <section
+          class="card flow-card mt-18"
+          id="flowCard"
+          aria-labelledby="flowCardTitle"
+        >
+          <div class="card-header">
+            <div>
+              <div class="eyebrow">
+                Understand
+              </div>
+
+              <h2 id="flowCardTitle">
+                Request Flow Card
+              </h2>
+
+              <p id="flowCardSubtitle">
+                Choose a request flow to see
+                its operational design.
+              </p>
+            </div>
+
+            <span
+              class="badge badge-purple"
+              id="flowCardAccessBadge"
+            >
+              Full edit
+            </span>
+          </div>
+
+          <div
+            class="card-body"
+            id="flowCardBody"
+          >
+            <div class="empty-state">
+              Select a request type to
+              review the flow.
+            </div>
+          </div>
+        </section>
+      `
+    );
+  }
+
   function updateRoleSummary() {
     const current = role();
+    const scoped = visibleTemplates();
+    const templates = allTemplates();
+
+    document.body.dataset
+      .flowStudioRole = roleId;
+
+    document.body.dataset
+      .adminRole = roleId;
 
     const select =
-      document.getElementById(
-        "adminRoleSelect"
-      );
+      byId("adminRoleSelect");
+
+    if (
+      select &&
+      select.value !== roleId
+    ) {
+      select.value = roleId;
+    }
+
+    const eyebrow =
+      byId("adminRoleEyebrow");
+
+    const title =
+      byId("adminRoleTitle");
 
     const badge =
-      document.getElementById(
-        "flowRoleBadge"
-      );
+      byId("adminRoleBadge") ||
+      byId("flowRoleBadge");
 
-    document.body.dataset.flowStudioRole =
-      roleId;
+    if (eyebrow) {
+      eyebrow.textContent =
+        current.eyebrow;
+    }
 
-    if (select) {
-      select.value = roleId;
+    if (title) {
+      title.textContent =
+        current.label;
     }
 
     if (badge) {
@@ -324,73 +548,167 @@
         current.badge;
     }
 
-    document.getElementById(
-      "flowRoleDescription"
-    ).textContent =
-      current.description;
+    [
+      byId("adminRoleDescription"),
+      byId("flowRoleDescription")
+    ]
+      .filter(Boolean)
+      .forEach((element) => {
+        element.textContent =
+          current.description;
+      });
 
-    document.getElementById(
-      "flowRoleScope"
-    ).textContent =
-      `${visibleTemplates().length} of ` +
-      `${Templates.getAll().length} ` +
-      "request flows visible";
+    const permissions =
+      byId("adminRolePermissions");
+
+    if (permissions) {
+      permissions.innerHTML =
+        current.permissions
+          .map(
+            (item) => `
+              <span class="flow-permission-chip">
+                ${escapeHtml(item)}
+              </span>
+            `
+          )
+          .join("");
+    }
+
+    const visibleFlowCount =
+      byId("visibleFlowCount");
+
+    if (visibleFlowCount) {
+      visibleFlowCount.textContent =
+        String(scoped.length);
+    }
+
+    const visibleFlowHint =
+      byId("visibleFlowHint");
+
+    if (visibleFlowHint) {
+      visibleFlowHint.textContent =
+        `of ${templates.length} company request flows`;
+    }
+
+    const feedbackSignalCount =
+      byId("feedbackSignalCount");
+
+    if (feedbackSignalCount) {
+      feedbackSignalCount.textContent =
+        String(
+          readLocalArray(
+            FEEDBACK_KEY
+          ).length
+        );
+    }
+
+    const pendingProposalCount =
+      byId("pendingProposalCount");
+
+    if (pendingProposalCount) {
+      const openStatuses =
+        new Set([
+          "draft",
+          "pending-approval",
+          "approved"
+        ]);
+
+      const count =
+        readLocalArray(
+          PROPOSALS_KEY
+        ).filter(
+          (item) =>
+            openStatuses.has(
+              item.status
+            )
+        ).length;
+
+      pendingProposalCount.textContent =
+        String(count);
+    }
+
+    const governedControlCount =
+      byId("governedControlCount");
+
+    if (governedControlCount) {
+      governedControlCount.textContent =
+        current.canEditGoverned
+          ? "Full"
+          : current.canEdit
+            ? "Approval"
+            : "View";
+    }
+
+    const flowRoleScope =
+      byId("flowRoleScope");
+
+    if (flowRoleScope) {
+      flowRoleScope.textContent =
+        `${scoped.length} of ` +
+        `${templates.length} ` +
+        "request flows visible";
+    }
   }
 
   // FLOW STUDIO M1: ROLE-SCOPED TEMPLATE ACCESS
   function rememberActiveTemplate() {
-    const activeButton =
-      document.querySelector(
+    const selected =
+      query(
         "#templateList " +
         "[data-template-id].active, " +
+        "#templateList " +
+        "[data-template-id].selected, " +
         "#templateList " +
         '[data-template-id][aria-selected="true"]'
       );
 
-    if (activeButton) {
+    if (selected) {
       activeTemplateId =
-        activeButton.dataset.templateId;
+        selected.dataset.templateId;
     }
   }
 
   function applyListScope() {
-    const allowed = new Set(
-      visibleTemplates().map(
-        (template) => template.id
-      )
-    );
+    const allowed =
+      new Set(
+        visibleTemplates().map(
+          (template) => template.id
+        )
+      );
 
-    document
-      .querySelectorAll(
-        "#templateList [data-template-id]"
-      )
-      .forEach((button) => {
-        button.hidden =
-          !allowed.has(
-            button.dataset.templateId
-          );
-      });
+    const buttons =
+      queryAll(
+        "#templateList " +
+        "[data-template-id]"
+      );
+
+    buttons.forEach((button) => {
+      button.hidden =
+        !allowed.has(
+          button.dataset.templateId
+        );
+    });
 
     const count =
-      document.getElementById(
-        "templateCount"
-      );
+      byId("templateCount");
 
     if (count) {
       count.textContent =
         `${allowed.size} visible of ` +
-        `${Templates.getAll().length} ` +
+        `${allTemplates().length} ` +
         "configured request types";
     }
 
-    if (!allowed.has(activeTemplateId)) {
-      const first = Array.from(
-        document.querySelectorAll(
-          "#templateList [data-template-id]"
-        )
-      ).find(
-        (button) => !button.hidden
-      );
+    if (
+      !allowed.has(
+        activeTemplateId
+      )
+    ) {
+      const first =
+        buttons.find(
+          (button) =>
+            !button.hidden
+        );
 
       if (first) {
         activeTemplateId =
@@ -425,7 +743,7 @@
 
   function ensurePermissionBanner() {
     if (
-      document.getElementById(
+      byId(
         "flowEditorPermissionBanner"
       )
     ) {
@@ -433,11 +751,13 @@
     }
 
     const header =
-      document.querySelector(
+      query(
         "#templateForm .card-header"
       );
 
-    if (!header) return;
+    if (!header) {
+      return;
+    }
 
     header.insertAdjacentHTML(
       "afterend",
@@ -475,7 +795,9 @@
       ];
     }
 
-    if (!role().canEditGoverned) {
+    if (
+      !role().canEditGoverned
+    ) {
       return [
         "limited-edit",
         "Owned-flow editing",
@@ -492,11 +814,11 @@
 
   function applyEditorPermissions() {
     const form =
-      document.getElementById(
-        "templateForm"
-      );
+      byId("templateForm");
 
-    if (!form) return;
+    if (!form) {
+      return;
+    }
 
     ensurePermissionBanner();
     rememberActiveTemplate();
@@ -514,75 +836,88 @@
       access,
       title,
       detail
-    ] = permissionCopy(inScope);
+    ] = permissionCopy(
+      inScope
+    );
 
     form.dataset.flowAccess =
       access;
 
-    document.getElementById(
-      "flowEditorPermissionBanner"
-    ).dataset.access =
-      access;
-
-    document.getElementById(
-      "flowPermissionTitle"
-    ).textContent =
-      title;
-
-    document.getElementById(
-      "flowPermissionDetail"
-    ).textContent =
-      detail;
-
-    form
-      .querySelectorAll(
-        "input, select, textarea, button"
-      )
-      .forEach((control) =>
-        setDisabled(
-          control,
-          !canEdit
-        )
+    const banner =
+      byId(
+        "flowEditorPermissionBanner"
       );
 
-    form
-      .querySelectorAll(
-        ".flow-governed-field"
-      )
-      .forEach((field) =>
-        field.classList.remove(
-          "flow-governed-field"
-        )
+    if (banner) {
+      banner.dataset.access =
+        access;
+    }
+
+    const permissionTitle =
+      byId("flowPermissionTitle");
+
+    if (permissionTitle) {
+      permissionTitle.textContent =
+        title;
+    }
+
+    const permissionDetail =
+      byId("flowPermissionDetail");
+
+    if (permissionDetail) {
+      permissionDetail.textContent =
+        detail;
+    }
+
+    queryAll(
+      "input, select, textarea, button",
+      form
+    ).forEach((control) => {
+      setDisabled(
+        control,
+        !canEdit
       );
+    });
+
+    queryAll(
+      ".flow-governed-field",
+      form
+    ).forEach((field) => {
+      field.classList.remove(
+        "flow-governed-field"
+      );
+    });
 
     if (
       canEdit &&
       !role().canEditGoverned
     ) {
-      form
-        .querySelectorAll(
-          CATEGORY_OWNER_LOCKS.join(",")
-        )
-        .forEach((control) => {
-          setDisabled(
-            control,
-            true
+      queryAll(
+        CATEGORY_OWNER_LOCKS.join(
+          ","
+        ),
+        form
+      ).forEach((control) => {
+        setDisabled(
+          control,
+          true
+        );
+
+        const field =
+          control.closest(".field");
+
+        if (field) {
+          field.classList.add(
+            "flow-governed-field"
           );
-
-          const field =
-            control.closest(".field");
-
-          if (field) {
-            field.classList.add(
-              "flow-governed-field"
-            );
-          }
-        });
+        }
+      });
     }
 
     const save =
-      form.querySelector(
-        'button[type="submit"]'
+      query(
+        'button[type="submit"]',
+        form
       );
 
     if (save) {
@@ -596,9 +931,7 @@
     }
 
     const reset =
-      document.getElementById(
-        "resetTemplates"
-      );
+      byId("resetTemplates");
 
     if (reset) {
       reset.disabled =
@@ -615,7 +948,9 @@
     const template =
       activeTemplate();
 
-    if (!template) return;
+    if (!template) {
+      return;
+    }
 
     const values = {
       templateCatalog:
@@ -628,84 +963,762 @@
         template.priority || "",
 
       responseSla:
-        template.responseSlaHours == null
+        template.responseSlaHours ==
+        null
           ? ""
           : template.responseSlaHours,
 
       resolutionSla:
-        template.resolutionSlaHours == null
+        template
+          .resolutionSlaHours ==
+        null
           ? ""
-          : template.resolutionSlaHours
+          : template
+              .resolutionSlaHours
     };
 
-    Object.entries(values).forEach(
+    Object.entries(
+      values
+    ).forEach(
       ([id, value]) => {
         const control =
-          document.getElementById(id);
+          byId(id);
 
         if (control) {
-          control.value = value;
+          control.value =
+            value;
         }
       }
     );
   }
 
-  function applyRoleState() {
-    renderQueued = false;
+  function firstText(...values) {
+    for (const value of values) {
+      if (Array.isArray(value)) {
+        const joined =
+          value
+            .map((item) =>
+              String(
+                item == null
+                  ? ""
+                  : item
+              ).trim()
+            )
+            .filter(Boolean)
+            .join(", ");
 
-    rememberActiveTemplate();
-    updateRoleSummary();
-    applyListScope();
-    applyEditorPermissions();
+        if (joined) {
+          return joined;
+        }
+      }
+
+      if (
+        value !== null &&
+        value !== undefined &&
+        typeof value !== "object"
+      ) {
+        const text =
+          String(value).trim();
+
+        if (text) {
+          return text;
+        }
+      }
+    }
+
+    return "";
   }
 
-  function scheduleRoleState() {
-    if (renderQueued) return;
+  function humanize(value) {
+    return String(value || "")
+      .replace(
+        /([a-z0-9])([A-Z])/g,
+        "$1 $2"
+      )
+      .replace(
+        /[-_]+/g,
+        " "
+      )
+      .replace(
+        /\s+/g,
+        " "
+      )
+      .trim()
+      .replace(
+        /\b\w/g,
+        (character) =>
+          character.toUpperCase()
+      );
+  }
 
-    renderQueued = true;
+  function uniqueText(items) {
+    const seen =
+      new Set();
 
-    window.requestAnimationFrame(
-      applyRoleState
+    return items
+      .map((item) =>
+        String(
+          item == null
+            ? ""
+            : item
+        ).trim()
+      )
+      .filter((item) => {
+        const key =
+          item.toLowerCase();
+
+        if (
+          !item ||
+          seen.has(key)
+        ) {
+          return false;
+        }
+
+        seen.add(key);
+
+        return true;
+      });
+  }
+
+  function templateFields(
+    template
+  ) {
+    return (
+      template &&
+      Array.isArray(
+        template.fields
+      )
+    )
+      ? template.fields
+      : [];
+  }
+
+  function diagnosticQuestions(
+    template
+  ) {
+    return (
+      template &&
+      template.diagnostics &&
+      Array.isArray(
+        template.diagnostics
+          .questions
+      )
+    )
+      ? template.diagnostics
+          .questions
+      : [];
+  }
+
+  function requiredDiagnosticIds(
+    template
+  ) {
+    return (
+      template &&
+      template.diagnostics &&
+      Array.isArray(
+        template.diagnostics
+          .requiredForWork
+      )
+    )
+      ? template.diagnostics
+          .requiredForWork
+      : [];
+  }
+
+  function fieldLabel(field) {
+    return firstText(
+      field &&
+        field.employeeLabel,
+
+      field &&
+        field.label,
+
+      field &&
+        field.name,
+
+      humanize(
+        field &&
+          field.id
+      )
     );
   }
 
-  function changeRole(nextRoleId) {
-    roleId =
-      ROLE_IDS.has(nextRoleId)
-        ? nextRoleId
-        : "platform-admin";
+  function questionLabel(
+    question
+  ) {
+    return firstText(
+      question &&
+        question.reportLabel,
 
-    window.localStorage.setItem(
-      ROLE_KEY,
-      roleId
+      question &&
+        question.label,
+
+      humanize(
+        question &&
+          question.id
+      )
     );
+  }
 
-    const search =
-      document.getElementById(
-        "templateSearch"
+  function flowCardUseCase(
+    template
+  ) {
+    const configured =
+      firstText(
+        template
+          .employeeFacingDescription,
+
+        template
+          .employeeDescription,
+
+        template.description,
+
+        template.helpText,
+
+        template.summary
       );
 
-    if (search) {
-      search.value = "";
+    if (configured) {
+      return configured;
+    }
 
-      search.dispatchEvent(
-        new Event(
-          "input",
-          { bubbles: true }
-        )
+    const name =
+      firstText(
+        template.name,
+        "this request flow"
+      );
+
+    return (
+      "Use when an employee needs " +
+      `help with ${name.toLowerCase()}.`
+    );
+  }
+
+  function flowCardEvidence(
+    template
+  ) {
+    const excluded =
+      new Set([
+        "requestedFor",
+        "requestedBy",
+        "shortDescription",
+        "description",
+        "attachments"
+      ]);
+
+    const fields =
+      templateFields(
+        template
+      ).filter(
+        (field) =>
+          field &&
+          !excluded.has(
+            field.id
+          )
+      );
+
+    const required =
+      fields.filter(
+        (field) =>
+          field.required
+      );
+
+    const selected =
+      required.length
+        ? required
+        : fields.slice(0, 5);
+
+    const questions =
+      diagnosticQuestions(
+        template
+      );
+
+    const diagnostics =
+      requiredDiagnosticIds(
+        template
+      ).map((id) => {
+        const question =
+          questions.find(
+            (item) =>
+              item.id === id
+          );
+
+        return question
+          ? questionLabel(
+              question
+            )
+          : humanize(id);
+      });
+
+    return uniqueText([
+      ...selected.map(
+        fieldLabel
+      ),
+      ...diagnostics
+    ]).slice(0, 8);
+  }
+
+  function flowCardUrgency(
+    template,
+    evidence
+  ) {
+    const priority =
+      firstText(
+        template.priority,
+        template.defaultPriority
+      );
+
+    const items = [
+      priority
+        ? `Default priority: ${priority}`
+        : "Default priority follows the existing request-flow rules."
+    ];
+
+    const text =
+      evidence
+        .join(" ")
+        .toLowerCase();
+
+    if (
+      /scope|affected|users?|station|line/
+        .test(text)
+    ) {
+      items.push(
+        "Affected scope can increase urgency."
       );
     }
 
-    scheduleRoleState();
+    if (
+      /impact|outage|stopped|production|safety/
+        .test(text)
+    ) {
+      items.push(
+        "Business impact can increase urgency."
+      );
+    }
 
-    window.setTimeout(
-      applyRoleState,
-      0
+    items.push(
+      "Shipping stopped: P1 bypass."
     );
 
-    UI.showToast(
-      `Flow Studio is now showing the ${role().label} view.`
-    );
+    return uniqueText(items);
+  }
+
+  function flowCardReceiverItems(
+    template,
+    evidence
+  ) {
+    const configured = [];
+
+    if (
+      Array.isArray(
+        template.receiverBriefItems
+      )
+    ) {
+      configured.push(
+        ...template
+          .receiverBriefItems
+      );
+    }
+
+    if (
+      typeof template
+        .receiverBrief ===
+      "string"
+    ) {
+      configured.push(
+        template.receiverBrief
+      );
+    }
+
+    const action =
+      firstText(
+        template
+          .suggestedFirstAction,
+
+        template.firstAction
+      );
+
+    return uniqueText([
+      ...configured,
+      "Actionable request title",
+      ...evidence.slice(0, 4),
+
+      action
+        ? `Suggested first action: ${action}`
+        : "Suggested first action",
+
+      "Known information gaps"
+    ]).slice(0, 8);
+  }
+
+  function flowCardWorkQuestions(
+    template
+  ) {
+    const excluded =
+      new Set([
+        "requestedFor",
+        "requestedBy",
+        "attachments"
+      ]);
+
+    const fieldPrompts =
+      templateFields(
+        template
+      )
+        .filter(
+          (field) =>
+            field &&
+            field.required &&
+            !excluded.has(
+              field.id
+            )
+        )
+        .map((field) => {
+          const configured =
+            firstText(
+              field.question,
+              field.prompt
+            );
+
+          if (configured) {
+            return configured;
+          }
+
+          return (
+            "Provide " +
+            `${fieldLabel(field).toLowerCase()}.`
+          );
+        });
+
+    const required =
+      requiredDiagnosticIds(
+        template
+      );
+
+    const diagnosticPrompts =
+      diagnosticQuestions(
+        template
+      )
+        .filter(
+          (question) =>
+            question.required ||
+            required.includes(
+              question.id
+            )
+        )
+        .map((question) =>
+          firstText(
+            question.question,
+            question.prompt,
+            question.label,
+            humanize(
+              question.id
+            )
+          )
+        );
+
+    return uniqueText([
+      ...fieldPrompts,
+      ...diagnosticPrompts
+    ]).slice(0, 10);
+  }
+
+  function flowCardList(
+    items,
+    emptyText
+  ) {
+    if (!items.length) {
+      return `
+        <p class="flow-card-empty">
+          ${escapeHtml(emptyText)}
+        </p>
+      `;
+    }
+
+    return `
+      <ul class="flow-card-list">
+        ${items
+          .map(
+            (item) => `
+              <li>
+                ${escapeHtml(item)}
+              </li>
+            `
+          )
+          .join("")}
+      </ul>
+    `;
+  }
+
+  function flowCardAccess() {
+    if (
+      role().canEditGoverned
+    ) {
+      return {
+        label: "Full edit",
+        className:
+          "badge-purple"
+      };
+    }
+
+    if (role().canEdit) {
+      return {
+        label:
+          "Owned content",
+
+        className:
+          "badge-teal"
+      };
+    }
+
+    return {
+      label: "Read-only",
+      className: "badge-blue"
+    };
+  }
+
+  function renderFlowCard() {
+    const body =
+      byId("flowCardBody");
+
+    const title =
+      byId("flowCardTitle");
+
+    const subtitle =
+      byId("flowCardSubtitle");
+
+    const badge =
+      byId(
+        "flowCardAccessBadge"
+      );
+
+    if (
+      !body ||
+      !title ||
+      !subtitle ||
+      !badge
+    ) {
+      return;
+    }
+
+    const template =
+      activeTemplate();
+
+    const access =
+      flowCardAccess();
+
+    badge.className =
+      `badge ${access.className}`;
+
+    badge.textContent =
+      access.label;
+
+    if (
+      !template ||
+      !templateInScope(
+        template
+      )
+    ) {
+      title.textContent =
+        "Request Flow Card";
+
+      subtitle.textContent =
+        "Choose a request flow available to the selected role.";
+
+      body.innerHTML = `
+        <div class="empty-state">
+          No in-scope request flow is selected.
+        </div>
+      `;
+
+      return;
+    }
+
+    const evidence =
+      flowCardEvidence(
+        template
+      );
+
+    const urgency =
+      flowCardUrgency(
+        template,
+        evidence
+      );
+
+    const receiver =
+      flowCardReceiverItems(
+        template,
+        evidence
+      );
+
+    const questions =
+      flowCardWorkQuestions(
+        template
+      );
+
+    const route =
+      firstText(
+        template.queue,
+        template.receivingQueue,
+        "Existing receiving queue"
+      );
+
+    const sla = [];
+
+    if (
+      template.responseSlaHours !=
+      null
+    ) {
+      sla.push(
+        `${template.responseSlaHours}h response`
+      );
+    }
+
+    if (
+      template
+        .resolutionSlaHours !=
+      null
+    ) {
+      sla.push(
+        `${template.resolutionSlaHours}h resolution`
+      );
+    }
+
+    title.textContent =
+      firstText(
+        template.name,
+        "Selected request flow"
+      );
+
+    subtitle.textContent =
+      role().canEdit
+        ? (
+            "Plain-language summary of what " +
+            "MasterFlow learns, routes, and " +
+            "gives the receiver."
+          )
+        : (
+            "Read-only summary of the request " +
+            "flow entering your managed queue."
+          );
+
+    body.innerHTML = `
+      <div class="flow-card-grid">
+        <section
+          class="
+            flow-card-section
+            flow-card-section-wide
+          "
+        >
+          <div class="flow-card-section-heading">
+            <span>1</span>
+
+            <h3>
+              When employees need this
+            </h3>
+          </div>
+
+          <p class="flow-card-copy">
+            ${escapeHtml(
+              flowCardUseCase(
+                template
+              )
+            )}
+          </p>
+        </section>
+
+        <section class="flow-card-section">
+          <div class="flow-card-section-heading">
+            <span>2</span>
+
+            <h3>
+              What MasterFlow must learn
+            </h3>
+          </div>
+
+          ${flowCardList(
+            evidence,
+            "No required evidence has been configured yet."
+          )}
+        </section>
+
+        <section class="flow-card-section">
+          <div class="flow-card-section-heading">
+            <span>3</span>
+
+            <h3>
+              Where the work goes
+            </h3>
+          </div>
+
+          <div class="flow-card-route">
+            ${escapeHtml(route)}
+          </div>
+
+          <p class="flow-card-meta">
+            ${escapeHtml(
+              sla.length
+                ? sla.join(" • ")
+                : (
+                    "Existing queue ownership " +
+                    "and SLA controls are preserved."
+                  )
+            )}
+          </p>
+        </section>
+
+        <section class="flow-card-section">
+          <div class="flow-card-section-heading">
+            <span>4</span>
+
+            <h3>
+              What changes urgency
+            </h3>
+          </div>
+
+          ${flowCardList(
+            urgency,
+            "Urgency follows the existing priority rules."
+          )}
+        </section>
+
+        <section class="flow-card-section">
+          <div class="flow-card-section-heading">
+            <span>5</span>
+
+            <h3>
+              What the receiver gets
+            </h3>
+          </div>
+
+          ${flowCardList(
+            receiver,
+            "Receiver Brief content has not been configured yet."
+          )}
+        </section>
+
+        <section
+          class="
+            flow-card-section
+            flow-card-section-wide
+          "
+        >
+          <div class="flow-card-section-heading">
+            <span>6</span>
+
+            <h3>
+              Work-readiness questions
+            </h3>
+          </div>
+
+          ${flowCardList(
+            questions,
+            "No additional work-readiness questions are required."
+          )}
+        </section>
+      </div>
+    `;
   }
 
   // FLOW STUDIO M1: LIVE ENGINE TEST
@@ -713,7 +1726,9 @@
     return Array.isArray(value)
       ? value.length > 0
       : String(
-          value == null ? "" : value
+          value == null
+            ? ""
+            : value
         ).trim() !== "";
   }
 
@@ -722,14 +1737,6 @@
     template
   ) {
     const answers = {};
-
-    const questions =
-      template.diagnostics &&
-      Array.isArray(
-        template.diagnostics.questions
-      )
-        ? template.diagnostics.questions
-        : [];
 
     const supplied =
       result.diagnosticAnswers ||
@@ -741,69 +1748,69 @@
         result.originalText || ""
       ).toLowerCase();
 
-    questions.forEach(
-      (question) => {
-        let value =
-          supplied[question.id] ||
-          (
-            result.extractedFields ||
-            {}
-          )[question.id] ||
-          (
-            result.fieldAnswers ||
-            {}
-          )[question.id] ||
-          "";
+    diagnosticQuestions(
+      template
+    ).forEach((question) => {
+      let value =
+        supplied[question.id] ||
+        (
+          result.extractedFields ||
+          {}
+        )[question.id] ||
+        (
+          result.fieldAnswers ||
+          {}
+        )[question.id] ||
+        "";
 
-        if (
-          value &&
-          typeof value === "object"
-        ) {
-          value =
-            value.value || "";
-        }
-
-        if (
-          !hasValue(value) &&
-          question.signals
-        ) {
-          Object.entries(
-            question.signals
-          ).some(
-            ([answer, phrases]) => {
-              const matched =
-                (phrases || []).some(
-                  (phrase) =>
-                    input.includes(
-                      String(
-                        phrase
-                      ).toLowerCase()
-                    )
-                );
-
-              if (matched) {
-                value = answer;
-              }
-
-              return matched;
-            }
-          );
-        }
-
-        if (hasValue(value)) {
-          answers[question.id] = {
-            id: question.id,
-
-            label:
-              question.reportLabel ||
-              question.label ||
-              question.id,
-
-            value
-          };
-        }
+      if (
+        value &&
+        typeof value === "object"
+      ) {
+        value =
+          value.value || "";
       }
-    );
+
+      if (
+        !hasValue(value) &&
+        question.signals
+      ) {
+        Object.entries(
+          question.signals
+        ).some(
+          ([answer, phrases]) => {
+            const matched =
+              (phrases || []).some(
+                (phrase) =>
+                  input.includes(
+                    String(
+                      phrase
+                    ).toLowerCase()
+                  )
+              );
+
+            if (matched) {
+              value = answer;
+            }
+
+            return matched;
+          }
+        );
+      }
+
+      if (hasValue(value)) {
+        answers[question.id] = {
+          id: question.id,
+
+          label:
+            question.reportLabel ||
+            question.label ||
+            question.id,
+
+          value
+        };
+      }
+    });
 
     return answers;
   }
@@ -812,42 +1819,50 @@
     result,
     template
   ) {
-    const excluded = new Set([
-      "shortDescription",
-      "description",
-      "requestedFor",
-      "attachments"
-    ]);
+    const excluded =
+      new Set([
+        "shortDescription",
+        "description",
+        "requestedFor",
+        "attachments"
+      ]);
 
     const evidence = [];
     const seen = new Set();
 
     Object.values(
-      result.extractionDetails || {}
+      result.extractionDetails ||
+      {}
     ).forEach((detail) => {
       if (
         !detail ||
-        excluded.has(detail.fieldId) ||
-        !hasValue(detail.value)
+        excluded.has(
+          detail.fieldId
+        ) ||
+        !hasValue(
+          detail.value
+        )
       ) {
         return;
       }
 
+      const label =
+        detail.label ||
+        detail.fieldId;
+
       const key =
         String(
-          detail.label ||
-          detail.fieldId
+          label
         ).toLowerCase();
 
-      if (seen.has(key)) return;
+      if (seen.has(key)) {
+        return;
+      }
 
       seen.add(key);
 
       evidence.push(
-        `${
-          detail.label ||
-          detail.fieldId
-        }: ${detail.value}`
+        `${label}: ${detail.value}`
       );
     });
 
@@ -858,9 +1873,12 @@
       )
     ).forEach((detail) => {
       const key =
-        detail.label.toLowerCase();
+        detail.label
+          .toLowerCase();
 
-      if (seen.has(key)) return;
+      if (seen.has(key)) {
+        return;
+      }
 
       seen.add(key);
 
@@ -869,7 +1887,10 @@
       );
     });
 
-    return evidence.slice(0, 6);
+    return evidence.slice(
+      0,
+      6
+    );
   }
 
   function testMissing(
@@ -880,12 +1901,25 @@
       (
         result.missingFields ||
         []
-      ).map((field) => ({
-        id: field.id,
-        label:
-          field.label ||
-          field.id
-      }));
+      ).map((field) => {
+        if (
+          typeof field ===
+          "string"
+        ) {
+          return {
+            id: field,
+            label: humanize(field)
+          };
+        }
+
+        return {
+          id: field.id,
+
+          label:
+            field.label ||
+            humanize(field.id)
+        };
+      });
 
     const answers =
       diagnosticAnswers(
@@ -893,29 +1927,19 @@
         template
       );
 
-    const required =
-      template.diagnostics &&
-      Array.isArray(
-        template.diagnostics
-          .requiredForWork
-      )
-        ? template.diagnostics
-            .requiredForWork
-        : [];
-
     const questions =
-      template.diagnostics &&
-      Array.isArray(
-        template.diagnostics.questions
-      )
-        ? template.diagnostics.questions
-        : [];
+      diagnosticQuestions(
+        template
+      );
 
-    required.forEach((id) => {
+    requiredDiagnosticIds(
+      template
+    ).forEach((id) => {
       if (
         answers[id] ||
         missing.some(
-          (item) => item.id === id
+          (item) =>
+            item.id === id
         )
       ) {
         return;
@@ -931,12 +1955,10 @@
         id,
 
         label: question
-          ? (
-              question.reportLabel ||
-              question.label ||
-              id
+          ? questionLabel(
+              question
             )
-          : id
+          : humanize(id)
       });
     });
 
@@ -946,18 +1968,25 @@
   function routingReadiness(
     result
   ) {
-    const routingValue =
+    const value =
       result.routingReadiness;
 
     const direct =
-      routingValue &&
-      typeof routingValue === "object"
+      (
+        value &&
+        typeof value ===
+        "object"
+      )
         ? Number(
-            routingValue.percent
+            value.percent
           )
-        : Number(routingValue);
+        : Number(value);
 
-    if (Number.isFinite(direct)) {
+    if (
+      Number.isFinite(
+        direct
+      )
+    ) {
       return Math.max(
         0,
         Math.min(
@@ -1005,18 +2034,25 @@
     result,
     template
   ) {
-    const workValue =
+    const value =
       result.workReadiness;
 
     const direct =
-      workValue &&
-      typeof workValue === "object"
+      (
+        value &&
+        typeof value ===
+        "object"
+      )
         ? Number(
-            workValue.percent
+            value.percent
           )
-        : Number(workValue);
+        : Number(value);
 
-    if (Number.isFinite(direct)) {
+    if (
+      Number.isFinite(
+        direct
+      )
+    ) {
       return Math.max(
         0,
         Math.min(
@@ -1027,27 +2063,23 @@
     }
 
     const fields =
-      (
-        template.fields ||
-        []
+      templateFields(
+        template
       ).filter(
         (field) =>
           field.required &&
           ![
             "requestedFor",
             "attachments"
-          ].includes(field.id)
+          ].includes(
+            field.id
+          )
       );
 
     const diagnostics =
-      template.diagnostics &&
-      Array.isArray(
-        template.diagnostics
-          .requiredForWork
-      )
-        ? template.diagnostics
-            .requiredForWork
-        : [];
+      requiredDiagnosticIds(
+        template
+      );
 
     const answers =
       diagnosticAnswers(
@@ -1056,17 +2088,21 @@
       );
 
     const extracted =
-      result.extractedFields || {};
+      result.extractedFields ||
+      {};
 
     const complete =
       fields.filter(
         (field) =>
           hasValue(
-            extracted[field.id]
+            extracted[
+              field.id
+            ]
           )
       ).length +
       diagnostics.filter(
-        (id) => answers[id]
+        (id) =>
+          answers[id]
       ).length;
 
     const total =
@@ -1075,31 +2111,39 @@
 
     return total
       ? Math.round(
-          (complete / total) * 100
+          (
+            complete /
+            total
+          ) * 100
         )
       : 100;
   }
 
-  function list(
+  function testList(
     items,
     emptyText
   ) {
-    return items.length
-      ? `
-          <ul class="flow-test-list">
-            ${items
-              .map(
-                (item) =>
-                  `<li>${escapeHtml(item)}</li>`
-              )
-              .join("")}
-          </ul>
-        `
-      : `
-          <p class="flow-test-empty">
-            ${escapeHtml(emptyText)}
-          </p>
-        `;
+    if (!items.length) {
+      return `
+        <p class="flow-test-empty">
+          ${escapeHtml(emptyText)}
+        </p>
+      `;
+    }
+
+    return `
+      <ul class="flow-test-list">
+        ${items
+          .map(
+            (item) => `
+              <li>
+                ${escapeHtml(item)}
+              </li>
+            `
+          )
+          .join("")}
+      </ul>
+    `;
   }
 
   function receiverPreview(
@@ -1112,8 +2156,10 @@
       (
         result.receiverBrief &&
         (
-          result.receiverBrief.title ||
-          result.receiverBrief.headline
+          result.receiverBrief
+            .title ||
+          result.receiverBrief
+            .headline
         )
       );
 
@@ -1123,25 +2169,32 @@
 
     const location =
       Object.values(
-        result.extractionDetails || {}
-      ).find(
-        (detail) =>
+        result.extractionDetails ||
+        {}
+      ).find((detail) => {
+        return (
           detail &&
-          hasValue(detail.value) &&
-          /location|station|area/i.test(
-            `${detail.fieldId} ${detail.label}`
-          )
-      );
+          hasValue(
+            detail.value
+          ) &&
+          /location|station|area/i
+            .test(
+              `${detail.fieldId} ${detail.label}`
+            )
+        );
+      });
 
     const symptom =
       Object.values(
         answers
-      ).find(
-        (detail) =>
-          /symptom|behavior|issue/i.test(
-            `${detail.id} ${detail.label}`
-          )
-      );
+      ).find((detail) => {
+        return (
+          /symptom|behavior|issue/i
+            .test(
+              `${detail.id} ${detail.label}`
+            )
+        );
+      });
 
     const subject =
       symptom
@@ -1151,7 +2204,9 @@
             result.originalText ||
             template.name
           )
-            .split(/[.!?]/)[0]
+            .split(
+              /[.!?]/
+            )[0]
             .trim();
 
     return (
@@ -1166,13 +2221,16 @@
 
   function renderTest(result) {
     const target =
-      document.getElementById(
-        "flowTestResult"
-      );
+      byId("flowTestResult");
 
-    if (!target) return;
+    if (!target) {
+      return;
+    }
 
-    if (!result || !result.ok) {
+    if (
+      !result ||
+      !result.ok
+    ) {
       target.innerHTML = `
         <div class="notice notice-warning">
           <span>!</span>
@@ -1199,26 +2257,43 @@
     }
 
     if (result.requiresP1) {
+      const queue =
+        (
+          result.requestPlan &&
+          result.requestPlan.queue
+        )
+          ? result.requestPlan.queue
+          : "Existing P1 queue";
+
       target.innerHTML = `
         <div class="flow-test-overview">
           <div class="flow-test-metric">
-            <small>Selected flow</small>
+            <small>
+              Selected flow
+            </small>
+
             <strong>
               Shipping Is Stopped fast lane
             </strong>
           </div>
 
           <div class="flow-test-metric">
-            <small>Confidence</small>
-            <strong>100%</strong>
+            <small>
+              Confidence
+            </small>
+
+            <strong>
+              100%
+            </strong>
           </div>
 
           <div class="flow-test-metric">
-            <small>Route</small>
+            <small>
+              Route
+            </small>
+
             <strong>
-              ${escapeHtml(
-                result.requestPlan.queue
-              )}
+              ${escapeHtml(queue)}
             </strong>
           </div>
         </div>
@@ -1236,7 +2311,9 @@
           </div>
 
           <div>
-            <dt>Receiver preview</dt>
+            <dt>
+              Receiver preview
+            </dt>
 
             <dd>
               ${escapeHtml(
@@ -1252,6 +2329,17 @@
 
     const template =
       result.template;
+
+    if (!template) {
+      renderTest({
+        ok: false,
+
+        error:
+          "The request engine did not return a request flow."
+      });
+
+      return;
+    }
 
     const answers =
       diagnosticAnswers(
@@ -1276,10 +2364,13 @@
         result.requestPlan &&
         result.requestPlan.queue
       ) ||
-      template.queue;
+      template.queue ||
+      "Existing receiving queue";
 
     const routing =
-      routingReadiness(result);
+      routingReadiness(
+        result
+      );
 
     const work =
       workReadiness(
@@ -1288,17 +2379,15 @@
       );
 
     const firstDiagnostic =
-      template.diagnostics &&
-      template.diagnostics.questions
-        ? template.diagnostics.questions.find(
-            (question) =>
-              missing.some(
-                (item) =>
-                  item.id ===
-                  question.id
-              )
-          )
-        : null;
+      diagnosticQuestions(
+        template
+      ).find((question) => {
+        return missing.some(
+          (item) =>
+            item.id ===
+            question.id
+        );
+      });
 
     const nextQuestion =
       (
@@ -1316,26 +2405,37 @@
     target.innerHTML = `
       <div class="flow-test-overview">
         <div class="flow-test-metric">
-          <small>Selected flow</small>
+          <small>
+            Selected flow
+          </small>
+
           <strong>
-            ${escapeHtml(template.name)}
+            ${escapeHtml(
+              template.name
+            )}
           </strong>
         </div>
 
         <div class="flow-test-metric">
-          <small>Confidence</small>
+          <small>
+            Confidence
+          </small>
 
           <strong>
             ${Math.round(
               Number(
-                result.confidence || 0
+                result.confidence ||
+                0
               )
             )}%
           </strong>
         </div>
 
         <div class="flow-test-metric">
-          <small>Route</small>
+          <small>
+            Route
+          </small>
+
           <strong>
             ${escapeHtml(route)}
           </strong>
@@ -1396,20 +2496,25 @@
 
       <div class="flow-test-detail-grid">
         <section class="flow-test-section">
-          <h3>Detected evidence</h3>
+          <h3>
+            Detected evidence
+          </h3>
 
-          ${list(
+          ${testList(
             evidence,
             "No work detail was detected yet."
           )}
         </section>
 
         <section class="flow-test-section">
-          <h3>Still needed</h3>
+          <h3>
+            Still needed
+          </h3>
 
-          ${list(
+          ${testList(
             missing.map(
-              (item) => item.label
+              (item) =>
+                item.label
             ),
             "Nothing else is required before review."
           )}
@@ -1423,12 +2528,16 @@
           </dt>
 
           <dd>
-            ${escapeHtml(nextQuestion)}
+            ${escapeHtml(
+              nextQuestion
+            )}
           </dd>
         </div>
 
         <div>
-          <dt>Receiver preview</dt>
+          <dt>
+            Receiver preview
+          </dt>
 
           <dd>
             ${escapeHtml(
@@ -1446,9 +2555,7 @@
 
   function runTest(text) {
     const target =
-      document.getElementById(
-        "flowTestResult"
-      );
+      byId("flowTestResult");
 
     if (target) {
       target.innerHTML = `
@@ -1470,75 +2577,176 @@
 
       renderTest({
         ok: false,
+
         error:
           "The live request engine returned an error."
       });
     }
   }
 
-  // FLOW STUDIO M1: INITIALIZATION
+  function applyRoleState() {
+    renderQueued = false;
+
+    rememberActiveTemplate();
+    updateRoleSummary();
+    applyListScope();
+    applyEditorPermissions();
+    renderFlowCard();
+  }
+
+  function scheduleRoleState() {
+    if (renderQueued) {
+      return;
+    }
+
+    renderQueued = true;
+
+    window.requestAnimationFrame(
+      applyRoleState
+    );
+  }
+
+  function changeRole(
+    nextRoleId
+  ) {
+    if (
+      !ROLE_IDS.has(
+        nextRoleId
+      )
+    ) {
+      console.error(
+        `Flow Studio received an unknown role: ${nextRoleId}`
+      );
+
+      return;
+    }
+
+    roleId = nextRoleId;
+
+    window.localStorage.setItem(
+      ROLE_KEY,
+      roleId
+    );
+
+    document.body.dataset
+      .flowStudioRole = roleId;
+
+    document.body.dataset
+      .adminRole = roleId;
+
+    const search =
+      byId("templateSearch");
+
+    if (search) {
+      search.value = "";
+
+      search.dispatchEvent(
+        new Event(
+          "input",
+          {
+            bubbles: true
+          }
+        )
+      );
+    }
+
+    applyRoleState();
+
+    window.setTimeout(
+      applyRoleState,
+      0
+    );
+
+    UI.showToast(
+      `Flow Studio is now showing the ${role().label} view.`
+    );
+  }
+
+  // FLOW STUDIO M1/M2: INITIALIZATION
   addRoleSelector();
   addFlowTest();
+  addFlowCard();
 
-  document.getElementById(
-    "adminRoleSelect"
-  ).addEventListener(
-    "change",
-    (event) =>
-      changeRole(
-        event.target.value
-      )
-  );
+  const roleSelect =
+    byId("adminRoleSelect");
 
-  document.getElementById(
-    "flowTestForm"
-  ).addEventListener(
-    "submit",
-    (event) => {
-      event.preventDefault();
+  if (!roleSelect) {
+    console.error(
+      "Flow Studio could not find #adminRoleSelect."
+    );
+  } else {
+    roleSelect.value =
+      roleId;
 
-      const input =
-        document.getElementById(
-          "flowTestInput"
+    roleSelect.addEventListener(
+      "change",
+      (event) => {
+        changeRole(
+          event.currentTarget.value
         );
-
-      const text =
-        input.value.trim();
-
-      if (!text) {
-        input.focus();
-
-        UI.showToast(
-          "Enter an employee request before testing the flow."
-        );
-
-        return;
       }
+    );
+  }
 
-      runTest(text);
-    }
-  );
+  const testForm =
+    byId("flowTestForm");
+
+  if (testForm) {
+    testForm.addEventListener(
+      "submit",
+      (event) => {
+        event.preventDefault();
+
+        const input =
+          byId("flowTestInput");
+
+        const text =
+          input
+            ? input.value.trim()
+            : "";
+
+        if (!text) {
+          if (input) {
+            input.focus();
+          }
+
+          UI.showToast(
+            "Enter an employee request before testing the flow."
+          );
+
+          return;
+        }
+
+        runTest(text);
+      }
+    );
+  }
 
   document.addEventListener(
     "click",
     (event) => {
-      const templateButton =
+      const button =
         event.target.closest(
-          "#templateList [data-template-id]"
+          "#templateList " +
+          "[data-template-id]"
         );
 
-      if (templateButton) {
+      if (button) {
         const template =
           Templates.get(
-            templateButton.dataset
+            button.dataset
               .templateId
           );
 
         if (
-          !templateInScope(template)
+          !templateInScope(
+            template
+          )
         ) {
           event.preventDefault();
-          event.stopImmediatePropagation();
+
+          event
+            .stopImmediatePropagation();
 
           UI.showToast(
             "That request flow is outside the selected role's scope."
@@ -1548,7 +2756,7 @@
         }
 
         activeTemplateId =
-          templateButton.dataset
+          button.dataset
             .templateId;
 
         scheduleRoleState();
@@ -1561,7 +2769,9 @@
         !role().canReset
       ) {
         event.preventDefault();
-        event.stopImmediatePropagation();
+
+        event
+          .stopImmediatePropagation();
 
         UI.showToast(
           "Only Megan Delia can reset company request-flow configuration."
@@ -1588,7 +2798,9 @@
         !role().canEdit
       ) {
         event.preventDefault();
-        event.stopImmediatePropagation();
+
+        event
+          .stopImmediatePropagation();
 
         UI.showToast(
           "This role can review and test the flow, but cannot edit it."
@@ -1607,9 +2819,7 @@
   );
 
   const manager =
-    document.querySelector(
-      ".template-manager"
-    );
+    query(".template-manager");
 
   if (manager) {
     new MutationObserver(

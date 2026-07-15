@@ -355,3 +355,141 @@
     transition: none;
   }
 }
+/* FLOW STUDIO M2: HUMAN-READABLE FLOW CARD */
+
+.flow-card {
+  overflow: hidden;
+}
+
+.flow-card .card-header {
+  align-items: flex-start;
+}
+
+.flow-card-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.flow-card-section {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.flow-card-section-wide {
+  grid-column: 1 / -1;
+}
+
+.flow-card-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 11px;
+}
+
+.flow-card-section-heading span {
+  display: inline-flex;
+  flex: 0 0 25px;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 999px;
+  background: var(--purple-soft);
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.flow-card-section-heading h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.flow-card-copy {
+  max-width: 880px;
+  margin: 0;
+  color: #415163;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.flow-card-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flow-card-list li {
+  position: relative;
+  min-width: 0;
+  padding-left: 18px;
+  color: #415163;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.flow-card-list li::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--teal);
+}
+
+.flow-card-route {
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--blue-soft);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.flow-card-meta {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.flow-card-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+body[data-flow-studio-role="queue-manager"]
+.flow-card-section {
+  background: #fbfcfd;
+}
+
+body[data-flow-studio-role="category-owner"]
+.flow-card-section-heading span {
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+@media (max-width: 760px) {
+  .flow-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-card-section-wide {
+    grid-column: auto;
+  }
+}
