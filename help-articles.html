@@ -3,27 +3,194 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MasterFlow self-service knowledge workspace with guided troubleshooting, escalation guidance, and ticket deflection tracking.">
   <title>MasterFlow - Help articles</title>
   <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/HELP_ARTICLES_APPEND.css">
 </head>
-<body class="workspace-page" data-page="help-articles">
+<body class="workspace-page help-center-page" data-page="help-articles">
   <div class="content-shell">
     <main>
       <div class="page-heading">
-        <div><h1>Help articles</h1><p>Search common solutions before creating a ticket. Self-service should save time without blocking employees who still need support.</p></div>
-        <div class="page-actions"><a class="btn btn-primary" href="index.html">Ask for help</a></div>
+        <div>
+          <div class="eyebrow">Self-service support</div>
+          <h1>Help Center</h1>
+          <p>Describe the problem in your own words. MasterFlow will recommend a guided fix, capture what you tried, and carry the results into a request when support is still needed.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn btn-primary" href="index.html">Ask for help</a>
+        </div>
       </div>
 
-      <div class="notice notice-info"><span>i</span><div><strong>Knowledge recommendations are assistance, not a gate.</strong><p>Employees can create a ticket at any time, and critical warehouse incidents always use the Shipping is stopped fast lane.</p></div></div>
+      <section class="help-search-hero" aria-labelledby="helpSearchTitle">
+        <div>
+          <span class="badge badge-teal">Natural-language search</span>
+          <h2 id="helpSearchTitle">What are you trying to fix?</h2>
+          <p>Try phrases like “printer will not connect,” “laptop is slow,” “scanner is not reading,” or “shipping is stopped.”</p>
+        </div>
+        <div class="help-search-controls">
+          <input
+            class="control help-search-input"
+            id="articleSearch"
+            type="search"
+            placeholder="Describe the issue or search articles"
+            aria-label="Search help articles"
+          >
+          <select class="control" id="articleCategory" aria-label="Filter articles by category">
+            <option value="all">All categories</option>
+            <option>Hardware</option>
+            <option>Device performance</option>
+            <option>Using MasterFlow</option>
+            <option>Warehouse operations</option>
+            <option>Access</option>
+            <option>Warehouse technology</option>
+          </select>
+        </div>
+      </section>
 
-      <div class="toolbar mt-18">
-        <div class="toolbar-left"><input class="control search-control" id="articleSearch" type="search" placeholder="Search printers, laptop, email, barcode..." aria-label="Search help articles"></div>
-        <div class="toolbar-right"><select class="control" id="articleCategory" aria-label="Filter articles by category"><option value="all">All categories</option><option>Hardware</option><option>Device performance</option><option>Using MasterFlow</option><option>Warehouse operations</option><option>Access</option><option>Warehouse technology</option></select></div>
+      <section class="help-summary-grid mt-18" aria-label="Self-service summary">
+        <div class="help-summary-card">
+          <span>Articles available</span>
+          <strong id="articleAvailableCount">0</strong>
+          <small>Practical internal guidance</small>
+        </div>
+        <div class="help-summary-card">
+          <span>Most relevant</span>
+          <strong id="articleTopScore">—</strong>
+          <small>Based on your current search</small>
+        </div>
+        <div class="help-summary-card">
+          <span>Issues solved here</span>
+          <strong id="articleDeflectionCount">0</strong>
+          <small>Prototype self-service deflections</small>
+        </div>
+        <div class="help-summary-card">
+          <span>Still need support</span>
+          <strong id="articleEscalationCount">0</strong>
+          <small>Requests started with troubleshooting context</small>
+        </div>
+      </section>
+
+      <div class="notice notice-info mt-18">
+        <span>i</span>
+        <div>
+          <strong>Knowledge recommendations are assistance, not a gate.</strong>
+          <p>Employees can create a request at any time. Stop troubleshooting when a safety concern exists, and always use the Shipping is stopped fast lane for a critical warehouse outage.</p>
+        </div>
       </div>
 
-      <section class="article-grid" id="articleGrid" aria-live="polite"></section>
+      <section class="card mt-18" id="recommendedArticleSection" hidden>
+        <div class="card-header">
+          <div>
+            <h2>Recommended first</h2>
+            <p>MasterFlow matched this guide to the wording of your issue.</p>
+          </div>
+          <span class="badge badge-teal">Best match</span>
+        </div>
+        <div class="card-body" id="recommendedArticle"></div>
+      </section>
+
+      <section class="mt-18" aria-labelledby="allArticlesTitle">
+        <div class="help-section-heading">
+          <div>
+            <h2 id="allArticlesTitle">All help articles</h2>
+            <p id="articleResultCount">0 articles</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" id="clearArticleSearch">Clear search</button>
+        </div>
+        <div class="article-grid help-article-grid" id="articleGrid" aria-live="polite"></div>
+      </section>
     </main>
   </div>
+
+  <dialog id="articleDialog" class="help-article-dialog" aria-labelledby="articleDialogTitle">
+    <div class="dialog-header">
+      <div>
+        <div class="article-tags" id="articleDialogTags"></div>
+        <h2 id="articleDialogTitle"></h2>
+        <p id="articleDialogSummary"></p>
+      </div>
+      <button class="close-button" type="button" data-close-article-dialog aria-label="Close">×</button>
+    </div>
+
+    <div class="dialog-body help-guide-body">
+      <section class="help-meaning-panel">
+        <div class="help-panel-heading">
+          <span class="help-panel-icon" aria-hidden="true">i</span>
+          <div>
+            <h3>What this usually means</h3>
+            <p id="articleDialogMeaning"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="help-steps-panel">
+        <div class="help-panel-heading help-panel-heading-between">
+          <div>
+            <h3>Try these steps in order</h3>
+            <p>Check each step as you complete it. MasterFlow will include the results if you still need support.</p>
+          </div>
+          <span class="badge badge-blue" id="articleStepProgress">0 of 0 complete</span>
+        </div>
+        <div class="help-step-list" id="articleDialogSteps"></div>
+      </section>
+
+      <section class="help-record-panel">
+        <div class="help-panel-heading">
+          <span class="help-panel-icon" aria-hidden="true">✎</span>
+          <div>
+            <h3>What to record if it still fails</h3>
+            <p id="articleRecordGuidance"></p>
+          </div>
+        </div>
+
+        <div class="field-row mt-12">
+          <div class="field">
+            <label for="articleAffectedScope">Who or what is affected?</label>
+            <select class="select" id="articleAffectedScope">
+              <option value="">Choose one</option>
+              <option>Only me</option>
+              <option>One station or device</option>
+              <option>Multiple users or stations</option>
+              <option>Entire process or area</option>
+              <option>Not sure</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="articleIdentifiers">Location, asset, system, or error code</label>
+            <input class="input" id="articleIdentifiers" placeholder="Example: Pack Station 14, PHX-PRN-22, OMS error 504">
+          </div>
+        </div>
+
+        <div class="field mt-12">
+          <label for="articleObservation">What happened after trying the steps?</label>
+          <textarea class="textarea" id="articleObservation" placeholder="Describe the result, exact error message, or anything that changed."></textarea>
+        </div>
+      </section>
+
+      <section class="help-escalation-panel">
+        <div class="help-panel-heading">
+          <span class="help-panel-icon help-panel-icon-warning" aria-hidden="true">!</span>
+          <div>
+            <h3>When to stop and escalate</h3>
+            <p id="articleEscalationText"></p>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" type="button" id="articleEmergencyButton" hidden>
+          Shipping is stopped — open P1 fast lane
+        </button>
+      </section>
+
+      <section class="help-feedback-panel">
+        <h3>Did this solve the issue?</h3>
+        <p>MasterFlow records the result for reporting. If support is still needed, the completed steps and observations are carried into the request automatically.</p>
+        <div class="help-feedback-actions">
+          <button class="btn btn-primary" type="button" id="articleSolvedButton">Yes, this solved it</button>
+          <button class="btn btn-secondary" type="button" id="articleNeedHelpButton">No, I still need help</button>
+        </div>
+      </section>
+    </div>
+  </dialog>
 
   <script src="assets/js/store.js" defer></script>
   <script src="assets/js/layout.js" defer></script>
