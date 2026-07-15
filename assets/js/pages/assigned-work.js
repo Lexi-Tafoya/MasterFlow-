@@ -21,6 +21,8 @@
   let currentView = "recommended";
   let currentTicketId = "";
 
+  const COMMENT_EDIT_WINDOW_MS = 5 * 60 * 1000;
+
   const viewDefinitions = {
     recommended: {
       title: "Prioritized work",
@@ -410,19 +412,159 @@
     return [...new Set(names)].sort();
   }
 
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function writeState(state) {
+    window.localStorage.setItem(Store.STORAGE_KEY, JSON.stringify(state));
+    window.dispatchEvent(new CustomEvent("masterflow:state", { detail: clone(state) }));
+  }
+
+  function createComment(text, visibility) {
+    const now = new Date();
+    return {
+      id: `comment-${now.getTime()}-${Math.random().toString(36).slice(2, 7)}`,
+      type: "comment",
+      author: Store.CURRENT_USER.name,
+      visibility: visibility === "requester" ? "requester" : "internal",
+      text: String(text || "").trim(),
+      originalText: String(text || "").trim(),
+      revisions: [],
+      at: now.toISOString(),
+      editedAt: null,
+      editableUntil: new Date(now.getTime() + COMMENT_EDIT_WINDOW_MS).toISOString()
+    };
+  }
+
+  function updateTicketWithComment(ticketId, patch, systemText, commentText, visibility) {
+    const state = Store.getState();
+    const ticket = state.tickets.find((item) => item.id === ticketId);
+    if (!ticket) return null;
+
+    const now = new Date().toISOString();
+    Object.assign(ticket, patch || {}, { updatedAt: now });
+    ticket.history = Array.isArray(ticket.history) ? ticket.history : [];
+
+    if (systemText) {
+      ticket.history.push({ at: now, text: systemText, type: "system" });
+    }
+
+    const cleanComment = String(commentText || "").trim();
+    if (cleanComment) {
+      ticket.history.push(createComment(cleanComment, visibility));
+    }
+
+    writeState(state);
+    return clone(ticket);
+  }
+
+  function canEditComment(item) {
+    if (!item || item.type !== "comment") return false;
+    if (item.author !== Store.CURRENT_USER.name) return false;
+
+    const fallbackDeadline = new Date(item.at).getTime() + COMMENT_EDIT_WINDOW_MS;
+    const configuredDeadline = new Date(item.editableUntil || "").getTime();
+    const deadline = Number.isFinite(configuredDeadline) ? configuredDeadline : fallbackDeadline;
+    return Number.isFinite(deadline) && Date.now() <= deadline;
+  }
+
+  function editComment(ticketId, commentId, nextText) {
+    const cleanText = String(nextText || "").trim();
+    if (!cleanText) return { ok: false, message: "A comment cannot be empty." };
+
+    const state = Store.getState();
+    const ticket = state.tickets.find((item) => item.id === ticketId);
+    if (!ticket) return { ok: false, message: "Ticket not found." };
+
+    const comment = (ticket.history || []).find((item) => item.id === commentId);
+    if (!comment) return { ok: false, message: "Comment not found." };
+    if (!canEditComment(comment)) {
+      return { ok: false, message: "The five-minute edit window has closed." };
+    }
+
+    if (comment.text === cleanText) {
+      return { ok: false, message: "No changes were made." };
+    }
+
+    const now = new Date().toISOString();
+    comment.originalText = comment.originalText || comment.text;
+    comment.revisions = Array.isArray(comment.revisions) ? comment.revisions : [];
+    comment.revisions.push({
+      text: comment.text,
+      editedAt: now,
+      editedBy: Store.CURRENT_USER.name
+    });
+    comment.text = cleanText;
+    comment.editedAt = now;
+    ticket.updatedAt = now;
+
+    writeState(state);
+    return { ok: true, ticket: clone(ticket) };
+  }
+
+  function commentAuditMarkup(item) {
+    if (!item.editedAt || !item.originalText) return "";
+    return `
+      <details class="receiver-comment-audit">
+        <summary>View original comment</summary>
+        <p>${UI.escapeHtml(item.originalText)}</p>
+      </details>
+    `;
+  }
+
   function renderTimeline(ticket) {
     const history = (ticket.history || []).slice().reverse();
     const container = document.getElementById("receiverTimeline");
+
     container.innerHTML = history.length
-      ? history.map((item) => `
-          <article class="receiver-timeline-item">
-            <div class="receiver-timeline-dot"></div>
-            <div>
-              <strong>${UI.escapeHtml(item.text)}</strong>
-              <small>${UI.escapeHtml(UI.formatDate(item.at))}</small>
-            </div>
-          </article>
-        `).join("")
+      ? history.map((item) => {
+          if (item.type === "comment") {
+            const visibilityLabel = item.visibility === "requester"
+              ? "Requester message"
+              : "Internal update";
+            const visibilityClass = item.visibility === "requester"
+              ? "badge-blue"
+              : "badge-gray";
+            const editedLabel = item.editedAt ? " · Edited" : "";
+            const editControls = canEditComment(item)
+              ? `
+                  <button class="link-button receiver-comment-edit" type="button" data-edit-comment="${UI.escapeHtml(item.id)}">Edit</button>
+                  <span class="receiver-comment-window">Editable for five minutes</span>
+                `
+              : "";
+
+            return `
+              <article class="receiver-timeline-item receiver-comment-item" data-comment-id="${UI.escapeHtml(item.id)}">
+                <div class="receiver-timeline-dot"></div>
+                <div class="receiver-comment-content">
+                  <div class="receiver-comment-header">
+                    <div class="receiver-comment-author">
+                      <strong>${UI.escapeHtml(item.author || "Unknown user")}</strong>
+                      <span class="badge ${visibilityClass}">${visibilityLabel}</span>
+                    </div>
+                    <small>${UI.escapeHtml(UI.formatDate(item.at))}${editedLabel}</small>
+                  </div>
+                  <p class="receiver-comment-text">${UI.escapeHtml(item.text || "")}</p>
+                  <div class="receiver-comment-actions">
+                    ${editControls}
+                    ${commentAuditMarkup(item)}
+                  </div>
+                </div>
+              </article>
+            `;
+          }
+
+          return `
+            <article class="receiver-timeline-item receiver-system-item">
+              <div class="receiver-timeline-dot"></div>
+              <div>
+                <strong>${UI.escapeHtml(item.text)}</strong>
+                <small>${UI.escapeHtml(UI.formatDate(item.at))}</small>
+              </div>
+            </article>
+          `;
+        }).join("")
       : '<div class="empty-state">No timeline activity has been recorded.</div>';
   }
 
@@ -614,22 +756,34 @@
   document.getElementById("receiverRequestInfo").addEventListener("click", () => {
     const note = requireNote("request more information");
     if (!note) return;
-    const ticket = Store.getTicket(currentTicketId);
-    updateCurrentTicket(
+    const existingTicket = Store.getTicket(currentTicketId);
+    const updatedTicket = updateTicketWithComment(
+      currentTicketId,
       { status: "Waiting on requester" },
-      `Information requested from ${ticket ? ticket.requester : "the requester"} by ${Store.CURRENT_USER.name}: ${note}`,
-      "Information request added to the timeline."
+      `Status changed to Waiting on requester by ${Store.CURRENT_USER.name}.`,
+      note,
+      "requester"
     );
+    if (updatedTicket) {
+      UI.showToast(`Information request sent to ${existingTicket ? existingTicket.requester : "the requester"}.`);
+      renderReceiverTicket(updatedTicket);
+    }
   });
 
   document.getElementById("receiverAddUpdate").addEventListener("click", () => {
     const note = requireNote("add an update");
     if (!note) return;
-    updateCurrentTicket(
+    const updatedTicket = updateTicketWithComment(
+      currentTicketId,
       {},
-      `Update from ${Store.CURRENT_USER.name}: ${note}`,
-      "Update added to the ticket."
+      "",
+      note,
+      "internal"
     );
+    if (updatedTicket) {
+      UI.showToast("Update added. You can edit it for five minutes.");
+      renderReceiverTicket(updatedTicket);
+    }
   });
 
   document.getElementById("receiverResolveTicket").addEventListener("click", () => {
@@ -648,6 +802,53 @@
       `Reopened by ${Store.CURRENT_USER.name}.`,
       "Ticket reopened."
     );
+  });
+
+  document.getElementById("receiverTimeline").addEventListener("click", (event) => {
+    const editButton = event.target.closest("[data-edit-comment]");
+    if (editButton) {
+      const ticket = Store.getTicket(currentTicketId);
+      const comment = ticket && (ticket.history || []).find((item) => item.id === editButton.dataset.editComment);
+      if (!comment || !canEditComment(comment)) {
+        UI.showToast("The five-minute edit window has closed.");
+        refreshOpenTicket();
+        return;
+      }
+
+      const article = event.target.closest("[data-comment-id]");
+      const content = article && article.querySelector(".receiver-comment-content");
+      if (!content) return;
+
+      content.innerHTML = `
+        <div class="receiver-comment-editor">
+          <label for="receiverCommentEdit-${UI.escapeHtml(comment.id)}">Edit your comment</label>
+          <textarea class="textarea" id="receiverCommentEdit-${UI.escapeHtml(comment.id)}" rows="3">${UI.escapeHtml(comment.text)}</textarea>
+          <div class="receiver-comment-editor-actions">
+            <button class="btn btn-primary btn-sm" type="button" data-save-comment="${UI.escapeHtml(comment.id)}">Save edit</button>
+            <button class="btn btn-secondary btn-sm" type="button" data-cancel-comment-edit>Cancel</button>
+          </div>
+          <small>The original wording remains preserved in the audit history.</small>
+        </div>
+      `;
+      const input = content.querySelector("textarea");
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+      return;
+    }
+
+    const saveButton = event.target.closest("[data-save-comment]");
+    if (saveButton) {
+      const article = event.target.closest("[data-comment-id]");
+      const input = article && article.querySelector("textarea");
+      const result = editComment(currentTicketId, saveButton.dataset.saveComment, input ? input.value : "");
+      UI.showToast(result.message || (result.ok ? "Comment updated." : "Comment could not be updated."));
+      if (result.ok && result.ticket) renderReceiverTicket(result.ticket);
+      return;
+    }
+
+    if (event.target.closest("[data-cancel-comment-edit]")) {
+      refreshOpenTicket();
+    }
   });
 
   document.getElementById("receiverFeedbackButton").addEventListener("click", () => {

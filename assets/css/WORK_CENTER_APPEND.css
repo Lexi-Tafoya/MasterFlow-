@@ -809,3 +809,131 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Editable receiver comments */
+
+.receiver-comment-item .receiver-timeline-dot {
+  border-color: var(--blue-soft);
+  background: var(--blue);
+}
+
+.receiver-comment-content {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-2);
+}
+
+.receiver-comment-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.receiver-comment-author {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.receiver-comment-header strong {
+  font-size: 11px;
+}
+
+.receiver-comment-header small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.receiver-comment-text {
+  margin: 9px 0 0;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.receiver-comment-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.receiver-comment-edit {
+  font-size: 10px;
+}
+
+.receiver-comment-window {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.receiver-comment-audit {
+  width: 100%;
+  margin-top: 4px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+}
+
+.receiver-comment-audit summary {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.receiver-comment-audit p {
+  margin: 7px 0 0;
+  padding: 8px 9px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.receiver-comment-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.receiver-comment-editor label {
+  color: #415163;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.receiver-comment-editor .textarea {
+  min-height: 86px;
+}
+
+.receiver-comment-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.receiver-comment-editor > small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+@media (max-width: 600px) {
+  .receiver-comment-header,
+  .receiver-comment-editor-actions {
+    display: grid;
+  }
+
+  .receiver-comment-editor-actions .btn {
+    width: 100%;
+  }
+}
+
