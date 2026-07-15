@@ -501,23 +501,7 @@ body[data-flow-studio-role="category-owner"]
   display: none !important;
 }
 
-.template-manager.flow-workspace-list-only {
-  grid-template-columns: minmax(0, 1fr);
-}
 
-.template-manager.flow-workspace-list-only
-.template-list-card {
-  width: 100%;
-  max-width: none;
-}
-
-.template-manager.flow-workspace-list-only
-.template-list {
-  display: grid;
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
 
 body[data-role-workspace="queue-manager"]
 .flow-card .card-header {

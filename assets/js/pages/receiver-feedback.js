@@ -7,13 +7,7 @@
   if (!Store || !UI || !UI.layoutReady) return;
 
   const FEEDBACK_KEY = "masterflowFlowFeedbackV1";
-const CLOSED_STATUSES = new Set([
-  "Resolved",
-  "Closed",
-  "Cancelled",
-  "Approved",
-  "Rejected"
-]);
+  const CLOSED_STATUSES = new Set(["Resolved", "Closed", "Cancelled", "Rejected"]);
   const FLOW_GAP_EXCLUSIONS = new Set(["Assigned owner", "Confirmed routing", "Requester response"]);
   const ISSUE_TYPES = new Set([
     "missing-information",
@@ -133,6 +127,51 @@ const CLOSED_STATUSES = new Set([
     return labels[code] ? `${labels[code]} (${code})` : cleanText(priority) || "Normal";
   }
 
+  function isApprovalRequired(ticket) {
+    return cleanText(ticket && ticket.status) === "Approval required";
+  }
+
+  function isAwaitingApproval(ticket) {
+    return cleanText(ticket && ticket.status) === "Awaiting approval";
+  }
+
+  function isApprovedForFulfillment(ticket) {
+    return cleanText(ticket && ticket.status) === "Approved - Ready to fulfill";
+  }
+
+  function requestedCost(ticket) {
+    const details = ticket && ticket.details || {};
+    return cleanText(details.estimatedCost || details.cost || details.amount);
+  }
+
+  function numericRequestedCost(ticket) {
+    const amount = Number(requestedCost(ticket).replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(amount) ? amount : 0;
+  }
+
+  function approvalRoute(ticket) {
+    const details = ticket && ticket.details || {};
+    const approval = details.approval && typeof details.approval === "object"
+      ? details.approval
+      : {};
+    const threshold = Number(Store.getState().settings.directorApprovalThreshold || 1000);
+    const amount = numericRequestedCost(ticket);
+    const director = amount >= threshold;
+
+    return {
+      approverRole: cleanText(approval.approverRole) || (director ? "Area Director" : "Department Manager"),
+      approvalLabel: cleanText(approval.approvalLabel) || (director ? "Director approval" : "Manager approval"),
+      threshold,
+      amount,
+      status: cleanText(approval.status) || "not-sent",
+      requestedAt: cleanText(approval.requestedAt),
+      requestedBy: cleanText(approval.requestedBy),
+      decisionAt: cleanText(approval.decisionAt),
+      decisionBy: cleanText(approval.decisionBy),
+      decisionNote: cleanText(approval.decisionNote)
+    };
+  }
+
   function humanizeKey(key) {
     return cleanText(key)
       .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
@@ -141,14 +180,24 @@ const CLOSED_STATUSES = new Set([
   }
 
   function valueText(value) {
-    if (Array.isArray(value)) return value.map(cleanText).filter(Boolean).join(", ");
-    if (value && typeof value === "object") return JSON.stringify(value);
+    if (value == null) return "";
+
+    if (Array.isArray(value)) {
+      return value
+        .filter((item) => ["string", "number", "boolean"].includes(typeof item))
+        .map(cleanText)
+        .filter(Boolean)
+        .join(", ");
+    }
+
+    if (typeof value === "object") return "";
     return cleanText(value);
   }
 
   function keyIdentifiers(ticket) {
     const identifiers = [];
-    const excluded = new Set([
+    const details = ticket.details || {};
+    const excludedKeys = new Set([
       "requestTemplateId",
       "requestTemplateName",
       "resolutionTargetHours",
@@ -156,20 +205,72 @@ const CLOSED_STATUSES = new Set([
       "businessImpact",
       "safetyContainment",
       "containment",
-      "observedSituation"
+      "observedSituation",
+      "receiverBrief",
+      "diagnosticAnswers",
+      "diagnostics",
+      "classification",
+      "analysis",
+      "rawPayload",
+      "requestPayload",
+      "extractionResults",
+      "approval"
     ]);
+    const seen = new Set();
 
-    if (ticket.location && !/not provided|unknown/i.test(ticket.location)) {
-      identifiers.push({ label: "Location", value: ticket.location });
+    function addIdentifier(label, value) {
+      const cleanLabel = cleanText(label);
+      const cleanValue = valueText(value);
+      if (!cleanLabel || !cleanValue) return;
+
+      const duplicateKey = `${cleanLabel.toLowerCase()}::${cleanValue.toLowerCase()}`;
+      if (seen.has(duplicateKey)) return;
+      seen.add(duplicateKey);
+      identifiers.push({ label: cleanLabel, value: cleanValue });
     }
 
-    Object.entries(ticket.details || {}).forEach(([key, value]) => {
-      const text = valueText(value);
-      if (!text || excluded.has(key)) return;
-      identifiers.push({ label: humanizeKey(key), value: text });
+    function customFieldLabel(key) {
+      if (details.fieldLabels && typeof details.fieldLabels === "object" && details.fieldLabels[key]) {
+        return details.fieldLabels[key];
+      }
+      if (details.customFieldLabels && typeof details.customFieldLabels === "object" && details.customFieldLabels[key]) {
+        return details.customFieldLabels[key];
+      }
+
+      const ticketText = [ticket.title, ticket.category, ticket.description].join(" ").toLowerCase();
+      if (/^customField\d+$/i.test(key) && /printer|ink|toner|supply/.test(ticketText)) {
+        return "Quantity needed";
+      }
+      return humanizeKey(key);
+    }
+
+    if (ticket.location && !/not provided|unknown/i.test(ticket.location)) {
+      addIdentifier("Location", ticket.location);
+    }
+
+    const receiverBrief = details.receiverBrief;
+    if (receiverBrief && typeof receiverBrief === "object" && Array.isArray(receiverBrief.identifiers)) {
+      receiverBrief.identifiers.forEach((identifier) => {
+        if (!identifier || typeof identifier !== "object") return;
+        addIdentifier(identifier.label || identifier.name, identifier.value);
+      });
+    }
+
+    if (Array.isArray(details.customFields)) {
+      details.customFields.forEach((field) => {
+        if (!field || typeof field !== "object") return;
+        addIdentifier(field.label || field.name, field.value);
+      });
+    }
+
+    Object.entries(details).forEach(([key, value]) => {
+      if (excludedKeys.has(key)) return;
+      if (["fieldLabels", "customFieldLabels", "customFields"].includes(key)) return;
+      if (value && typeof value === "object") return;
+      addIdentifier(customFieldLabel(key), value);
     });
 
-    return identifiers.slice(0, 8);
+    return identifiers.slice(0, 10);
   }
 
   function informationGaps(ticket) {
@@ -234,8 +335,12 @@ const CLOSED_STATUSES = new Set([
       parts.unshift("Critical operations may be blocked");
     } else if (isWaiting(ticket)) {
       parts.unshift("Resolution is blocked until the requester responds");
-    } else if (ticket.status === "Approval required") {
-      parts.unshift("Work is waiting on an authorized decision");
+    } else if (isApprovalRequired(ticket)) {
+      parts.unshift("Work must be routed to an authorized approver");
+    } else if (isAwaitingApproval(ticket)) {
+      parts.unshift("Work is waiting on an authorized approval decision");
+    } else if (isApprovedForFulfillment(ticket)) {
+      parts.unshift("Approval is complete and fulfillment can begin");
     } else {
       parts.unshift("Active business work is affected");
     }
@@ -260,7 +365,20 @@ const CLOSED_STATUSES = new Set([
 
   function suggestedFirstAction(ticket, gaps) {
     const text = `${ticket.title || ""} ${ticket.description || ""} ${ticket.category || ""}`.toLowerCase();
+    const route = approvalRoute(ticket);
 
+    if (ticket.status === "Rejected") {
+      return "Review the authorized rejection reason with the requester and close any remaining follow-up.";
+    }
+    if (isApprovalRequired(ticket)) {
+      return `Validate the request and send it to the ${route.approverRole} for approval.`;
+    }
+    if (isAwaitingApproval(ticket)) {
+      return `Wait for the ${route.approverRole} decision or provide any additional information they request.`;
+    }
+    if (isApprovedForFulfillment(ticket)) {
+      return "Begin fulfillment now that the authorized approval is complete.";
+    }
     if (isClosed(ticket)) return "Review the recorded resolution and reopen only if the issue returns.";
     if (String(ticket.priority || "").startsWith("P1")) {
       return "Confirm the full operational scope, claim ownership, and begin the critical response immediately.";
@@ -285,7 +403,23 @@ const CLOSED_STATUSES = new Set([
     let workClass = "badge-green";
     let workDetail = "The receiver can begin without waiting on another person.";
 
-    if (isClosed(ticket)) {
+    if (ticket.status === "Rejected") {
+      workLabel = "Rejected";
+      workClass = "badge-red";
+      workDetail = "An authorized approver rejected the request.";
+    } else if (isApprovedForFulfillment(ticket)) {
+      workLabel = "Ready to fulfill";
+      workClass = "badge-green";
+      workDetail = "Approval is complete and the fulfillment team can begin work.";
+    } else if (isAwaitingApproval(ticket)) {
+      workLabel = "Awaiting approver";
+      workClass = "badge-amber";
+      workDetail = `The request is pending with the ${approvalRoute(ticket).approverRole}.`;
+    } else if (isApprovalRequired(ticket)) {
+      workLabel = "Approval routing needed";
+      workClass = "badge-amber";
+      workDetail = "The receiver must validate and send the request to the authorized approver.";
+    } else if (isClosed(ticket)) {
       workLabel = "Completed";
       workClass = "badge-green";
       workDetail = "The ticket has a recorded completion state.";
@@ -458,8 +592,8 @@ const CLOSED_STATUSES = new Set([
   }
 
   function readinessForQueue(ticket) {
-    const analysis = analyzeTicket(ticket);
-    return analysis.workReadiness.label === "Ready to work";
+    const label = analyzeTicket(ticket).workReadiness.label;
+    return label === "Ready to work" || label === "Ready to fulfill";
   }
 
   function queueRecommendation(activeTickets) {
@@ -517,7 +651,106 @@ const CLOSED_STATUSES = new Set([
     const waitingCount = document.getElementById("qmWaitingCount");
     const recommendationPanel = document.getElementById("qmRecommendation");
     const feedbackList = document.getElementById("qmFeedbackList");
+    const approvalList = document.getElementById("qmApprovalList");
+    const approvalCount = document.getElementById("qmApprovalCount");
     let currentRecommendation = null;
+
+    function approvalCardMarkup(ticket) {
+      const route = approvalRoute(ticket);
+      const amount = requestedCost(ticket) || "Amount not provided";
+      const requestedBy = route.requestedBy || "Ticket receiver";
+
+      return `
+        <article class="queue-approval-card" data-approval-ticket="${UI.escapeHtml(ticket.id)}">
+          <div class="queue-approval-main">
+            <div class="queue-approval-topline">
+              <span class="badge badge-amber">Awaiting approval</span>
+              <span>${UI.escapeHtml(route.approverRole)}</span>
+            </div>
+            <strong>${UI.escapeHtml(ticket.number)} - ${UI.escapeHtml(ticket.title)}</strong>
+            <p>${UI.escapeHtml(ticket.requester)} · ${UI.escapeHtml(ticket.queue)} · ${UI.escapeHtml(amount)}</p>
+            <p>${UI.escapeHtml(ticket.description || "No business justification was provided.")}</p>
+            <small>Submitted for approval by ${UI.escapeHtml(requestedBy)}${route.requestedAt ? ` on ${UI.escapeHtml(formatExactDate(route.requestedAt))}` : ""}.</small>
+          </div>
+          <div class="queue-approval-decision">
+            <label for="approval-note-${UI.escapeHtml(ticket.id)}">Decision note</label>
+            <textarea
+              class="textarea"
+              id="approval-note-${UI.escapeHtml(ticket.id)}"
+              data-approval-note="${UI.escapeHtml(ticket.id)}"
+              rows="2"
+              placeholder="Required for rejection or a request for more information."
+            ></textarea>
+            <div class="queue-approval-actions">
+              <button class="btn btn-primary btn-sm" type="button" data-approval-action="approve" data-ticket-id="${UI.escapeHtml(ticket.id)}">Approve</button>
+              <button class="btn btn-danger btn-sm" type="button" data-approval-action="reject" data-ticket-id="${UI.escapeHtml(ticket.id)}">Reject</button>
+              <button class="btn btn-secondary btn-sm" type="button" data-approval-action="information" data-ticket-id="${UI.escapeHtml(ticket.id)}">Request information</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function decideApproval(ticketId, action, note) {
+      const ticket = Store.getTicket(ticketId);
+      if (!ticket || !isAwaitingApproval(ticket)) {
+        UI.showToast("This request is no longer awaiting approval.");
+        return;
+      }
+
+      const route = approvalRoute(ticket);
+      const cleanNoteValue = cleanText(note);
+      if (["reject", "information"].includes(action) && !cleanNoteValue) {
+        UI.showToast("Add a decision note before continuing.");
+        const input = approvalList.querySelector(`[data-approval-note="${ticketId}"]`);
+        if (input) input.focus();
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const decisionBy = `${Store.CURRENT_USER.name} (${route.approverRole})`;
+      let status = "Awaiting approval";
+      let approvalStatus = "pending";
+      let historyText = "";
+      let toastText = "";
+
+      if (action === "approve") {
+        status = "Approved - Ready to fulfill";
+        approvalStatus = "approved";
+        historyText = `Approved by ${decisionBy}${cleanNoteValue ? `: ${cleanNoteValue}` : "."}`;
+        toastText = `${ticket.number} approved and returned to the fulfillment team.`;
+      } else if (action === "reject") {
+        status = "Rejected";
+        approvalStatus = "rejected";
+        historyText = `Rejected by ${decisionBy}: ${cleanNoteValue}`;
+        toastText = `${ticket.number} rejected.`;
+      } else if (action === "information") {
+        status = "Waiting on requester";
+        approvalStatus = "information-requested";
+        historyText = `Additional information requested by ${decisionBy}: ${cleanNoteValue}`;
+        toastText = `Information requested for ${ticket.number}.`;
+      } else {
+        return;
+      }
+
+      const details = {
+        ...(ticket.details || {}),
+        approval: {
+          ...((ticket.details && ticket.details.approval) || {}),
+          status: approvalStatus,
+          approverRole: route.approverRole,
+          approvalLabel: route.approvalLabel,
+          threshold: route.threshold,
+          amount: route.amount,
+          decisionAt: now,
+          decisionBy,
+          decisionNote: cleanNoteValue
+        }
+      };
+
+      Store.updateTicket(ticket.id, { status, details }, historyText);
+      UI.showToast(toastText);
+    }
 
     function renderQueueManager() {
       const tickets = Store.getState().tickets.slice();
@@ -532,6 +765,12 @@ const CLOSED_STATUSES = new Set([
       unassigned.textContent = String(noOwner.length);
       readinessRate.textContent = `${active.length ? Math.round((ready.length / active.length) * 100) : 100}%`;
       waitingCount.textContent = `${waiting.length} waiting`;
+
+      const pendingApprovals = tickets.filter(isAwaitingApproval);
+      approvalCount.textContent = `${pendingApprovals.length} pending`;
+      approvalList.innerHTML = pendingApprovals.length
+        ? pendingApprovals.map(approvalCardMarkup).join("")
+        : '<div class="notice notice-success"><div><strong>No pending approvals</strong><p>Requests appear here after a ticket receiver validates them and sends them to the authorized manager or director.</p></div></div>';
 
       const queueNames = [...new Set(active.map((ticket) => ticket.queue))].sort();
       queueBody.innerHTML = queueNames.length
@@ -645,6 +884,14 @@ const CLOSED_STATUSES = new Set([
           `).join("")
         : '<div class="empty-state">No receiver or manager feedback has been submitted yet.</div>';
     }
+
+    approvalList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-approval-action]");
+      if (!button) return;
+      const ticketId = button.dataset.ticketId;
+      const noteInput = approvalList.querySelector(`[data-approval-note="${ticketId}"]`);
+      decideApproval(ticketId, button.dataset.approvalAction, noteInput ? noteInput.value : "");
+    });
 
     waitingList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-qm-ticket]");

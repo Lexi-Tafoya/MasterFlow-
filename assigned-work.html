@@ -218,6 +218,15 @@
         </button>
       </section>
 
+      <section class="receiver-approval-summary" id="receiverApprovalSummary" hidden>
+        <div>
+          <small>Approval route</small>
+          <strong id="receiverApprovalRoute">Department manager</strong>
+          <p id="receiverApprovalStatusText"></p>
+        </div>
+        <span class="badge badge-amber" id="receiverApprovalBadge">Approval required</span>
+      </section>
+
       <section class="receiver-action-panel" id="receiverActionPanel">
         <div class="receiver-action-header">
           <div>
@@ -243,8 +252,7 @@
         </div>
 
         <div class="receiver-action-buttons">
-          <button class="btn btn-primary btn-sm" type="button" id="receiverApproveTicket" hidden>Approve request</button>
-          <button class="btn btn-danger btn-sm" type="button" id="receiverRejectTicket" hidden>Reject request</button>
+          <button class="btn btn-primary btn-sm" type="button" id="receiverSendApproval" hidden>Send for approval</button>
           <button class="btn btn-secondary btn-sm" type="button" id="receiverRequestInfo">Request more information</button>
           <button class="btn btn-secondary btn-sm" type="button" id="receiverAddUpdate">Add update</button>
           <button class="btn btn-primary btn-sm" type="button" id="receiverResolveTicket">Resolve ticket</button>

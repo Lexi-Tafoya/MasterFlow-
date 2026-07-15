@@ -23,10 +23,18 @@
 
   const COMMENT_EDIT_WINDOW_MS = 5 * 60 * 1000;
 
-  const APPROVAL_FINAL_STATUSES = new Set(["Approved", "Rejected"]);
+  const APPROVAL_FINAL_STATUSES = new Set(["Rejected"]);
 
   function isApprovalRequired(ticket) {
     return String(ticket && ticket.status || "") === "Approval required";
+  }
+
+  function isAwaitingApproval(ticket) {
+    return String(ticket && ticket.status || "") === "Awaiting approval";
+  }
+
+  function isApprovedForFulfillment(ticket) {
+    return String(ticket && ticket.status || "") === "Approved - Ready to fulfill";
   }
 
   function isApprovalFinal(ticket) {
@@ -42,20 +50,55 @@
     return String(details.estimatedCost || details.cost || details.amount || "").trim();
   }
 
+  function numericRequestedCost(ticket) {
+    const value = requestedCost(ticket).replace(/[^0-9.-]/g, "");
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount : 0;
+  }
+
+  function approvalRouteFor(ticket) {
+    const details = ticket && ticket.details || {};
+    const existing = details.approval && typeof details.approval === "object"
+      ? details.approval
+      : {};
+    const threshold = Number(Store.getState().settings.directorApprovalThreshold || 1000);
+    const amount = numericRequestedCost(ticket);
+    const requiresDirector = amount >= threshold;
+
+    return {
+      approverRole: existing.approverRole || (requiresDirector ? "Area Director" : "Department Manager"),
+      approvalLabel: existing.approvalLabel || (requiresDirector ? "Director approval" : "Manager approval"),
+      threshold,
+      amount,
+      status: existing.status || "not-sent",
+      requestedAt: existing.requestedAt || "",
+      requestedBy: existing.requestedBy || "",
+      decisionAt: existing.decisionAt || "",
+      decisionBy: existing.decisionBy || "",
+      decisionNote: existing.decisionNote || ""
+    };
+  }
+
   function suggestedActionFor(ticket, analysis) {
+    const route = approvalRouteFor(ticket);
+
     if (isApprovalRequired(ticket)) {
       const cost = requestedCost(ticket);
       return cost
-        ? `Review the ${cost} request and approve, reject, or request more information.`
-        : "Review the request and approve, reject, or request more information.";
+        ? `Validate the ${cost} request and send it to the ${route.approverRole} for approval.`
+        : `Validate the request and send it to the ${route.approverRole} for approval.`;
     }
 
-    if (ticket && ticket.status === "Approved") {
-      return "The request was approved. Review the timeline for the recorded decision.";
+    if (isAwaitingApproval(ticket)) {
+      return `Approval is pending with the ${route.approverRole}. No approval decision is required from the ticket receiver.`;
+    }
+
+    if (isApprovedForFulfillment(ticket)) {
+      return "Approval is complete. Begin fulfillment and keep the requester updated.";
     }
 
     if (ticket && ticket.status === "Rejected") {
-      return "The request was rejected. Review the timeline for the recorded reason.";
+      return "The authorized approver rejected this request. Review the recorded reason with the requester.";
     }
 
     return analysis.suggestedFirstAction;
@@ -65,24 +108,31 @@
     if (isApprovalFinal(ticket)) {
       return `${ticket.status} ${UI.formatDate(ticket.updatedAt)}`;
     }
+    if (isAwaitingApproval(ticket)) {
+      return "Awaiting approval decision";
+    }
     return analysis.dueLabel;
   }
 
   function workReadinessFor(ticket, analysis) {
-    if (ticket && ticket.status === "Approved") {
-      return { label: "Approved", className: "badge-green" };
+    if (isApprovedForFulfillment(ticket)) {
+      return { label: "Ready to fulfill", className: "badge-green" };
     }
     if (ticket && ticket.status === "Rejected") {
       return { label: "Rejected", className: "badge-red" };
     }
+    if (isAwaitingApproval(ticket)) {
+      return { label: "Awaiting approver", className: "badge-amber" };
+    }
     if (isApprovalRequired(ticket)) {
-      return { label: "Decision required", className: "badge-amber" };
+      return { label: "Ready to route", className: "badge-amber" };
     }
     return analysis.workReadiness;
   }
 
   function statusClassFor(status) {
     if (status === "Rejected") return "badge-red";
+    if (status === "Approved - Ready to fulfill") return "badge-green";
     return UI.statusClass(status);
   }
 
@@ -175,6 +225,8 @@
     else if (minutes <= 240) score += 20;
 
     if (ticket.status === "Approval required") score += 30;
+    if (ticket.status === "Awaiting approval") score -= 20;
+    if (ticket.status === "Approved - Ready to fulfill") score += 35;
     if (ticket.status === "Triage") score += 25;
     if (ticket.status === "New") score += 15;
     if (ticket.assignee === Store.CURRENT_USER.name) score += 15;
@@ -193,7 +245,9 @@
     if (String(ticket.priority || "").startsWith("P1")) reasons.push("Critical operational impact");
     if (minutes < 0) reasons.push("SLA is overdue");
     else if (minutes <= 60) reasons.push("SLA due within one hour");
-    if (ticket.status === "Approval required") reasons.push("Decision required");
+    if (ticket.status === "Approval required") reasons.push("Approval routing required");
+    if (ticket.status === "Awaiting approval") reasons.push("Pending authorized decision");
+    if (ticket.status === "Approved - Ready to fulfill") reasons.push("Approved for fulfillment");
     if (ticket.status === "Triage") reasons.push("Routing must be confirmed");
     if (ticket.assignee === Store.CURRENT_USER.name) reasons.push("Assigned to you");
     if (!ticket.assignee || ticket.assignee === "Unassigned") reasons.push("No owner assigned");
@@ -408,7 +462,9 @@
 
   function renderRecommended(items) {
     const active = items.filter((item) => !isFinished(item.ticket));
-    const actionable = active.filter((item) => !Feedback.isWaiting(item.ticket));
+    const actionable = active.filter((item) =>
+      !Feedback.isWaiting(item.ticket) && !isAwaitingApproval(item.ticket)
+    );
     const recommended = (actionable.length ? actionable : active).slice(0, 3);
     recommendedList.innerHTML = recommended.length
       ? recommended.map(recommendedMarkup).join("")
@@ -672,28 +728,62 @@
 
     const closed = isFinished(ticket);
     const approvalRequired = isApprovalRequired(ticket);
+    const awaitingApproval = isAwaitingApproval(ticket);
+    const approvedForFulfillment = isApprovedForFulfillment(ticket);
     const canReopen = ["Resolved", "Closed"].includes(ticket.status);
+    const approvalRoute = approvalRouteFor(ticket);
 
     const claimButton = document.getElementById("receiverClaimTicket");
     const assignButton = document.getElementById("receiverAssignTicket");
     const startButton = document.getElementById("receiverStartWork");
-    const approveButton = document.getElementById("receiverApproveTicket");
-    const rejectButton = document.getElementById("receiverRejectTicket");
+    const sendApprovalButton = document.getElementById("receiverSendApproval");
     const requestInfoButton = document.getElementById("receiverRequestInfo");
     const addUpdateButton = document.getElementById("receiverAddUpdate");
     const resolveButton = document.getElementById("receiverResolveTicket");
     const reopenButton = document.getElementById("receiverReopenTicket");
     const actionPanel = document.getElementById("receiverActionPanel");
+    const approvalSummary = document.getElementById("receiverApprovalSummary");
+    const approvalBadge = document.getElementById("receiverApprovalBadge");
+
+    const showApprovalSummary =
+      approvalRequired || awaitingApproval || approvedForFulfillment || ticket.status === "Rejected";
+
+    approvalSummary.hidden = !showApprovalSummary;
+    if (showApprovalSummary) {
+      document.getElementById("receiverApprovalRoute").textContent = approvalRoute.approverRole;
+
+      let approvalText = `This request must be reviewed by the ${approvalRoute.approverRole}.`;
+      let approvalBadgeText = "Approval required";
+      let approvalBadgeClass = "badge-amber";
+
+      if (awaitingApproval) {
+        approvalText = `Sent by ${approvalRoute.requestedBy || "the ticket receiver"}. The authorized approver must make the decision in Queue Manager.`;
+        approvalBadgeText = "Awaiting approval";
+      } else if (approvedForFulfillment) {
+        approvalText = `Approved by ${approvalRoute.decisionBy || "an authorized approver"}. The fulfillment team can now complete the work.`;
+        approvalBadgeText = "Approved";
+        approvalBadgeClass = "badge-green";
+      } else if (ticket.status === "Rejected") {
+        approvalText = `Rejected by ${approvalRoute.decisionBy || "an authorized approver"}${approvalRoute.decisionNote ? `: ${approvalRoute.decisionNote}` : "."}`;
+        approvalBadgeText = "Rejected";
+        approvalBadgeClass = "badge-red";
+      }
+
+      document.getElementById("receiverApprovalStatusText").textContent = approvalText;
+      approvalBadge.textContent = approvalBadgeText;
+      approvalBadge.className = `badge ${approvalBadgeClass}`;
+    }
 
     claimButton.hidden = closed || Boolean(ticket.assignee && ticket.assignee !== "Unassigned");
     assignButton.hidden = closed;
     assigneeSelect.disabled = closed;
-    startButton.hidden = closed || approvalRequired || ticket.status === "In progress";
-    approveButton.hidden = !approvalRequired;
-    rejectButton.hidden = !approvalRequired;
+    startButton.hidden =
+      closed || approvalRequired || awaitingApproval || ticket.status === "In progress";
+    startButton.textContent = approvedForFulfillment ? "Start fulfillment" : "Start work";
+    sendApprovalButton.hidden = !approvalRequired;
     requestInfoButton.hidden = closed;
     addUpdateButton.hidden = closed;
-    resolveButton.hidden = closed || approvalRequired;
+    resolveButton.hidden = closed || approvalRequired || awaitingApproval;
     reopenButton.hidden = !canReopen;
     actionPanel.hidden = closed && !canReopen;
     document.getElementById("receiverActionNote").value = "";
@@ -823,32 +913,47 @@
   document.getElementById("receiverStartWork").addEventListener("click", () => {
     const ticket = Store.getTicket(currentTicketId);
     if (!ticket) return;
+    const approvedFulfillment = isApprovedForFulfillment(ticket);
     updateCurrentTicket(
       {
         status: "In progress",
         assignee: !ticket.assignee || ticket.assignee === "Unassigned" ? Store.CURRENT_USER.name : ticket.assignee
       },
-      `Work started by ${Store.CURRENT_USER.name}.`,
-      "Work started."
+      approvedFulfillment
+        ? `Fulfillment started by ${Store.CURRENT_USER.name} after approval.`
+        : `Work started by ${Store.CURRENT_USER.name}.`,
+      approvedFulfillment ? "Fulfillment started." : "Work started."
     );
   });
 
-  document.getElementById("receiverApproveTicket").addEventListener("click", () => {
+  document.getElementById("receiverSendApproval").addEventListener("click", () => {
+    const ticket = Store.getTicket(currentTicketId);
+    if (!ticket || !isApprovalRequired(ticket)) return;
+
     const note = document.getElementById("receiverActionNote").value.trim();
-    updateCurrentTicket(
-      { status: "Approved" },
-      `Approved by ${Store.CURRENT_USER.name}${note ? `: ${note}` : "."}`,
-      "Request approved."
-    );
-  });
+    const route = approvalRouteFor(ticket);
+    const now = new Date().toISOString();
+    const details = {
+      ...(ticket.details || {}),
+      approval: {
+        status: "pending",
+        approverRole: route.approverRole,
+        approvalLabel: route.approvalLabel,
+        threshold: route.threshold,
+        amount: route.amount,
+        requestedAt: now,
+        requestedBy: Store.CURRENT_USER.name,
+        decisionAt: "",
+        decisionBy: "",
+        decisionNote: "",
+        receiverNote: note
+      }
+    };
 
-  document.getElementById("receiverRejectTicket").addEventListener("click", () => {
-    const note = requireNote("reject the request");
-    if (!note) return;
     updateCurrentTicket(
-      { status: "Rejected" },
-      `Rejected by ${Store.CURRENT_USER.name}: ${note}`,
-      "Request rejected."
+      { status: "Awaiting approval", details },
+      `Sent to the ${route.approverRole} for approval by ${Store.CURRENT_USER.name}${note ? `: ${note}` : "."}`,
+      `Approval request sent to the ${route.approverRole}.`
     );
   });
 

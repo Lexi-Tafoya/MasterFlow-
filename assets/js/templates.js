@@ -174,6 +174,111 @@
       ]
     },
     {
+      id: "new-it-hardware",
+      name: "New IT Hardware Request",
+      description: "Request a new, additional, or replacement scanner, laptop, monitor, printer, or other IT-managed hardware.",
+      catalog: "IT Information",
+      queue: "IT Information",
+      priority: "P3 - Normal",
+      responseSlaHours: 8,
+      resolutionSlaHours: 72,
+      keywords: [
+        "new scanner",
+        "need a scanner",
+        "need new scanner",
+        "scanner request",
+        "additional scanner",
+        "replacement scanner",
+        "replace scanner",
+        "new barcode scanner",
+        "barcode scanner request",
+        "new handheld scanner",
+        "handheld scanner request",
+        "new laptop",
+        "replacement laptop",
+        "new monitor",
+        "replacement monitor",
+        "new printer",
+        "replacement printer",
+        "new hardware",
+        "replacement hardware",
+        "need equipment",
+        "need new equipment"
+      ],
+      article: {
+        title: "Prepare a new hardware request",
+        summary: "Provide the device type, location, quantity, business reason, and estimated cost when known. If cost is unknown, MasterFlow will flag that a quote is required."
+      },
+      fields: [
+        { id: "shortDescription", label: "Short Description", type: "text", required: true, extractor: "shortDescription" },
+        {
+          id: "hardwareType",
+          label: "Hardware Type",
+          type: "select",
+          required: true,
+          options: ["", "Scanner", "Barcode scanner", "Handheld scanner", "Laptop", "Monitor", "Printer", "Other"],
+          extractor: "hardwareType"
+        },
+        {
+          id: "requestPurpose",
+          label: "Request Purpose",
+          type: "select",
+          required: true,
+          options: ["", "New / additional device", "Replacement device", "Shared team device", "Not sure"],
+          extractor: "requestPurpose"
+        },
+        {
+          id: "location",
+          label: "Location or Work Area",
+          type: "text",
+          required: true,
+          placeholder: "Example: Packaging Line 2",
+          extractor: "location"
+        },
+        {
+          id: "quantity",
+          label: "Quantity Needed",
+          type: "number",
+          required: true,
+          extractor: "quantity"
+        },
+        {
+          id: "businessReason",
+          label: "Business Reason",
+          type: "textarea",
+          required: true,
+          placeholder: "What work will this hardware support, restore, or improve?"
+        },
+        {
+          id: "costEstimateStatus",
+          label: "Cost Estimate Status",
+          type: "select",
+          required: true,
+          options: ["", "Estimated cost provided", "Quote required"],
+          extractor: "costEstimateStatus"
+        },
+        {
+          id: "estimatedCost",
+          label: "Estimated Cost",
+          type: "number",
+          required: false,
+          placeholder: "Leave blank when a quote is required",
+          extractor: "estimatedCost"
+        },
+        {
+          id: "replacementAsset",
+          label: "Existing Asset or Scanner Number",
+          type: "text",
+          required: false,
+          recommended: true,
+          recommendedHint: "include the current asset number when this is a replacement",
+          placeholder: "Example: SCN-204"
+        },
+        { id: "requestedFor", label: "Requested For", type: "user", required: true, profileValue: "name", locked: true },
+        { id: "attachments", label: "Attachments or Quote", type: "attachment", required: false }
+      ]
+    },
+    {
       id: "general-triage",
       name: "General Request - Needs Triage",
       description: "Use when MasterFlow cannot safely match an existing request type.",
@@ -249,7 +354,18 @@
       "prints blank",
       "faded print",
       "streaked print",
-      "poor print quality"
+      "poor print quality",
+      "scanner not working",
+      "scanner issue",
+      "barcode scanner not working",
+      "scanner won't scan",
+      "scanner will not scan",
+      "scanner disconnected",
+      "scanner error",
+      "scanner broken",
+      "scanner is broken",
+      "scanner is not working",
+      "scanner does not work"
     ],
 
     "equipment-out-of-service": [
@@ -342,6 +458,28 @@
       "hvac leak",
       "burning smell from vent",
       "temperature issue"
+    ],
+
+    "new-it-hardware": [
+      "i need a new scanner",
+      "need a new scanner",
+      "need another scanner",
+      "need additional scanner",
+      "need replacement scanner",
+      "replace the scanner",
+      "replacement barcode scanner",
+      "new barcode scanner",
+      "new handheld scanner",
+      "hardware request",
+      "new hardware request",
+      "need a new laptop",
+      "need another laptop",
+      "need a new monitor",
+      "need another monitor",
+      "need a new printer",
+      "need another printer",
+      "need new equipment",
+      "request new equipment"
     ],
 
     "general-triage": []
@@ -1061,6 +1199,92 @@
       ]
     },
 
+    "new-it-hardware": {
+      requiredForWork: [
+        "requestPurpose",
+        "businessReason",
+        "costEstimateStatus"
+      ],
+
+      suggestedFirstAction:
+        "Validate the hardware need, location, quantity, and cost information, then send the request through the configured manager or director approval route before fulfillment.",
+
+      questions: [
+        {
+          id: "requestPurpose",
+          label: "Request purpose",
+          reportLabel: "Why the hardware is needed",
+          question: "Is this a new or additional device, a replacement, or a shared team device?",
+          why: "The purpose determines whether an existing asset, replacement reason, or additional approval evidence may be needed.",
+          type: "select",
+          options: [
+            "New / additional device",
+            "Replacement device",
+            "Shared team device",
+            "Not sure"
+          ],
+          signals: {
+            "New / additional device": [
+              "new scanner",
+              "another scanner",
+              "additional scanner",
+              "new laptop",
+              "new monitor",
+              "new printer"
+            ],
+            "Replacement device": [
+              "replacement scanner",
+              "replace scanner",
+              "replacement laptop",
+              "replacement monitor",
+              "replacement printer"
+            ],
+            "Shared team device": [
+              "shared scanner",
+              "team scanner",
+              "shared device"
+            ]
+          }
+        },
+        {
+          id: "businessReason",
+          label: "Business reason",
+          reportLabel: "Business need",
+          question: "What work will this hardware support, restore, or improve?",
+          why: "The receiving team and approver need a concise business reason before deciding whether to purchase or reassign equipment.",
+          type: "textarea",
+          options: []
+        },
+        {
+          id: "costEstimateStatus",
+          label: "Cost estimate status",
+          reportLabel: "Cost information",
+          question: "Do you know the estimated cost, or should the receiving team obtain a quote?",
+          why: "The amount determines whether manager or director approval is required.",
+          type: "select",
+          options: [
+            "Estimated cost provided",
+            "Quote required"
+          ],
+          signals: {
+            "Estimated cost provided": [
+              "estimated cost",
+              "cost is",
+              "quote is",
+              "dollars",
+              "usd"
+            ],
+            "Quote required": [
+              "need a quote",
+              "quote required",
+              "cost unknown",
+              "do not know the cost"
+            ]
+          }
+        }
+      ]
+    },
+
     "general-triage": {
       requiredForWork: [
         "requestedOutcome",
@@ -1222,6 +1446,24 @@
     }
 
     /*
+     * A hardware purchase must contain clear acquisition intent.
+     * This prevents phrases such as "my scanner is broken" from
+     * becoming purchase requests when they belong with Help Desk.
+     */
+    if (template.id === "new-it-hardware") {
+      const device = "(?:scanner|barcode scanner|handheld scanner|laptop|monitor|printer|hardware|equipment)";
+      const acquisitionPatterns = [
+        new RegExp(`\\b(?:new|another|additional|replacement)\\s+${device}\\b`, "i"),
+        new RegExp(`\\b(?:replace|purchase|buy|order|request)\\b.{0,35}\\b${device}\\b`, "i"),
+        new RegExp(`\\bneed\\s+(?:a|an|one|\\d+)?\\s*(?:new|another|additional|replacement)?\\s*${device}\\b`, "i")
+      ];
+
+      if (!acquisitionPatterns.some((pattern) => pattern.test(input))) {
+        return 0;
+      }
+    }
+
+    /*
      * Existing template keyword scoring supports
      * normal descriptions and partial word matches.
      */
@@ -1377,6 +1619,38 @@
       },
       stockCheckType: () => /date code/i.test(input) ? "Date codes" : (/packag/i.test(input) ? "Packaging" : (/condition/i.test(input) ? "Condition" : (/count|quantity/i.test(input) ? "Count" : ""))),
       system: () => ["MERP", "OMS", "SYQ", "EDI", "API"].find((name) => lower.includes(name.toLowerCase())) || (lower.includes("website") ? "Website" : ""),
+      hardwareType: () => {
+        if (/barcode scanner/i.test(input)) return "Barcode scanner";
+        if (/handheld scanner/i.test(input)) return "Handheld scanner";
+        if (/scanner/i.test(input)) return "Scanner";
+        if (/laptop/i.test(input)) return "Laptop";
+        if (/monitor/i.test(input)) return "Monitor";
+        if (/printer/i.test(input)) return "Printer";
+        return "";
+      },
+      requestPurpose: () => {
+        if (/replace(?:ment)?|replacing/i.test(input)) return "Replacement device";
+        if (/shared|team device|team scanner/i.test(input)) return "Shared team device";
+        if (/\b(?:new|another|additional)\b/i.test(input)) return "New / additional device";
+        return "Not sure";
+      },
+      quantity: () => {
+        const explicit = input.match(/\b(?:qty|quantity|need|request(?:ing)?)\s*(?:of\s*)?(\d+)\b/i);
+        if (explicit) return explicit[1];
+        const deviceCount = input.match(/\b(\d+)\s+(?:new\s+|replacement\s+|additional\s+)?(?:scanner|scanners|laptop|laptops|monitor|monitors|printer|printers)\b/i);
+        if (deviceCount) return deviceCount[1];
+        if (/\b(?:a|an|one)\s+(?:new\s+|replacement\s+|additional\s+)?(?:scanner|laptop|monitor|printer)\b/i) return "1";
+        if (/\b(?:new|replacement|additional)\s+(?:scanner|laptop|monitor|printer)\b/i) return "1";
+        return "";
+      },
+      estimatedCost: () => {
+        const match = input.match(/\$\s*([\d,]+(?:\.\d{1,2})?)/) || input.match(/\b([\d,]+(?:\.\d{1,2})?)\s*(?:dollars?|usd)\b/i);
+        return match ? match[1].replace(/,/g, "") : "";
+      },
+      costEstimateStatus: () => {
+        if (/\$\s*[\d,]+|\b[\d,]+(?:\.\d{1,2})?\s*(?:dollars?|usd)\b/i.test(input)) return "Estimated cost provided";
+        return "Quote required";
+      },
       requestKind: () => /enhancement|improve|new capability/i.test(input) ? "Enhancement" : (/access/i.test(input) ? "Access" : "Issue")
     };
 

@@ -332,6 +332,16 @@
   }
 
   function titleFor(values) {
+    if (activeTemplate.id === "new-it-hardware") {
+      const hardware = values.hardwareType || "IT hardware";
+      const purpose = values.requestPurpose || "New / additional device";
+      const prefix = purpose === "Replacement device"
+        ? "Replacement"
+        : purpose === "Shared team device"
+          ? "Shared"
+          : "New";
+      return `${prefix} ${hardware.toLowerCase()} request`;
+    }
     if (values.shortDescription) return values.shortDescription;
     if (activeTemplate.id === "printer-ink" && values.printerName) return `Ink request for ${values.printerName}`;
     if (activeTemplate.id === "stock-check-phoenix" && values.partNumber) return `Stock check for ${values.partNumber}`;
@@ -388,6 +398,66 @@
       return;
     }
 
+
+    const isHardwarePurchase =
+      activeTemplate.id === "new-it-hardware";
+
+    const rawEstimatedCost = String(
+      values.estimatedCost || ""
+    )
+      .replace(/[$,]/g, "")
+      .trim();
+
+    const numericEstimatedCost =
+      rawEstimatedCost &&
+      Number.isFinite(Number(rawEstimatedCost))
+        ? Number(rawEstimatedCost)
+        : 0;
+
+    const directorThreshold = Number(
+      Store.getState().settings.directorApprovalThreshold || 1000
+    );
+
+    const costEstimateStatus =
+      numericEstimatedCost > 0
+        ? "Estimated cost provided"
+        : values.costEstimateStatus || "Quote required";
+
+    const approverRole =
+      numericEstimatedCost >= directorThreshold
+        ? "Area Director"
+        : "Department Manager";
+
+    const approvalLabel =
+      numericEstimatedCost >= directorThreshold
+        ? "Director approval"
+        : "Manager approval";
+
+    const ticketStatus =
+      isHardwarePurchase
+        ? "Approval required"
+        : activeTemplate.id === "general-triage"
+          ? "Triage"
+          : "New";
+
+    if (
+      isHardwarePurchase &&
+      values.costEstimateStatus === "Estimated cost provided" &&
+      numericEstimatedCost <= 0
+    ) {
+      UI.showToast("Enter the estimated cost or choose Quote required.");
+      const estimatedCostInput = document.getElementById("estimatedCost");
+      if (estimatedCostInput) estimatedCostInput.focus();
+      return;
+    }
+
+    const fieldLabels = Object.fromEntries(
+      activeTemplate.fields.map((field) => [
+        field.id,
+        field.label
+      ])
+    );
+
     const now = new Date();
     const ticket = Store.addTicket({
       title:
@@ -405,7 +475,7 @@
         activeTemplate.priority,
       queue: activeTemplate.queue,
       requester: Store.CURRENT_USER.name,
-      status: activeTemplate.id === "general-triage" ? "Triage" : "New",
+      status: ticketStatus,
       location: locationFor(values),
       source: "MasterFlow Smart Request",
       classificationConfidence: confidence,
@@ -415,7 +485,31 @@
         requestTemplateId: activeTemplate.id,
         requestTemplateName: activeTemplate.name,
         resolutionTargetHours: activeTemplate.resolutionSlaHours,
+        fieldLabels,
         ...values,
+
+        ...(isHardwarePurchase
+          ? {
+              costEstimateStatus,
+              estimatedCost:
+                numericEstimatedCost > 0
+                  ? `$${numericEstimatedCost.toFixed(2)}`
+                  : "",
+              approvalRequired: true,
+              approval: {
+                status: "not-sent",
+                approverRole,
+                approvalLabel,
+                threshold: directorThreshold,
+                amount: numericEstimatedCost,
+                requestedAt: "",
+                requestedBy: "",
+                decisionAt: "",
+                decisionBy: "",
+                decisionNote: ""
+              }
+            }
+          : {}),
         receiverBrief:
           draft.receiverBrief || null,
 
@@ -437,7 +531,11 @@
         clarificationCount:
           draft.clarificationCount || 0,        
       },
-      historyText: `Ticket created through Smart Request and routed to ${activeTemplate.queue}.`
+      historyText: isHardwarePurchase
+        ? numericEstimatedCost > 0
+          ? `Hardware request created and routed to ${activeTemplate.queue}. Receiver validation is required before sending the ${UI.formatMoney(numericEstimatedCost)} request to the ${approverRole}.`
+          : `Hardware request created and routed to ${activeTemplate.queue}. A quote is required before the receiver sends it to the ${approverRole}.`
+        : `Ticket created through Smart Request and routed to ${activeTemplate.queue}.`
     });
     window.sessionStorage.setItem(LAST_TICKET_KEY, ticket.id);
     window.sessionStorage.removeItem(DRAFT_KEY);
