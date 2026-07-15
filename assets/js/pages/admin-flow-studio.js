@@ -2587,10 +2587,265 @@
   function applyRoleState() {
     renderQueued = false;
 
+  // FLOW STUDIO M1B: DISTINCT ROLE WORKSPACES
+  function applyRoleWorkspace() {
+    const workspaces = {
+      "platform-admin": {
+        eyebrow:
+          "Enterprise governance",
+
+        title:
+          "Megan Control Center",
+
+        description:
+          "Govern company-wide request flows, ownership, routing, SLA, priority, approval, P1, and safety controls.",
+
+        noticeTitle:
+          "Protect company-wide controls without maintaining every department’s intake manually.",
+
+        noticeText:
+          "Review all request flows, validate governed behavior, and manage protected routing, queue, priority, and SLA settings.",
+
+        testTitle:
+          "Validate a request flow",
+
+        testDescription:
+          "Test classification and readiness before approving or publishing configuration changes.",
+
+        listTitle:
+          "All Request Flows",
+
+        hideEditor: false,
+        showReset: true,
+        showMetrics: true
+      },
+
+      "category-owner": {
+        eyebrow:
+          "Teach and improve",
+
+        title:
+          "My Request Flows",
+
+        description:
+          "Teach, test, and improve the IT request flows you own while protected routing and SLA controls remain governed.",
+
+        noticeTitle:
+          "Improve request quality without changing governed controls.",
+
+        noticeText:
+          "Edit employee wording, recognition phrases, questions, answer options, evidence requirements, and Receiver Brief content.",
+
+        testTitle:
+          "Test one of my flows",
+
+        testDescription:
+          "Preview how an employee request will be classified, clarified, and prepared for the receiving team.",
+
+        listTitle:
+          "My Request Flows",
+
+        hideEditor: false,
+        showReset: false,
+        showMetrics: false
+      },
+
+      "queue-manager": {
+        eyebrow:
+          "Observe intake quality",
+
+        title:
+          "Intake Quality",
+
+        description:
+          "Review how requests arrive in your managed queues and identify missing information, unclear questions, and recognition problems.",
+
+        noticeTitle:
+          "Inspect the quality of requests entering your queues.",
+
+        noticeText:
+          "Test managed-queue flows and review their operational outcome. Request design and governed settings remain read-only.",
+
+        testTitle:
+          "Test intake into my queues",
+
+        testDescription:
+          "Run a sample employee request and inspect the route, readiness, missing evidence, and Receiver Brief outcome.",
+
+        listTitle:
+          "Flows Entering My Queues",
+
+        hideEditor: true,
+        showReset: false,
+        showMetrics: false
+      }
+    };
+
+    const workspace =
+      workspaces[roleId] ||
+      workspaces["platform-admin"];
+
+    const heading =
+      document.querySelector(
+        ".flow-studio-title"
+      );
+
+    if (heading) {
+      const eyebrow =
+        heading.querySelector(
+          ".eyebrow"
+        );
+
+      const title =
+        heading.querySelector(
+          "h1"
+        );
+
+      const description =
+        heading.querySelector(
+          "p"
+        );
+
+      if (eyebrow) {
+        eyebrow.textContent =
+          workspace.eyebrow;
+      }
+
+      if (title) {
+        title.textContent =
+          workspace.title;
+      }
+
+      if (description) {
+        description.textContent =
+          workspace.description;
+      }
+    }
+
+    const introduction =
+      document.querySelector(
+        "main > .notice.notice-info"
+      );
+
+    if (introduction) {
+      const introductionTitle =
+        introduction.querySelector(
+          "strong"
+        );
+
+      const introductionText =
+        introduction.querySelector(
+          "p"
+        );
+
+      if (introductionTitle) {
+        introductionTitle.textContent =
+          workspace.noticeTitle;
+      }
+
+      if (introductionText) {
+        introductionText.textContent =
+          workspace.noticeText;
+      }
+    }
+
+    const testTitle =
+      document.getElementById(
+        "flowTestTitle"
+      );
+
+    if (testTitle) {
+      testTitle.textContent =
+        workspace.testTitle;
+
+      const testDescription =
+        testTitle.parentElement
+          ? testTitle.parentElement.querySelector(
+              "p"
+            )
+          : null;
+
+      if (testDescription) {
+        testDescription.textContent =
+          workspace.testDescription;
+      }
+    }
+
+    const listTitle =
+      document.querySelector(
+        ".template-list-card " +
+        ".card-header h2"
+      );
+
+    if (listTitle) {
+      listTitle.textContent =
+        workspace.listTitle;
+    }
+
+    const templateManager =
+      document.querySelector(
+        ".template-manager"
+      );
+
+    if (templateManager) {
+      templateManager.classList.toggle(
+        "flow-workspace-list-only",
+        workspace.hideEditor
+      );
+    }
+
+    const templateEditor =
+      document.getElementById(
+        "templateForm"
+      );
+
+    if (templateEditor) {
+      templateEditor.hidden =
+        workspace.hideEditor;
+    }
+
+    const resetButton =
+      document.getElementById(
+        "resetTemplates"
+      );
+
+    if (resetButton) {
+      resetButton.hidden =
+        !workspace.showReset;
+    }
+
+    const titleActions =
+      document.querySelector(
+        ".flow-studio-title-actions"
+      );
+
+    if (titleActions) {
+      titleActions.hidden =
+        !workspace.showReset;
+    }
+
+    const roleMetrics =
+      document.querySelector(
+        ".flow-role-metrics"
+      );
+
+    if (roleMetrics) {
+      roleMetrics.hidden =
+        !workspace.showMetrics;
+    }
+
+    document.body.dataset
+      .roleWorkspace = roleId;
+  }
+
+  function applyRoleState() {
+    renderQueued = false;
+
     rememberActiveTemplate();
     updateRoleSummary();
     applyListScope();
     applyEditorPermissions();
+    applyRoleWorkspace();
     renderFlowCard();
   }
 

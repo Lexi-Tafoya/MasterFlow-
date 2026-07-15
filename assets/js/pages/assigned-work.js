@@ -23,6 +23,69 @@
 
   const COMMENT_EDIT_WINDOW_MS = 5 * 60 * 1000;
 
+  const APPROVAL_FINAL_STATUSES = new Set(["Approved", "Rejected"]);
+
+  function isApprovalRequired(ticket) {
+    return String(ticket && ticket.status || "") === "Approval required";
+  }
+
+  function isApprovalFinal(ticket) {
+    return APPROVAL_FINAL_STATUSES.has(String(ticket && ticket.status || ""));
+  }
+
+  function isFinished(ticket) {
+    return Feedback.isClosed(ticket) || isApprovalFinal(ticket);
+  }
+
+  function requestedCost(ticket) {
+    const details = ticket && ticket.details || {};
+    return String(details.estimatedCost || details.cost || details.amount || "").trim();
+  }
+
+  function suggestedActionFor(ticket, analysis) {
+    if (isApprovalRequired(ticket)) {
+      const cost = requestedCost(ticket);
+      return cost
+        ? `Review the ${cost} request and approve, reject, or request more information.`
+        : "Review the request and approve, reject, or request more information.";
+    }
+
+    if (ticket && ticket.status === "Approved") {
+      return "The request was approved. Review the timeline for the recorded decision.";
+    }
+
+    if (ticket && ticket.status === "Rejected") {
+      return "The request was rejected. Review the timeline for the recorded reason.";
+    }
+
+    return analysis.suggestedFirstAction;
+  }
+
+  function dueLabelFor(ticket, analysis) {
+    if (isApprovalFinal(ticket)) {
+      return `${ticket.status} ${UI.formatDate(ticket.updatedAt)}`;
+    }
+    return analysis.dueLabel;
+  }
+
+  function workReadinessFor(ticket, analysis) {
+    if (ticket && ticket.status === "Approved") {
+      return { label: "Approved", className: "badge-green" };
+    }
+    if (ticket && ticket.status === "Rejected") {
+      return { label: "Rejected", className: "badge-red" };
+    }
+    if (isApprovalRequired(ticket)) {
+      return { label: "Decision required", className: "badge-amber" };
+    }
+    return analysis.workReadiness;
+  }
+
+  function statusClassFor(status) {
+    if (status === "Rejected") return "badge-red";
+    return UI.statusClass(status);
+  }
+
   const viewDefinitions = {
     recommended: {
       title: "Prioritized work",
@@ -55,7 +118,7 @@
   };
 
   function bucketFor(ticket) {
-    if (Feedback.isClosed(ticket)) return "completed";
+    if (isFinished(ticket)) return "completed";
     if (String(ticket.priority || "").startsWith("P1")) return "critical";
     if (Feedback.isWaiting(ticket)) return "waiting";
     if (Feedback.isSlaRisk(ticket)) return "risk";
@@ -100,7 +163,7 @@
   }
 
   function calculateWorkScore(ticket) {
-    if (Feedback.isClosed(ticket)) return 0;
+    if (isFinished(ticket)) return 0;
 
     let score = priorityWeight(ticket.priority);
     const minutes = minutesUntilDue(ticket);
@@ -117,7 +180,7 @@
     if (ticket.assignee === Store.CURRENT_USER.name) score += 15;
     if (!ticket.assignee || ticket.assignee === "Unassigned") score += 25;
     if (Feedback.isWaiting(ticket)) score -= 50;
-    if (analysis.workReadiness.label === "Ready to work") score += 15;
+    if (workReadinessFor(ticket, analysis).label === "Ready to work") score += 15;
 
     return score;
   }
@@ -135,7 +198,7 @@
     if (ticket.assignee === Store.CURRENT_USER.name) reasons.push("Assigned to you");
     if (!ticket.assignee || ticket.assignee === "Unassigned") reasons.push("No owner assigned");
     if (Feedback.isWaiting(ticket)) reasons.push("Blocked by missing information");
-    if (analysis.workReadiness.label === "Ready to work") reasons.push("Work-ready on arrival");
+    if (workReadinessFor(ticket, analysis).label === "Ready to work") reasons.push("Work-ready on arrival");
     if (!reasons.length) reasons.push("Ready for action");
 
     return reasons.slice(0, 3);
@@ -149,8 +212,8 @@
         score: calculateWorkScore(ticket)
       }))
       .sort((a, b) => {
-        if (Feedback.isClosed(a.ticket) !== Feedback.isClosed(b.ticket)) {
-          return Feedback.isClosed(a.ticket) ? 1 : -1;
+        if (isFinished(a.ticket) !== isFinished(b.ticket)) {
+          return isFinished(a.ticket) ? 1 : -1;
         }
         if (b.score !== a.score) return b.score - a.score;
         return new Date(a.ticket.slaDueAt).getTime() - new Date(b.ticket.slaDueAt).getTime();
@@ -159,13 +222,13 @@
 
   function matchesView(item) {
     const ticket = item.ticket;
-    if (currentView === "recommended") return !Feedback.isClosed(ticket);
-    if (currentView === "mine") return !Feedback.isClosed(ticket) && ticket.assignee === Store.CURRENT_USER.name;
-    if (currentView === "team") return !Feedback.isClosed(ticket);
-    if (currentView === "unassigned") return !Feedback.isClosed(ticket) && (!ticket.assignee || ticket.assignee === "Unassigned");
+    if (currentView === "recommended") return !isFinished(ticket);
+    if (currentView === "mine") return !isFinished(ticket) && ticket.assignee === Store.CURRENT_USER.name;
+    if (currentView === "team") return !isFinished(ticket);
+    if (currentView === "unassigned") return !isFinished(ticket) && (!ticket.assignee || ticket.assignee === "Unassigned");
     if (currentView === "risk") return Feedback.isSlaRisk(ticket);
-    if (currentView === "waiting") return !Feedback.isClosed(ticket) && Feedback.isWaiting(ticket);
-    if (currentView === "completed") return Feedback.isClosed(ticket);
+    if (currentView === "waiting") return !isFinished(ticket) && Feedback.isWaiting(ticket);
+    if (currentView === "completed") return isFinished(ticket);
     return true;
   }
 
@@ -187,7 +250,7 @@
         ticket.status,
         ticket.location,
         analysis.requestedOutcome,
-        analysis.suggestedFirstAction
+        suggestedActionFor(ticket, analysis)
       ].join(" ").toLowerCase();
 
       return matchesView(item)
@@ -197,8 +260,8 @@
   }
 
   function renderCounts(items) {
-    const active = items.filter((item) => !Feedback.isClosed(item.ticket));
-    const completed = items.filter((item) => Feedback.isClosed(item.ticket));
+    const active = items.filter((item) => !isFinished(item.ticket));
+    const completed = items.filter((item) => isFinished(item.ticket));
     const counts = {
       recommended: active.length,
       mine: active.filter((item) => item.ticket.assignee === Store.CURRENT_USER.name).length,
@@ -225,7 +288,7 @@
   }
 
   function queueSummary(items) {
-    const active = items.filter((item) => !Feedback.isClosed(item.ticket));
+    const active = items.filter((item) => !isFinished(item.ticket));
     const queues = [...new Set(active.map((item) => item.ticket.queue))];
 
     return queues.map((name) => {
@@ -283,14 +346,14 @@
         <div class="work-card-main">
           <div class="work-card-topline">
             <span class="badge ${bucketBadgeClass(item.bucket)}">${UI.escapeHtml(bucketLabel(item.bucket))}</span>
-            <span class="work-due">${UI.escapeHtml(analysis.dueLabel)}</span>
+            <span class="work-due">${UI.escapeHtml(dueLabelFor(ticket, analysis))}</span>
           </div>
           <button class="work-ticket-title" type="button" data-ticket-id="${UI.escapeHtml(ticket.id)}">${UI.escapeHtml(ticket.title)}</button>
           <div class="work-ticket-reference">${UI.escapeHtml(ticket.number)} · ${UI.escapeHtml(ticket.queue)}</div>
           <p class="work-impact">${UI.escapeHtml(analysis.scopeImpact)}</p>
           <div class="work-next-action">
             <small>Suggested first action</small>
-            <strong>${UI.escapeHtml(analysis.suggestedFirstAction)}</strong>
+            <strong>${UI.escapeHtml(suggestedActionFor(ticket, analysis))}</strong>
           </div>
           <div class="work-reason-list">${reasons}</div>
         </div>
@@ -314,17 +377,17 @@
         <div class="work-card-main">
           <div class="work-card-topline">
             <span class="badge ${bucketBadgeClass(item.bucket)}">${UI.escapeHtml(bucketLabel(item.bucket))}</span>
-            <span class="work-due">${UI.escapeHtml(analysis.dueLabel)}</span>
+            <span class="work-due">${UI.escapeHtml(dueLabelFor(ticket, analysis))}</span>
           </div>
           <button class="work-ticket-title" type="button" data-ticket-id="${UI.escapeHtml(ticket.id)}">${UI.escapeHtml(ticket.title)}</button>
           <div class="work-ticket-reference">${UI.escapeHtml(ticket.number)} · ${UI.escapeHtml(ticket.queue)}</div>
           <div class="work-card-readiness">
             <span class="badge ${analysis.routingReadiness.className}">${UI.escapeHtml(analysis.routingReadiness.label)}</span>
-            <span class="badge ${analysis.workReadiness.className}">${UI.escapeHtml(analysis.workReadiness.label)}</span>
+            <span class="badge ${workReadinessFor(ticket, analysis).className}">${UI.escapeHtml(workReadinessFor(ticket, analysis).label)}</span>
           </div>
           <div class="work-next-action compact">
             <small>Next action</small>
-            <strong>${UI.escapeHtml(analysis.suggestedFirstAction)}</strong>
+            <strong>${UI.escapeHtml(suggestedActionFor(ticket, analysis))}</strong>
           </div>
           <div class="work-meta">
             <span>Owner: <strong>${UI.escapeHtml(ticket.assignee || "Unassigned")}</strong></span>
@@ -337,14 +400,14 @@
           ${!ticket.assignee || ticket.assignee === "Unassigned"
             ? `<button class="btn btn-primary btn-sm" type="button" data-claim-ticket="${UI.escapeHtml(ticket.id)}">Claim ticket</button>`
             : ""}
-          <button class="btn btn-secondary btn-sm" type="button" data-ticket-id="${UI.escapeHtml(ticket.id)}">${Feedback.isClosed(ticket) ? "View" : "Open"}</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-ticket-id="${UI.escapeHtml(ticket.id)}">${isFinished(ticket) ? "View" : "Open"}</button>
         </div>
       </article>
     `;
   }
 
   function renderRecommended(items) {
-    const active = items.filter((item) => !Feedback.isClosed(item.ticket));
+    const active = items.filter((item) => !isFinished(item.ticket));
     const actionable = active.filter((item) => !Feedback.isWaiting(item.ticket));
     const recommended = (actionable.length ? actionable : active).slice(0, 3);
     recommendedList.innerHTML = recommended.length
@@ -377,7 +440,7 @@
           <td><span class="badge ${UI.statusClass(ticket.status)}">${UI.escapeHtml(ticket.status)}</span></td>
           <td>${UI.escapeHtml(ticket.queue)}</td>
           <td>${UI.escapeHtml(ticket.assignee || "Unassigned")}</td>
-          <td><strong>${UI.escapeHtml(analysis.dueLabel)}</strong><span class="subtext">${UI.escapeHtml(UI.formatDate(ticket.slaDueAt))}</span></td>
+          <td><strong>${UI.escapeHtml(dueLabelFor(ticket, analysis))}</strong><span class="subtext">${UI.escapeHtml(UI.formatDate(ticket.slaDueAt))}</span></td>
           <td>
             ${!ticket.assignee || ticket.assignee === "Unassigned"
               ? `<button class="btn btn-secondary btn-sm" type="button" data-claim-ticket="${UI.escapeHtml(ticket.id)}">Claim</button>`
@@ -574,19 +637,19 @@
 
     document.getElementById("receiverTicketTitle").textContent = `${ticket.number} - ${ticket.title}`;
     document.getElementById("receiverTicketSubtitle").textContent = `${ticket.queue} · ${ticket.status}`;
-    setBadge(document.getElementById("receiverStatusBadge"), ticket.status, UI.statusClass(ticket.status));
+    setBadge(document.getElementById("receiverStatusBadge"), ticket.status, statusClassFor(ticket.status));
     setBadge(document.getElementById("receiverRoutingBadge"), analysis.routingReadiness.label, analysis.routingReadiness.className);
-    setBadge(document.getElementById("receiverWorkBadge"), analysis.workReadiness.label, analysis.workReadiness.className);
+    setBadge(document.getElementById("receiverWorkBadge"), workReadinessFor(ticket, analysis).label, workReadinessFor(ticket, analysis).className);
 
     document.getElementById("receiverBriefHeadline").textContent = analysis.requestedOutcome;
-    document.getElementById("receiverBriefSummary").textContent = analysis.suggestedFirstAction;
+    document.getElementById("receiverBriefSummary").textContent = suggestedActionFor(ticket, analysis);
     document.getElementById("receiverCurrentOwner").textContent = ticket.assignee || "Unassigned";
-    document.getElementById("receiverSlaLabel").textContent = analysis.dueLabel;
+    document.getElementById("receiverSlaLabel").textContent = dueLabelFor(ticket, analysis);
     document.getElementById("receiverRequestedOutcome").textContent = analysis.requestedOutcome;
     document.getElementById("receiverObservedSituation").textContent = analysis.observedSituation;
     document.getElementById("receiverScopeImpact").textContent = analysis.scopeImpact;
     document.getElementById("receiverSafetyContainment").textContent = analysis.safetyContainment;
-    document.getElementById("receiverSuggestedAction").textContent = analysis.suggestedFirstAction;
+    document.getElementById("receiverSuggestedAction").textContent = suggestedActionFor(ticket, analysis);
 
     document.getElementById("receiverIdentifiers").innerHTML = analysis.identifiers.length
       ? analysis.identifiers.map((item) => `
@@ -607,15 +670,32 @@
       .join("")}`;
     assigneeSelect.value = ticket.assignee || "Unassigned";
 
-    const closed = Feedback.isClosed(ticket);
-    document.getElementById("receiverClaimTicket").hidden = closed || Boolean(ticket.assignee && ticket.assignee !== "Unassigned");
-    document.getElementById("receiverAssignTicket").hidden = closed;
+    const closed = isFinished(ticket);
+    const approvalRequired = isApprovalRequired(ticket);
+    const canReopen = ["Resolved", "Closed"].includes(ticket.status);
+
+    const claimButton = document.getElementById("receiverClaimTicket");
+    const assignButton = document.getElementById("receiverAssignTicket");
+    const startButton = document.getElementById("receiverStartWork");
+    const approveButton = document.getElementById("receiverApproveTicket");
+    const rejectButton = document.getElementById("receiverRejectTicket");
+    const requestInfoButton = document.getElementById("receiverRequestInfo");
+    const addUpdateButton = document.getElementById("receiverAddUpdate");
+    const resolveButton = document.getElementById("receiverResolveTicket");
+    const reopenButton = document.getElementById("receiverReopenTicket");
+    const actionPanel = document.getElementById("receiverActionPanel");
+
+    claimButton.hidden = closed || Boolean(ticket.assignee && ticket.assignee !== "Unassigned");
+    assignButton.hidden = closed;
     assigneeSelect.disabled = closed;
-    document.getElementById("receiverStartWork").hidden = closed || ticket.status === "In progress";
-    document.getElementById("receiverRequestInfo").hidden = closed;
-    document.getElementById("receiverAddUpdate").hidden = closed;
-    document.getElementById("receiverResolveTicket").hidden = closed;
-    document.getElementById("receiverReopenTicket").hidden = !closed;
+    startButton.hidden = closed || approvalRequired || ticket.status === "In progress";
+    approveButton.hidden = !approvalRequired;
+    rejectButton.hidden = !approvalRequired;
+    requestInfoButton.hidden = closed;
+    addUpdateButton.hidden = closed;
+    resolveButton.hidden = closed || approvalRequired;
+    reopenButton.hidden = !canReopen;
+    actionPanel.hidden = closed && !canReopen;
     document.getElementById("receiverActionNote").value = "";
 
     renderTimeline(ticket);
@@ -750,6 +830,25 @@
       },
       `Work started by ${Store.CURRENT_USER.name}.`,
       "Work started."
+    );
+  });
+
+  document.getElementById("receiverApproveTicket").addEventListener("click", () => {
+    const note = document.getElementById("receiverActionNote").value.trim();
+    updateCurrentTicket(
+      { status: "Approved" },
+      `Approved by ${Store.CURRENT_USER.name}${note ? `: ${note}` : "."}`,
+      "Request approved."
+    );
+  });
+
+  document.getElementById("receiverRejectTicket").addEventListener("click", () => {
+    const note = requireNote("reject the request");
+    if (!note) return;
+    updateCurrentTicket(
+      { status: "Rejected" },
+      `Rejected by ${Store.CURRENT_USER.name}: ${note}`,
+      "Request rejected."
     );
   });
 
