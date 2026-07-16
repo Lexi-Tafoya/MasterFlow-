@@ -1,0 +1,39 @@
+Read MASTERFLOW_RELEASE_GUIDE.md completely.
+
+Read the entire repository before making any changes.
+
+Do not redesign the product.
+
+Do not expand scope.
+
+Treat this as a Release Candidate.
+
+Perform:
+
+1. Repository understanding.
+2. Browser-based QA.
+3. Runtime validation.
+4. Console monitoring.
+5. Responsive review.
+6. Accessibility review.
+7. Demo-path validation.
+8. Fix only confirmed issues.
+9. Retest after each fix.
+
+At completion provide:
+
+- Tests completed
+- Bugs found
+- Bugs fixed
+- Remaining risks
+- Suggested polish
+- Final hackathon score:
+  - Business Impact /40
+  - Technical Execution /30
+  - Usability & Clarity /30
+
+Optimize only for:
+- Stability
+- Professionalism
+- Demo quality
+- Business value
