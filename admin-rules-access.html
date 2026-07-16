@@ -2,65 +2,563 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MasterFlow - Rules and access</title>
-  <link rel="stylesheet" href="assets/css/styles.css">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <meta
+    name="description"
+    content="MasterFlow enterprise governance for protected settings, approval thresholds, governed proposals, routing rules, and role scope."
+  >
+
+  <title>MasterFlow - Platform Governance</title>
+
+  <link
+    rel="stylesheet"
+    href="assets/css/styles.css"
+  >
 </head>
-<body class="workspace-page" data-page="admin">
+
+<body
+  class="workspace-page"
+  data-page="admin"
+>
   <div class="content-shell">
     <main>
       <div class="page-heading">
-        <div><h1>Rules & access</h1><p>Common configuration changes should be manageable by authorized administrators without specialized development work.</p></div>
-        <div class="page-actions"><span class="badge badge-purple">Administrator only</span></div>
+        <div>
+          <div class="eyebrow">
+            Enterprise administration
+          </div>
+
+          <h1>Megan Platform Governance</h1>
+
+          <p>
+            Set the boundaries managers can operate within, protect
+            company-wide controls, and approve governed request-flow
+            changes without manually maintaining every department’s intake.
+          </p>
+        </div>
+
+        <div class="page-actions">
+          <a
+            class="btn btn-secondary"
+            href="admin-templates.html"
+          >
+            Open Flow Studio
+          </a>
+
+          <a
+            class="btn btn-secondary"
+            href="reporting.html"
+          >
+            View Intelligence
+          </a>
+
+          <span class="badge badge-purple">
+            Megan only
+          </span>
+        </div>
       </div>
 
-      <div class="notice notice-info"><span>i</span><div><strong>The role selector exists only for the prototype.</strong><p>Production authorization should come from company SSO groups, least-privilege permissions, and an auditable role mapping.</p></div></div>
+      <div class="notice notice-info">
+        <span aria-hidden="true">i</span>
 
-      <form id="adminSettingsForm" class="card mt-18">
-        <div class="card-header"><div><h2>Operational thresholds</h2><p>These fictional defaults demonstrate no-code configuration.</p></div><button class="btn btn-primary" type="submit">Save settings</button></div>
+        <div>
+          <strong>
+            Managers improve their owned flows while Megan protects
+            enterprise controls.
+          </strong>
+
+          <p>
+            Low-risk wording and recognition changes can stay with the
+            category manager. Queue, priority, major SLA, approval,
+            P1, and safety changes require governed review.
+          </p>
+        </div>
+      </div>
+
+      <section
+        class="kpi-grid mt-18"
+        aria-label="Governance summary"
+      >
+        <article class="kpi">
+          <div class="kpi-label">
+            Pending governed proposals
+          </div>
+
+          <div
+            class="kpi-value"
+            id="governancePendingCount"
+          >
+            0
+          </div>
+
+          <div class="kpi-meta warn">
+            Awaiting Megan’s decision
+          </div>
+        </article>
+
+        <article class="kpi">
+          <div class="kpi-label">
+            Approved, not published
+          </div>
+
+          <div
+            class="kpi-value"
+            id="governanceApprovedCount"
+          >
+            0
+          </div>
+
+          <div class="kpi-meta">
+            Ready to apply
+          </div>
+        </article>
+
+        <article class="kpi">
+          <div class="kpi-label">
+            Manager approval limit
+          </div>
+
+          <div
+            class="kpi-value"
+            id="governanceManagerLimit"
+          >
+            $0
+          </div>
+
+          <div class="kpi-meta">
+            Higher amounts require escalation
+          </div>
+        </article>
+
+        <article class="kpi">
+          <div class="kpi-label">
+            Active guardrails
+          </div>
+
+          <div
+            class="kpi-value"
+            id="governanceGuardrailCount"
+          >
+            0
+          </div>
+
+          <div class="kpi-meta good">
+            Routing, approval, confidence, and P1
+          </div>
+        </article>
+      </section>
+
+      <form
+        id="adminSettingsForm"
+        class="card mt-18"
+        novalidate
+      >
+        <div class="card-header">
+          <div>
+            <h2>Manager authority and platform thresholds</h2>
+
+            <p>
+              Megan defines which changes managers may complete directly
+              and which changes require enterprise review.
+            </p>
+          </div>
+
+          <button
+            class="btn btn-primary"
+            type="submit"
+          >
+            Save guardrails
+          </button>
+        </div>
+
         <div class="card-body">
           <div class="field-row-3">
-            <div class="field"><label for="ticketConfidence">Ticket auto-routing confidence (%)</label><input class="input" id="ticketConfidence" type="number" min="0" max="100" required><small>Below this value, route to Megan Delia - Triage.</small></div>
-            <div class="field"><label for="p1Response">P1 response target (minutes)</label><input class="input" id="p1Response" type="number" min="1" max="120" required><small>Used for shipping-stopped incidents.</small></div>
-            <div class="field"><label for="normalResponse">Normal response target (hours)</label><input class="input" id="normalResponse" type="number" min="1" max="72" required><small>Prototype SLA target.</small></div>
+            <div class="field">
+              <label for="ticketConfidence">
+                Safe-routing confidence (%)
+              </label>
+
+              <input
+                class="input"
+                id="ticketConfidence"
+                type="number"
+                min="0"
+                max="100"
+                required
+              >
+
+              <small>
+                Requests below this threshold route to Megan Delia - Triage.
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="p1Response">
+                P1 response target (minutes)
+              </label>
+
+              <input
+                class="input"
+                id="p1Response"
+                type="number"
+                min="1"
+                max="120"
+                required
+              >
+
+              <small>
+                Shipping-stopped requests continue using the P1 fast lane.
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="managerApprovalLimit">
+                Manager ticket-approval limit ($)
+              </label>
+
+              <input
+                class="input"
+                id="managerApprovalLimit"
+                type="number"
+                min="0"
+                step="1"
+                required
+              >
+
+              <small>
+                Requests at or above this amount require director-level approval.
+              </small>
+            </div>
           </div>
+
           <div class="field-row-3 mt-12">
-            <div class="field"><label for="minimumSavings">Minimum freight savings ($)</label><input class="input" id="minimumSavings" type="number" min="0" required><small>Review threshold; zero-touch actions can use a different economic rule.</small></div>
-            <div class="field"><label for="manualConfidence">Freight manual-review confidence (%)</label><input class="input" id="manualConfidence" type="number" min="0" max="100" required><small>Below this, normally record without creating work.</small></div>
-            <div class="field"><label for="autoConfidence">Freight possible auto-action confidence (%)</label><input class="input" id="autoConfidence" type="number" min="0" max="100" required><small>All hard guardrails must also pass.</small></div>
+            <div class="field">
+              <label for="normalResponse">
+                Normal response default (hours)
+              </label>
+
+              <input
+                class="input"
+                id="normalResponse"
+                type="number"
+                min="0.25"
+                max="72"
+                step="0.25"
+                required
+              >
+
+              <small>
+                Default response target used by standard requests.
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="normalResolution">
+                Normal resolution default (hours)
+              </label>
+
+              <input
+                class="input"
+                id="normalResolution"
+                type="number"
+                min="1"
+                max="720"
+                step="1"
+                required
+              >
+
+              <small>
+                Default resolution target used by standard requests.
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="managerResponseSlaDelta">
+                Manager response-SLA allowance (hours)
+              </label>
+
+              <input
+                class="input"
+                id="managerResponseSlaDelta"
+                type="number"
+                min="0"
+                max="72"
+                step="0.25"
+                required
+              >
+
+              <small>
+                Changes beyond this allowance require Megan’s approval.
+              </small>
+            </div>
           </div>
+
           <div class="field-row mt-12">
-            <div class="field"><label for="directorThreshold">Director approval threshold ($)</label><input class="input" id="directorThreshold" type="number" min="0" required><small>Example: purchases or financial exceptions above this value.</small></div>
-            <div class="field"><label for="normalResolution">Normal resolution target (hours)</label><input class="input" id="normalResolution" type="number" min="1" max="720" required><small>Used to calculate prototype SLA due times.</small></div>
+            <div class="field">
+              <label for="managerResolutionSlaDelta">
+                Manager resolution-SLA allowance (hours)
+              </label>
+
+              <input
+                class="input"
+                id="managerResolutionSlaDelta"
+                type="number"
+                min="0"
+                max="720"
+                step="1"
+                required
+              >
+
+              <small>
+                Changes beyond this allowance require Megan’s approval.
+              </small>
+            </div>
+
+            <div class="notice notice-warning">
+              <span aria-hidden="true">!</span>
+
+              <div>
+                <strong>
+                  Always governed
+                </strong>
+
+                <p>
+                  Cross-department routing, default priority, approval
+                  requirements, P1 behavior, and safety rules always
+                  require Megan.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </form>
 
+      <section class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>Governed flow proposals</h2>
+
+            <p>
+              Approve, reject, and publish protected changes submitted
+              through the closed feedback loop.
+            </p>
+          </div>
+
+          <span
+            class="badge badge-amber"
+            id="governanceProposalCount"
+          >
+            0 actions
+          </span>
+        </div>
+
+        <div
+          class="card-body"
+          id="governanceProposalList"
+          aria-live="polite"
+        >
+          <div class="empty-state">
+            Governed proposals are loading.
+          </div>
+        </div>
+      </section>
+
       <div class="grid grid-2 mt-18">
         <section class="card">
-          <div class="card-header"><div><h2>Routing rules</h2><p>Category, confidence, location, and business rules can control queue assignment.</p></div><button class="btn btn-secondary btn-sm" type="button">+ Add rule</button></div>
-          <div class="card-body" id="routingRules"></div>
+          <div class="card-header">
+            <div>
+              <h2>Routing guardrails</h2>
+
+              <p>
+                Protected rules controlling queue assignment and human triage.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="card-body"
+            id="routingRules"
+          ></div>
         </section>
+
         <section class="card">
-          <div class="card-header"><div><h2>Approval rules</h2><p>Keep financial, operational, and customer-impact approvals explicit.</p></div><button class="btn btn-secondary btn-sm" type="button">+ Add rule</button></div>
-          <div class="card-body" id="approvalRules"></div>
+          <div class="card-header">
+            <div>
+              <h2>Approval guardrails</h2>
+
+              <p>
+                Active operational approval policies relevant to ticket work.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="card-body"
+            id="approvalRules"
+          ></div>
         </section>
       </div>
 
       <section class="card mt-18">
-        <div class="card-header"><div><h2>Roles and access</h2><p>Illustrative role model; production access is expected to be mapped from SSO.</p></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Role</th><th>Can create</th><th>Can view</th><th>Can change</th><th>Production control</th></tr></thead><tbody>
-          <tr><td><strong>Regular user</strong></td><td>Own tickets and P1 incidents</td><td>Own tickets and knowledge</td><td>Own request details</td><td>SSO employee group</td></tr>
-          <tr><td><strong>Ticket receiver</strong></td><td>Tickets, approvals, freight decisions</td><td>Authorized queues and reporting</td><td>Assignment, status, permitted severity</td><td>Team and queue membership</td></tr>
-          <tr><td><strong>Administrator</strong></td><td>Configuration records</td><td>All authorized operational views</td><td>Rules, roles, queues, SLAs, approvals</td><td>Privileged SSO group + audit</td></tr>
-        </tbody></table></div>
-        <div class="card-footer"><button class="btn btn-secondary" id="resetSettingsButton" type="button">Reset all demo data</button></div>
+        <div class="card-header">
+          <div>
+            <h2>Recent governance decisions</h2>
+
+            <p>
+              Approved, published, and rejected flow changes remain visible.
+            </p>
+          </div>
+
+          <span class="badge badge-blue">
+            Change visibility
+          </span>
+        </div>
+
+        <div
+          class="card-body"
+          id="governanceRecentList"
+        >
+          <div class="empty-state">
+            No governance decisions have been recorded.
+          </div>
+        </div>
+      </section>
+
+      <section class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>Roles and authority</h2>
+
+            <p>
+              Prototype role scope; production permissions would be mapped
+              from company SSO and audited groups.
+            </p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Primary purpose</th>
+                <th>Can change</th>
+                <th>Cannot override</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>
+                  <strong>Regular user</strong>
+                </td>
+
+                <td>
+                  Submit and monitor personal requests
+                </td>
+
+                <td>
+                  Own request information and replies
+                </td>
+
+                <td>
+                  Routing, SLA, assignment, and governance
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <strong>Ticket receiver</strong>
+                </td>
+
+                <td>
+                  Complete work in authorized queues
+                </td>
+
+                <td>
+                  Assignment, status, updates, and resolution
+                </td>
+
+                <td>
+                  Own approval decisions and flow governance
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <strong>IT Queue &amp; Category Manager</strong>
+                </td>
+
+                <td>
+                  Manage queue operations and improve owned flows
+                </td>
+
+                <td>
+                  Low-risk content and allowed SLA changes
+                </td>
+
+                <td>
+                  Enterprise routing, P1, safety, and protected thresholds
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <strong>Megan Delia — Enterprise Administrator</strong>
+                </td>
+
+                <td>
+                  Protect company-wide controls and resolve governed changes
+                </td>
+
+                <td>
+                  All flows, thresholds, routing, priority, approvals, and P1
+                </td>
+
+                <td>
+                  Production controls still require audited authorization
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-footer">
+          <button
+            class="btn btn-secondary"
+            id="resetSettingsButton"
+            type="button"
+          >
+            Reset all demo data
+          </button>
+        </div>
       </section>
     </main>
   </div>
 
-  <script src="assets/js/store.js" defer></script>
-  <script src="assets/js/layout.js" defer></script>
-  <script src="assets/js/pages/admin-rules-access.js" defer></script>
+  <script
+    src="assets/js/store.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/templates.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/layout.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/pages/admin-rules-access.js"
+    defer
+  ></script>
 </body>
 </html>

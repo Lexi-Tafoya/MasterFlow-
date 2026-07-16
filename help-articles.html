@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="MasterFlow self-service knowledge workspace with guided troubleshooting, escalation guidance, and ticket deflection tracking.">
   <title>MasterFlow - Help articles</title>
+
   <link rel="stylesheet" href="assets/css/styles.css">
-  <link rel="stylesheet" href="assets/css/HELP_ARTICLES_APPEND.css">
+  <link rel="stylesheet" href="assets/css/TROUBLESHOOTING_APPEND.css">
 </head>
 <body class="workspace-page help-center-page" data-page="help-articles">
   <div class="content-shell">
     <main>
       <div class="page-heading">
         <div>
-          <div class="eyebrow">Self-service support</div>
+          <div class="eyebrow">Guided self-service</div>
           <h1>Help Center</h1>
-          <p>Describe the problem in your own words. MasterFlow will recommend a guided fix, capture what you tried, and carry the results into a request when support is still needed.</p>
+          <p>Describe the problem in your own words. MasterFlow recommends the best guide, records what you tried, and carries the results into a request when support is still needed.</p>
         </div>
         <div class="page-actions">
           <a class="btn btn-primary" href="index.html">Ask for help</a>
@@ -26,24 +26,12 @@
         <div>
           <span class="badge badge-teal">Natural-language search</span>
           <h2 id="helpSearchTitle">What are you trying to fix?</h2>
-          <p>Try phrases like “printer will not connect,” “laptop is slow,” “scanner is not reading,” or “shipping is stopped.”</p>
+          <p>Try “printer will not connect,” “laptop is slow,” “scanner is not reading,” or “I cannot access a report.”</p>
         </div>
         <div class="help-search-controls">
-          <input
-            class="control help-search-input"
-            id="articleSearch"
-            type="search"
-            placeholder="Describe the issue or search articles"
-            aria-label="Search help articles"
-          >
+          <input class="control help-search-input" id="articleSearch" type="search" placeholder="Describe the issue or search articles" aria-label="Search help articles" autocomplete="off">
           <select class="control" id="articleCategory" aria-label="Filter articles by category">
             <option value="all">All categories</option>
-            <option>Hardware</option>
-            <option>Device performance</option>
-            <option>Using MasterFlow</option>
-            <option>Warehouse operations</option>
-            <option>Access</option>
-            <option>Warehouse technology</option>
           </select>
         </div>
       </section>
@@ -57,25 +45,25 @@
         <div class="help-summary-card">
           <span>Most relevant</span>
           <strong id="articleTopScore">—</strong>
-          <small>Based on your current search</small>
+          <small>Based on the current search</small>
         </div>
         <div class="help-summary-card">
           <span>Issues solved here</span>
           <strong id="articleDeflectionCount">0</strong>
-          <small>Prototype self-service deflections</small>
+          <small>No ticket was needed</small>
         </div>
         <div class="help-summary-card">
-          <span>Still need support</span>
+          <span>Requests prepared</span>
           <strong id="articleEscalationCount">0</strong>
-          <small>Requests started with troubleshooting context</small>
+          <small>Troubleshooting context carried forward</small>
         </div>
       </section>
 
       <div class="notice notice-info mt-18">
         <span>i</span>
         <div>
-          <strong>Knowledge recommendations are assistance, not a gate.</strong>
-          <p>Employees can create a request at any time. Stop troubleshooting when a safety concern exists, and always use the Shipping is stopped fast lane for a critical warehouse outage.</p>
+          <strong>Self-service is never a gate.</strong>
+          <p>Create a request at any time. Stop troubleshooting for safety concerns, and use the Shipping is stopped fast lane for a critical warehouse outage.</p>
         </div>
       </div>
 
@@ -83,7 +71,7 @@
         <div class="card-header">
           <div>
             <h2>Recommended first</h2>
-            <p>MasterFlow matched this guide to the wording of your issue.</p>
+            <p>MasterFlow matched this guide to the wording of the issue.</p>
           </div>
           <span class="badge badge-teal">Best match</span>
         </div>
@@ -103,97 +91,91 @@
     </main>
   </div>
 
-  <dialog id="articleDialog" class="help-article-dialog" aria-labelledby="articleDialogTitle">
+  <dialog id="helpTroubleshootingDialog" class="troubleshooting-dialog" aria-labelledby="helpTroubleshootingTitle">
     <div class="dialog-header">
       <div>
-        <div class="article-tags" id="articleDialogTags"></div>
-        <h2 id="articleDialogTitle"></h2>
-        <p id="articleDialogSummary"></p>
+        <div class="article-tags" id="helpTroubleshootingBadges"></div>
+        <h2 id="helpTroubleshootingTitle">Guided troubleshooting</h2>
+        <p id="helpTroubleshootingSummary"></p>
       </div>
-      <button class="close-button" type="button" data-close-article-dialog aria-label="Close">×</button>
+      <button class="close-button" type="button" data-close-help-troubleshooting aria-label="Close">×</button>
     </div>
 
-    <div class="dialog-body help-guide-body">
-      <section class="help-meaning-panel">
-        <div class="help-panel-heading">
-          <span class="help-panel-icon" aria-hidden="true">i</span>
-          <div>
-            <h3>What this usually means</h3>
-            <p id="articleDialogMeaning"></p>
-          </div>
-        </div>
+    <div class="dialog-body troubleshooting-dialog-body">
+      <section class="troubleshooting-meaning">
+        <div class="eyebrow">What this usually means</div>
+        <p id="helpTroubleshootingMeaning"></p>
       </section>
 
-      <section class="help-steps-panel">
-        <div class="help-panel-heading help-panel-heading-between">
+      <section class="troubleshooting-section">
+        <div class="troubleshooting-section-heading">
           <div>
-            <h3>Try these steps in order</h3>
-            <p>Check each step as you complete it. MasterFlow will include the results if you still need support.</p>
+            <h3 id="helpTroubleshootingStepsTitle">Try these steps in order</h3>
+            <p>Check each step as you complete it. MasterFlow will include the results when support is still needed.</p>
           </div>
-          <span class="badge badge-blue" id="articleStepProgress">0 of 0 complete</span>
+          <span class="badge badge-blue" id="helpTroubleshootingProgress">0 of 0 complete</span>
         </div>
-        <div class="help-step-list" id="articleDialogSteps"></div>
+        <div class="troubleshooting-step-list" id="helpTroubleshootingSteps"></div>
       </section>
 
-      <section class="help-record-panel">
-        <div class="help-panel-heading">
-          <span class="help-panel-icon" aria-hidden="true">✎</span>
+      <section class="troubleshooting-warning">
+        <div class="eyebrow">When to stop and escalate</div>
+        <p id="helpTroubleshootingEscalation"></p>
+        <button class="btn btn-danger btn-sm" type="button" id="helpTroubleshootingP1" hidden>Shipping is stopped — open P1</button>
+      </section>
+
+      <section class="troubleshooting-section">
+        <div class="troubleshooting-section-heading">
           <div>
-            <h3>What to record if it still fails</h3>
-            <p id="articleRecordGuidance"></p>
+            <h3>Record the result</h3>
+            <p id="helpTroubleshootingRecord"></p>
           </div>
         </div>
-
-        <div class="field-row mt-12">
+        <div class="field-row">
           <div class="field">
-            <label for="articleAffectedScope">Who or what is affected?</label>
-            <select class="select" id="articleAffectedScope">
-              <option value="">Choose one</option>
-              <option>Only me</option>
-              <option>One station or device</option>
-              <option>Multiple users or stations</option>
-              <option>Entire process or area</option>
-              <option>Not sure</option>
+            <label for="helpTroubleshootingOutcome">What happened?</label>
+            <select class="select" id="helpTroubleshootingOutcome">
+              <option value="">Choose a result</option>
+              <option value="Solved">The issue is solved</option>
+              <option value="Improved but not solved">It improved but is not solved</option>
+              <option value="No change">There was no change</option>
+              <option value="Different error">The error or behavior changed</option>
+              <option value="Could not complete">I could not complete the steps</option>
             </select>
           </div>
           <div class="field">
-            <label for="articleIdentifiers">Location, asset, system, or error code</label>
-            <input class="input" id="articleIdentifiers" placeholder="Example: Pack Station 14, PHX-PRN-22, OMS error 504">
+            <label for="helpTroubleshootingScope">Who or what is affected?</label>
+            <select class="select" id="helpTroubleshootingScope">
+              <option value="">Choose the affected scope</option>
+              <option>Only me</option>
+              <option>One device or station</option>
+              <option>Multiple users or stations</option>
+              <option>An entire process or area</option>
+              <option>Not sure</option>
+            </select>
           </div>
         </div>
-
         <div class="field mt-12">
-          <label for="articleObservation">What happened after trying the steps?</label>
-          <textarea class="textarea" id="articleObservation" placeholder="Describe the result, exact error message, or anything that changed."></textarea>
+          <label for="helpTroubleshootingIdentifiers">Location, asset, system, ticket, or error</label>
+          <input class="input" id="helpTroubleshootingIdentifiers" placeholder="Example: Pack Station 14, PHX-PRN-22, OMS error 504">
         </div>
-      </section>
-
-      <section class="help-escalation-panel">
-        <div class="help-panel-heading">
-          <span class="help-panel-icon help-panel-icon-warning" aria-hidden="true">!</span>
-          <div>
-            <h3>When to stop and escalate</h3>
-            <p id="articleEscalationText"></p>
-          </div>
-        </div>
-        <button class="btn btn-danger btn-sm" type="button" id="articleEmergencyButton" hidden>
-          Shipping is stopped — open P1 fast lane
-        </button>
-      </section>
-
-      <section class="help-feedback-panel">
-        <h3>Did this solve the issue?</h3>
-        <p>MasterFlow records the result for reporting. If support is still needed, the completed steps and observations are carried into the request automatically.</p>
-        <div class="help-feedback-actions">
-          <button class="btn btn-primary" type="button" id="articleSolvedButton">Yes, this solved it</button>
-          <button class="btn btn-secondary" type="button" id="articleNeedHelpButton">No, I still need help</button>
+        <div class="field mt-12">
+          <label for="helpTroubleshootingNotes">Additional notes</label>
+          <textarea class="textarea" id="helpTroubleshootingNotes" placeholder="What changed, what could not be completed, or what should support know?"></textarea>
         </div>
       </section>
     </div>
+
+    <div class="dialog-footer troubleshooting-footer">
+      <button class="btn btn-secondary" type="button" data-close-help-troubleshooting>Close</button>
+      <button class="btn btn-soft" type="button" id="helpTroubleshootingSolved">This solved it</button>
+      <button class="btn btn-primary" type="button" id="helpTroubleshootingContinue">I still need help</button>
+    </div>
   </dialog>
 
-  <script src="assets/js/store.js" defer></script>
-  <script src="assets/js/layout.js" defer></script>
-  <script src="assets/js/pages/help-articles.js" defer></script>
+<script src="assets/js/store.js" defer></script>
+<script src="assets/js/layout.js" defer></script>
+<script src="assets/js/troubleshooting-engine.js" defer></script>
+<script src="assets/js/pages/help-articles.js" defer></script>
 </body>
 </html>

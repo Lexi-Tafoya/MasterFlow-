@@ -3,255 +3,884 @@
 
   const Store = window.MasterFlowStore;
   const UI = window.MasterFlowUI;
-  if (!Store || !UI || !UI.layoutReady) return;
+  const Troubleshooting =
+    window.MasterFlowTroubleshooting;
 
-  const METRICS_KEY = "masterflowKnowledgeMetricsV1";
-  const grid = document.getElementById("articleGrid");
-  const search = document.getElementById("articleSearch");
-  const category = document.getElementById("articleCategory");
-  const clearButton = document.getElementById("clearArticleSearch");
-  const recommendedSection = document.getElementById("recommendedArticleSection");
-  const recommendedContainer = document.getElementById("recommendedArticle");
-  const dialog = document.getElementById("articleDialog");
+  if (
+    !Store ||
+    !UI ||
+    !UI.layoutReady ||
+    !Troubleshooting
+  ) {
+    console.error(
+      "Help Center dependencies did not load.",
+      {
+        Store: Boolean(Store),
+        UI: Boolean(UI),
+        layoutReady: Boolean(
+          UI && UI.layoutReady
+        ),
+        Troubleshooting: Boolean(
+          Troubleshooting
+        )
+      }
+    );
 
-  let activeArticleId = "";
-
-  function readMetrics() {
-    try {
-      const value = JSON.parse(window.localStorage.getItem(METRICS_KEY) || "null");
-      return value && typeof value === "object"
-        ? {
-            solved: Number(value.solved || 0),
-            escalated: Number(value.escalated || 0),
-            articleFeedback: value.articleFeedback && typeof value.articleFeedback === "object"
-              ? value.articleFeedback
-              : {}
-          }
-        : { solved: 0, escalated: 0, articleFeedback: {} };
-    } catch (error) {
-      console.warn("Knowledge metrics were reset because they could not be read.", error);
-      return { solved: 0, escalated: 0, articleFeedback: {} };
-    }
+    return;
   }
 
-  function writeMetrics(metrics) {
-    window.localStorage.setItem(METRICS_KEY, JSON.stringify(metrics));
-    renderSummary();
+  const elements = {
+    grid:
+      document.getElementById(
+        "articleGrid"
+      ),
+
+    search:
+      document.getElementById(
+        "articleSearch"
+      ),
+
+    category:
+      document.getElementById(
+        "articleCategory"
+      ),
+
+    clearButton:
+      document.getElementById(
+        "clearArticleSearch"
+      ),
+
+    recommendedSection:
+      document.getElementById(
+        "recommendedArticleSection"
+      ),
+
+    recommendedContainer:
+      document.getElementById(
+        "recommendedArticle"
+      ),
+
+    resultCount:
+      document.getElementById(
+        "articleResultCount"
+      ),
+
+    availableCount:
+      document.getElementById(
+        "articleAvailableCount"
+      ),
+
+    topScore:
+      document.getElementById(
+        "articleTopScore"
+      ),
+
+    deflectionCount:
+      document.getElementById(
+        "articleDeflectionCount"
+      ),
+
+    escalationCount:
+      document.getElementById(
+        "articleEscalationCount"
+      ),
+
+    dialog:
+      document.getElementById(
+        "helpTroubleshootingDialog"
+      ),
+
+    badges:
+      document.getElementById(
+        "helpTroubleshootingBadges"
+      ),
+
+    title:
+      document.getElementById(
+        "helpTroubleshootingTitle"
+      ),
+
+    summary:
+      document.getElementById(
+        "helpTroubleshootingSummary"
+      ),
+
+    meaning:
+      document.getElementById(
+        "helpTroubleshootingMeaning"
+      ),
+
+    stepsTitle:
+      document.getElementById(
+        "helpTroubleshootingStepsTitle"
+      ),
+
+    progress:
+      document.getElementById(
+        "helpTroubleshootingProgress"
+      ),
+
+    steps:
+      document.getElementById(
+        "helpTroubleshootingSteps"
+      ),
+
+    escalation:
+      document.getElementById(
+        "helpTroubleshootingEscalation"
+      ),
+
+    p1Button:
+      document.getElementById(
+        "helpTroubleshootingP1"
+      ),
+
+    recordGuidance:
+      document.getElementById(
+        "helpTroubleshootingRecord"
+      ),
+
+    outcome:
+      document.getElementById(
+        "helpTroubleshootingOutcome"
+      ),
+
+    scope:
+      document.getElementById(
+        "helpTroubleshootingScope"
+      ),
+
+    identifiers:
+      document.getElementById(
+        "helpTroubleshootingIdentifiers"
+      ),
+
+    notes:
+      document.getElementById(
+        "helpTroubleshootingNotes"
+      ),
+
+    solvedButton:
+      document.getElementById(
+        "helpTroubleshootingSolved"
+      ),
+
+    continueButton:
+      document.getElementById(
+        "helpTroubleshootingContinue"
+      )
+  };
+
+  const missingElements =
+    Object.entries(elements)
+      .filter(([, element]) => !element)
+      .map(([name]) => name);
+
+  if (missingElements.length) {
+    console.error(
+      "Help Center HTML is missing required elements:",
+      missingElements
+    );
+
+    return;
   }
 
-  function normalize(value) {
-    return String(value || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+  let activeGuide = null;
+  let activeSession = null;
+
+  function escape(value) {
+    return UI.escapeHtml(value);
   }
 
-  function words(value) {
-    return normalize(value)
-      .split(" ")
-      .filter((word) => word.length > 2);
+  function modeLabel(mode) {
+    const labels = {
+      troubleshooting:
+        "Guided troubleshooting",
+
+      preparation:
+        "Request checklist",
+
+      safety:
+        "Safety checklist",
+
+      guidance:
+        "Guidance"
+    };
+
+    return labels[mode] || "Guide";
   }
 
-  function scoreArticle(article, query) {
-    const normalizedQuery = normalize(query);
-    if (!normalizedQuery) return 0;
+  function populateCategories() {
+    const currentValue =
+      elements.category.value || "all";
 
-    const title = normalize(article.title);
-    const summary = normalize(article.summary);
-    const categoryText = normalize(article.category);
-    const tags = normalize((article.tags || []).join(" "));
-    const steps = normalize((article.steps || []).join(" "));
+    const categories = [
+      ...new Set(
+        Store.getState()
+          .knowledgeArticles
+          .map(
+            (article) =>
+              article.category
+          )
+          .filter(Boolean)
+      )
+    ].sort();
 
-    let score = 0;
-    if (title.includes(normalizedQuery)) score += 80;
-    if (summary.includes(normalizedQuery)) score += 45;
-    if (tags.includes(normalizedQuery)) score += 55;
-    if (steps.includes(normalizedQuery)) score += 25;
+    elements.category.innerHTML = [
+      '<option value="all">All categories</option>',
 
-    words(normalizedQuery).forEach((word) => {
-      if (title.includes(word)) score += 18;
-      if (tags.includes(word)) score += 14;
-      if (summary.includes(word)) score += 9;
-      if (steps.includes(word)) score += 4;
-      if (categoryText.includes(word)) score += 5;
-    });
+      ...categories.map(
+        (name) =>
+          `<option value="${escape(
+            name
+          )}">${escape(name)}</option>`
+      )
+    ].join("");
 
-    return score;
+    elements.category.value =
+      ["all", ...categories].includes(
+        currentValue
+      )
+        ? currentValue
+        : "all";
   }
 
-  function getVisibleArticles() {
-    const state = Store.getState();
-    const query = search.value.trim();
-    const selectedCategory = category.value;
+  function renderSummary(results) {
+    const metrics =
+      Troubleshooting.metrics();
 
-    return state.knowledgeArticles
-      .map((article) => ({ article, score: scoreArticle(article, query) }))
-      .filter(({ article, score }) => {
-        const matchesCategory = selectedCategory === "all" || article.category === selectedCategory;
-        const matchesQuery = !query || score > 0;
-        return matchesCategory && matchesQuery;
-      })
-      .sort((a, b) => {
-        if (query && b.score !== a.score) return b.score - a.score;
-        return Number(b.article.helpful || 0) - Number(a.article.helpful || 0);
-      });
+    elements.availableCount.textContent =
+      String(
+        Store.getState()
+          .knowledgeArticles.length
+      );
+
+    elements.deflectionCount.textContent =
+      String(metrics.solved);
+
+    elements.escalationCount.textContent =
+      String(metrics.escalated);
+
+    elements.topScore.textContent =
+      elements.search.value.trim() &&
+      results.length
+        ? `${Math.min(
+            99,
+            Math.max(
+              1,
+              Number(
+                results[0].score || 0
+              )
+            )
+          )}%`
+        : "—";
   }
 
-  function renderSummary() {
-    const metrics = readMetrics();
-    const total = Store.getState().knowledgeArticles.length;
-    const visible = getVisibleArticles();
+  function articleMarkup(
+    result,
+    featured
+  ) {
+    const article = result.article;
+    const guide = result.guide;
+    const score = Number(
+      result.score || 0
+    );
 
-    document.getElementById("articleAvailableCount").textContent = String(total);
-    document.getElementById("articleDeflectionCount").textContent = String(metrics.solved);
-    document.getElementById("articleEscalationCount").textContent = String(metrics.escalated);
-    document.getElementById("articleTopScore").textContent = search.value.trim() && visible.length
-      ? `${Math.min(99, Math.max(1, visible[0].score))}%`
-      : "—";
-  }
-
-  function articleMarkup(article, score, compact) {
-    const helpful = Number(article.helpful || 0);
     return `
-      <article class="article-card${compact ? " help-article-featured" : ""}">
+      <article
+        class="article-card${
+          featured
+            ? " help-article-featured"
+            : ""
+        }"
+      >
         <div class="article-tags">
-          <span class="badge badge-blue">${UI.escapeHtml(article.category)}</span>
-          <span class="badge badge-green">${UI.escapeHtml(helpful)}% helpful</span>
-          ${score > 0 ? `<span class="badge badge-teal">${Math.min(99, score)} match</span>` : ""}
+          <span class="badge badge-blue">
+            ${escape(article.category)}
+          </span>
+
+          <span class="badge badge-green">
+            ${escape(article.helpful)}% helpful
+          </span>
+
+          ${
+            score > 0
+              ? `
+                <span class="badge badge-teal">
+                  ${Math.min(
+                    99,
+                    score
+                  )}% match
+                </span>
+              `
+              : ""
+          }
         </div>
-        <h2>${UI.escapeHtml(article.title)}</h2>
-        <p>${UI.escapeHtml(article.summary)}</p>
+
+        <h2>${escape(article.title)}</h2>
+
+        <p>${escape(article.summary)}</p>
+
         <div class="help-article-preview">
-          <strong>${article.steps && article.steps.length ? `${article.steps.length} guided steps` : "Quick guidance"}</strong>
-          <span>${UI.escapeHtml((article.tags || []).slice(0, 3).join(" · "))}</span>
+          <strong>
+            ${guide.steps.length}
+            guided step${
+              guide.steps.length === 1
+                ? ""
+                : "s"
+            }
+          </strong>
+
+          <span>
+            ${escape(
+              modeLabel(guide.mode)
+            )}
+            · about
+            ${escape(
+              guide.estimatedMinutes
+            )}
+            minute${
+              guide.estimatedMinutes === 1
+                ? ""
+                : "s"
+            }
+          </span>
         </div>
+
         <div class="help-article-actions">
-          <button class="btn btn-primary btn-sm" type="button" data-open-article="${UI.escapeHtml(article.id)}">Open guide</button>
-          <button class="btn btn-secondary btn-sm" type="button" data-use-article="${UI.escapeHtml(article.id)}">Still need help</button>
+          <button
+            class="btn btn-primary btn-sm"
+            type="button"
+            data-open-guide="${escape(
+              article.id
+            )}"
+          >
+            Open guide
+          </button>
+
+          <button
+            class="btn btn-secondary btn-sm"
+            type="button"
+            data-escalate-guide="${escape(
+              article.id
+            )}"
+          >
+            Still need help
+          </button>
         </div>
       </article>
     `;
   }
 
-  function bindArticleButtons(container) {
-    container.querySelectorAll("[data-open-article]").forEach((button) => {
-      button.addEventListener("click", () => openArticle(button.dataset.openArticle));
-    });
+  function render() {
+    populateCategories();
 
-    container.querySelectorAll("[data-use-article]").forEach((button) => {
-      button.addEventListener("click", () => startRequestFromArticle(button.dataset.useArticle));
-    });
-  }
+    const results =
+      Troubleshooting.searchArticles(
+        elements.search.value.trim(),
+        elements.category.value
+      );
 
-  function renderRecommended(items) {
-    const query = search.value.trim();
-    if (!query || !items.length || items[0].score <= 0) {
-      recommendedSection.hidden = true;
-      recommendedContainer.innerHTML = "";
-      return;
+    renderSummary(results);
+
+    elements.resultCount.textContent =
+      `${results.length} article${
+        results.length === 1
+          ? ""
+          : "s"
+      }`;
+
+    const best = results[0];
+
+    if (
+      elements.search.value.trim() &&
+      best &&
+      Number(best.score) > 0
+    ) {
+      elements.recommendedSection.hidden =
+        false;
+
+      elements.recommendedContainer.innerHTML =
+        articleMarkup(
+          best,
+          true
+        );
+    } else {
+      elements.recommendedSection.hidden =
+        true;
+
+      elements.recommendedContainer.innerHTML =
+        "";
     }
 
-    recommendedSection.hidden = false;
-    recommendedContainer.innerHTML = articleMarkup(items[0].article, items[0].score, true);
-    bindArticleButtons(recommendedContainer);
-  }
-
-  function render() {
-    const items = getVisibleArticles();
-    renderRecommended(items);
-    renderSummary();
-    document.getElementById("articleResultCount").textContent = `${items.length} article${items.length === 1 ? "" : "s"}`;
-
-    if (!items.length) {
-      grid.innerHTML = `
+    if (!results.length) {
+      elements.grid.innerHTML = `
         <div class="card help-empty-state">
           <div class="empty-state">
-            <strong>No article matched that wording.</strong>
-            <p>MasterFlow can still carry your description directly into a new request.</p>
-            <a class="btn btn-primary btn-sm" href="index.html">Create a request</a>
+            <strong>
+              No article matched that wording.
+            </strong>
+
+            <p>
+              MasterFlow can still carry
+              your description into a request.
+            </p>
+
+            <a
+              class="btn btn-primary btn-sm"
+              href="index.html"
+            >
+              Create a request
+            </a>
           </div>
         </div>
       `;
+
       return;
     }
 
-    grid.innerHTML = items.map(({ article, score }) => articleMarkup(article, score, false)).join("");
-    bindArticleButtons(grid);
+    elements.grid.innerHTML =
+      results
+        .map(
+          (result) =>
+            articleMarkup(
+              result,
+              false
+            )
+        )
+        .join("");
   }
 
-  function openArticle(articleId) {
-    const article = Store.getState().knowledgeArticles.find((item) => item.id === articleId);
-    if (!article) return;
-
-    activeArticleId = article.id;
-    document.getElementById("articleDialogTitle").textContent = article.title;
-    document.getElementById("articleDialogSummary").textContent = article.summary;
-    document.getElementById("articleDialogTags").innerHTML = `
-      <span class="badge badge-blue">${UI.escapeHtml(article.category)}</span>
-      <span class="badge badge-green">${UI.escapeHtml(article.helpful)}% helpful</span>
-    `;
-    document.getElementById("articleDialogSteps").innerHTML = (article.steps || [])
-      .map((step) => `<li>${UI.escapeHtml(step)}</li>`)
-      .join("") || "<li>Follow the guidance provided in the article summary.</li>";
-
-    if (!dialog.open) dialog.showModal();
+  function checkedSteps() {
+    return Array.from(
+      elements.steps.querySelectorAll(
+        'input[type="checkbox"]:checked'
+      )
+    )
+      .map(
+        (checkbox) =>
+          checkbox.dataset.stepText
+      )
+      .filter(Boolean);
   }
 
-  function recordFeedback(articleId, outcome) {
-    const metrics = readMetrics();
-    const articleFeedback = metrics.articleFeedback[articleId] || { solved: 0, escalated: 0 };
+  function updateProgress() {
+    const checkboxes =
+      Array.from(
+        elements.steps.querySelectorAll(
+          'input[type="checkbox"]'
+        )
+      );
 
-    if (outcome === "solved") {
-      metrics.solved += 1;
-      articleFeedback.solved += 1;
-    } else {
-      metrics.escalated += 1;
-      articleFeedback.escalated += 1;
+    const completed =
+      checkboxes.filter(
+        (checkbox) =>
+          checkbox.checked
+      ).length;
+
+    elements.progress.textContent =
+      `${completed} of ${checkboxes.length} complete`;
+  }
+
+  function currentIssueText(article) {
+    return (
+      elements.search.value.trim() ||
+      article.title
+    );
+  }
+
+  function openGuide(articleId) {
+    const guide =
+      Troubleshooting.guideForArticle(
+        articleId
+      );
+
+    const article =
+      Store.getState()
+        .knowledgeArticles
+        .find(
+          (item) =>
+            item.id === articleId
+        );
+
+    if (!guide || !article) {
+      UI.showToast(
+        "The selected guide could not be opened."
+      );
+
+      return;
     }
 
-    metrics.articleFeedback[articleId] = articleFeedback;
-    writeMetrics(metrics);
+    activeGuide = guide;
+
+    activeSession =
+      Troubleshooting.startSession({
+        guide,
+
+        source:
+          "help-center",
+
+        issueText:
+          currentIssueText(article),
+
+        templateId: ""
+      });
+
+    elements.title.textContent =
+      guide.title;
+
+    elements.summary.textContent =
+      guide.summary;
+
+    elements.meaning.textContent =
+      guide.meaning;
+
+    elements.escalation.textContent =
+      guide.escalation;
+
+    elements.recordGuidance.textContent =
+      guide.record;
+
+    elements.badges.innerHTML = `
+      <span class="badge badge-blue">
+        ${escape(guide.category)}
+      </span>
+
+      <span class="badge badge-teal">
+        ${escape(
+          modeLabel(guide.mode)
+        )}
+      </span>
+
+      <span class="badge badge-gray">
+        About
+        ${escape(
+          guide.estimatedMinutes
+        )}
+        min
+      </span>
+    `;
+
+    elements.stepsTitle.textContent =
+      guide.mode === "preparation"
+        ? "Review this checklist"
+        : guide.mode === "safety"
+          ? "Complete these safety and containment steps"
+          : "Try these steps in order";
+
+    elements.steps.innerHTML =
+      guide.steps
+        .map(
+          (step, index) => `
+            <label class="troubleshooting-step">
+              <input
+                type="checkbox"
+                data-step-text="${escape(
+                  step
+                )}"
+              >
+
+              <span
+                class="troubleshooting-step-number"
+              >
+                ${index + 1}
+              </span>
+
+              <span>
+                ${escape(step)}
+              </span>
+            </label>
+          `
+        )
+        .join("");
+
+    elements.outcome.value = "";
+    elements.scope.value = "";
+    elements.identifiers.value = "";
+    elements.notes.value = "";
+
+    elements.p1Button.hidden =
+      !guide.emergency;
+
+    elements.solvedButton.hidden =
+      !guide.allowSolved;
+
+    elements.continueButton.textContent =
+      guide.allowSolved
+        ? "I still need help"
+        : "Continue request with checklist";
+
+    updateProgress();
+
+    if (!elements.dialog.open) {
+      elements.dialog.showModal();
+    }
   }
 
-  function startRequestFromArticle(articleId) {
-    const article = Store.getState().knowledgeArticles.find((item) => item.id === articleId);
-    if (!article) return;
+  function sessionPatch(
+    defaultResult
+  ) {
+    return {
+      completedSteps:
+        checkedSteps(),
 
-    recordFeedback(article.id, "escalated");
+      affectedScope:
+        elements.scope.value,
+
+      identifiers:
+        elements.identifiers
+          .value
+          .trim(),
+
+      result:
+        elements.outcome.value ||
+        defaultResult ||
+        "",
+
+      notes:
+        elements.notes
+          .value
+          .trim()
+    };
+  }
+
+  function prepareRequest(session) {
+    Troubleshooting.setPending(
+      session
+    );
+
+    const prefill = [
+      session.issueText
+        ? `I still need help with this issue: ${session.issueText}`
+        : "I still need help after guided troubleshooting.",
+
+      Troubleshooting.formatForRequest(
+        session
+      )
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
     window.localStorage.setItem(
       "masterflowHomePrefill",
-      `I tried the steps in "${article.title}" but I still need help. ${search.value.trim()}`.trim()
+      prefill
     );
-    window.localStorage.setItem("masterflowKnowledgeSource", article.id);
-    window.location.href = "index.html";
+
+    if (session.articleId) {
+      window.localStorage.setItem(
+        "masterflowKnowledgeSource",
+        session.articleId
+      );
+    }
+
+    window.location.href =
+      "index.html";
   }
 
-  document.querySelectorAll("[data-close-article-dialog]").forEach((button) => {
-    button.addEventListener("click", () => dialog.close());
-  });
+  function quickEscalate(articleId) {
+    const guide =
+      Troubleshooting.guideForArticle(
+        articleId
+      );
 
-  document.getElementById("articleSolvedButton").addEventListener("click", () => {
-    if (!activeArticleId) return;
-    recordFeedback(activeArticleId, "solved");
-    dialog.close();
-    UI.showToast("Marked as solved. No ticket was created.");
-  });
+    const article =
+      Store.getState()
+        .knowledgeArticles
+        .find(
+          (item) =>
+            item.id === articleId
+        );
 
-  document.getElementById("articleNeedHelpButton").addEventListener("click", () => {
-    if (!activeArticleId) return;
-    dialog.close();
-    startRequestFromArticle(activeArticleId);
-  });
+    if (!guide || !article) return;
 
-  clearButton.addEventListener("click", () => {
-    search.value = "";
-    category.value = "all";
-    render();
-    search.focus();
-  });
+    const started =
+      Troubleshooting.startSession({
+        guide,
 
-  search.addEventListener("input", render);
-  category.addEventListener("change", render);
+        source:
+          "help-center",
+
+        issueText:
+          currentIssueText(article),
+
+        templateId: ""
+      });
+
+    const session =
+      Troubleshooting.finishSession(
+        started,
+
+        {
+          completedSteps: [],
+
+          result:
+            "Guide skipped; employee still needs support."
+        },
+
+        "escalated"
+      );
+
+    prepareRequest(session);
+  }
+
+  function handleCardClick(event) {
+    const openButton =
+      event.target.closest(
+        "[data-open-guide]"
+      );
+
+    if (openButton) {
+      openGuide(
+        openButton.dataset.openGuide
+      );
+
+      return;
+    }
+
+    const escalateButton =
+      event.target.closest(
+        "[data-escalate-guide]"
+      );
+
+    if (escalateButton) {
+      quickEscalate(
+        escalateButton.dataset
+          .escalateGuide
+      );
+    }
+  }
+
+  elements.grid.addEventListener(
+    "click",
+    handleCardClick
+  );
+
+  elements.recommendedContainer.addEventListener(
+    "click",
+    handleCardClick
+  );
+
+  elements.steps.addEventListener(
+    "change",
+    updateProgress
+  );
+
+  document
+    .querySelectorAll(
+      "[data-close-help-troubleshooting]"
+    )
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        () => {
+          elements.dialog.close();
+        }
+      );
+    });
+
+  elements.solvedButton.addEventListener(
+    "click",
+    () => {
+      if (
+        !activeSession ||
+        !activeGuide ||
+        !activeGuide.allowSolved
+      ) {
+        return;
+      }
+
+      const session =
+        Troubleshooting.finishSession(
+          activeSession,
+
+          sessionPatch("Solved"),
+
+          "solved"
+        );
+
+      Troubleshooting.clearPending();
+
+      elements.dialog.close();
+
+      render();
+
+      UI.showToast(
+        `Issue marked solved after ${session.completedSteps.length} completed step${
+          session.completedSteps.length === 1
+            ? ""
+            : "s"
+        }. No ticket was created.`
+      );
+    }
+  );
+
+  elements.continueButton.addEventListener(
+    "click",
+    () => {
+      if (
+        !activeSession ||
+        !activeGuide
+      ) {
+        return;
+      }
+
+      const defaultResult =
+        activeGuide.mode ===
+          "preparation" ||
+        activeGuide.mode ===
+          "safety"
+          ? "Information collected"
+          : "No change";
+
+      const session =
+        Troubleshooting.finishSession(
+          activeSession,
+
+          sessionPatch(
+            defaultResult
+          ),
+
+          "escalated"
+        );
+
+      elements.dialog.close();
+
+      prepareRequest(session);
+    }
+  );
+
+  elements.p1Button.addEventListener(
+    "click",
+    () => {
+      elements.dialog.close();
+      UI.openCriticalDialog();
+    }
+  );
+
+  elements.clearButton.addEventListener(
+    "click",
+    () => {
+      elements.search.value = "";
+      elements.category.value = "all";
+      render();
+      elements.search.focus();
+    }
+  );
+
+  elements.search.addEventListener(
+    "input",
+    render
+  );
+
+  elements.category.addEventListener(
+    "change",
+    render
+  );
+
+  window.addEventListener(
+    "masterflow:troubleshooting",
+    render
+  );
+
   render();
 })();

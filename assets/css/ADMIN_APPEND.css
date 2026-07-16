@@ -519,3 +519,266 @@ body[data-role-workspace="category-owner"]
     grid-template-columns: 1fr;
   }
 }
+/* FLOW STUDIO: CLOSED FEEDBACK AND PROPOSAL LOOP */
+
+.flow-improvement-center {
+  overflow: hidden;
+}
+
+.flow-improvement-summary {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.flow-improvement-summary > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-2);
+}
+
+.flow-improvement-summary small,
+.flow-improvement-summary strong {
+  display: block;
+}
+
+.flow-improvement-summary small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.flow-improvement-summary strong {
+  margin-top: 4px;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+.flow-improvement-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.flow-improvement-column {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfcfd;
+}
+
+.flow-improvement-column-header h3,
+.flow-improvement-column-header p {
+  margin: 0;
+}
+
+.flow-improvement-column-header h3 {
+  font-size: 14px;
+}
+
+.flow-improvement-column-header p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.flow-feedback-list,
+.flow-proposal-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.flow-feedback-item,
+.flow-proposal-item {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fff;
+}
+
+.flow-feedback-item h4,
+.flow-feedback-item p,
+.flow-proposal-item h4,
+.flow-proposal-item p {
+  margin: 0;
+}
+
+.flow-feedback-item h4,
+.flow-proposal-item h4 {
+  margin-top: 9px;
+  font-size: 13px;
+}
+
+.flow-feedback-item > p,
+.flow-proposal-item > p {
+  margin-top: 5px;
+  color: #415163;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.flow-item-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.flow-item-topline small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.flow-item-meta {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 10px 0 0;
+}
+
+.flow-item-meta div {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 9px;
+  background: var(--surface-2);
+}
+
+.flow-item-meta dt,
+.flow-item-meta dd {
+  margin: 0;
+}
+
+.flow-item-meta dt {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.flow-item-meta dd {
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.flow-item-recommendation,
+.flow-item-outcome {
+  display: grid;
+  gap: 3px;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 9px;
+}
+
+.flow-item-recommendation {
+  background: var(--blue-soft);
+  color: #164985;
+}
+
+.flow-item-outcome {
+  background: var(--green-soft);
+  color: #1c6531;
+}
+
+.flow-item-recommendation small,
+.flow-item-outcome small {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.flow-item-recommendation strong,
+.flow-item-outcome strong {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.flow-item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.flow-item-tags span {
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: #526171;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.flow-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.flow-proposal-diff {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.flow-proposal-diff > div {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-2);
+}
+
+.flow-proposal-diff small {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.flow-proposal-diff p {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.flow-proposal-dialog {
+  width: min(760px, calc(100vw - 28px));
+}
+
+@media (max-width: 900px) {
+  .flow-improvement-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .flow-improvement-summary,
+  .flow-item-meta,
+  .flow-proposal-diff {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-item-actions .btn {
+    width: 100%;
+  }
+}

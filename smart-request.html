@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MasterFlow | Smart Request Builder</title>
+
   <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/TROUBLESHOOTING_APPEND.css">
 </head>
 <body class="workspace-page" data-page="smart-request">
   <div class="content-shell">
@@ -22,7 +24,7 @@
           <div>
             <div class="eyebrow">Smart Request Builder</div>
             <h1>Review what MasterFlow prepared</h1>
-            <p>The selected existing request template controls the queue, SLA, required fields, and knowledge suggestions. Correct anything before submitting.</p>
+            <p>The selected request controls the queue, SLA, required fields, and recommended guidance. Correct anything before submitting.</p>
           </div>
           <a class="btn btn-secondary" href="index.html">Cancel</a>
         </div>
@@ -69,9 +71,27 @@
               </div>
             </section>
 
-            <section class="card" id="articlePanel">
-              <div class="card-header"><div><h3>Suggested self-service</h3><p>Your request draft stays available while you try this.</p></div></div>
-              <div class="card-body"><div class="article-card compact"><strong id="articleTitle"></strong><p id="articleSummary"></p><button class="btn btn-secondary btn-sm" id="articleResolved" type="button">This solved my issue</button></div></div>
+            <section class="card troubleshooting-card" id="troubleshootingPanel" hidden>
+              <div class="card-header">
+                <div>
+                  <div class="eyebrow">Recommended before submission</div>
+                  <h3 id="troubleshootingTitle">Guided troubleshooting</h3>
+                  <p id="troubleshootingSummary"></p>
+                </div>
+                <span class="badge badge-teal" id="troubleshootingModeBadge">Guide</span>
+              </div>
+              <div class="card-body">
+                <div class="troubleshooting-preview-meta">
+                  <span id="troubleshootingTime"></span>
+                  <span id="troubleshootingReason"></span>
+                </div>
+                <div class="notice notice-success troubleshooting-result" id="troubleshootingResult" hidden></div>
+                <div class="troubleshooting-preview-actions">
+                  <button class="btn btn-primary btn-sm" id="troubleshootingStart" type="button">Try guided troubleshooting</button>
+                  <button class="btn btn-secondary btn-sm" id="troubleshootingSkip" type="button">Continue without it</button>
+                </div>
+                <p class="muted small troubleshooting-not-gate">This guidance never blocks ticket creation. P1 incidents always bypass it.</p>
+              </div>
             </section>
 
             <div class="notice notice-info"><span>i</span><div><strong>Human confirmation stays in control.</strong><p>AI suggestions are editable. Shipping-stopped incidents use the direct P1 path and do not depend on classification confidence.</p></div></div>
@@ -90,9 +110,93 @@
     <div class="dialog-footer"><button class="btn btn-secondary" type="button" data-close-picker>Cancel</button></div>
   </dialog>
 
-  <script src="assets/js/store.js" defer></script>
-  <script src="assets/js/templates.js" defer></script>
-  <script src="assets/js/layout.js" defer></script>
-  <script src="assets/js/pages/smart-request.js" defer></script>
+  <dialog id="requestTroubleshootingDialog" class="troubleshooting-dialog" aria-labelledby="requestTroubleshootingTitle">
+    <div class="dialog-header">
+      <div>
+        <div class="article-tags" id="requestTroubleshootingBadges"></div>
+        <h2 id="requestTroubleshootingTitle">Guided troubleshooting</h2>
+        <p id="requestTroubleshootingSummary"></p>
+      </div>
+      <button class="close-button" type="button" data-close-request-troubleshooting aria-label="Close">×</button>
+    </div>
+
+    <div class="dialog-body troubleshooting-dialog-body">
+      <section class="troubleshooting-meaning">
+        <div class="eyebrow">What this usually means</div>
+        <p id="requestTroubleshootingMeaning"></p>
+      </section>
+
+      <section class="troubleshooting-section">
+        <div class="troubleshooting-section-heading">
+          <div>
+            <h3 id="requestTroubleshootingStepsTitle">Try these steps in order</h3>
+            <p>Check each step you complete. The results will be added to the ticket when support is still needed.</p>
+          </div>
+          <span class="badge badge-blue" id="requestTroubleshootingProgress">0 of 0 complete</span>
+        </div>
+        <div class="troubleshooting-step-list" id="requestTroubleshootingSteps"></div>
+      </section>
+
+      <section class="troubleshooting-warning">
+        <div class="eyebrow">When to stop and escalate</div>
+        <p id="requestTroubleshootingEscalation"></p>
+        <button class="btn btn-danger btn-sm" type="button" id="requestTroubleshootingP1" hidden>Shipping is stopped — open P1</button>
+      </section>
+
+      <section class="troubleshooting-section">
+        <div class="troubleshooting-section-heading">
+          <div>
+            <h3>Record the result</h3>
+            <p id="requestTroubleshootingRecord"></p>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="requestTroubleshootingOutcome">What happened?</label>
+            <select class="select" id="requestTroubleshootingOutcome">
+              <option value="">Choose a result</option>
+              <option value="Solved">The issue is solved</option>
+              <option value="Improved but not solved">It improved but is not solved</option>
+              <option value="No change">There was no change</option>
+              <option value="Different error">The error or behavior changed</option>
+              <option value="Could not complete">I could not complete the steps</option>
+              <option value="Information collected">The requested information was collected</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="requestTroubleshootingScope">Who or what is affected?</label>
+            <select class="select" id="requestTroubleshootingScope">
+              <option value="">Choose the affected scope</option>
+              <option>Only me</option>
+              <option>One device or station</option>
+              <option>Multiple users or stations</option>
+              <option>An entire process or area</option>
+              <option>Not sure</option>
+            </select>
+          </div>
+        </div>
+        <div class="field mt-12">
+          <label for="requestTroubleshootingIdentifiers">Location, asset, system, order, part, or error</label>
+          <input class="input" id="requestTroubleshootingIdentifiers" placeholder="Example: Pack Station 14, PHX-PRN-22, OMS error 504">
+        </div>
+        <div class="field mt-12">
+          <label for="requestTroubleshootingNotes">Additional notes</label>
+          <textarea class="textarea" id="requestTroubleshootingNotes" placeholder="What changed, what could not be completed, or what should support know?"></textarea>
+        </div>
+      </section>
+    </div>
+
+    <div class="dialog-footer troubleshooting-footer">
+      <button class="btn btn-secondary" type="button" data-close-request-troubleshooting>Close</button>
+      <button class="btn btn-soft" type="button" id="requestTroubleshootingSolved">This solved it</button>
+      <button class="btn btn-primary" type="button" id="requestTroubleshootingContinue">Continue request with results</button>
+    </div>
+  </dialog>
+
+<script src="assets/js/store.js" defer></script>
+<script src="assets/js/templates.js" defer></script>
+<script src="assets/js/layout.js" defer></script>
+<script src="assets/js/troubleshooting-engine.js" defer></script>
+<script src="assets/js/pages/smart-request.js" defer></script>
 </body>
 </html>

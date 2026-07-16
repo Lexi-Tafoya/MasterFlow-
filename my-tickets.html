@@ -3,37 +3,393 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta
+    name="description"
+    content="MasterFlow My Requests for requester updates, replies, attachments, and a shared ticket timeline."
+  >
+
   <title>MasterFlow - My requests</title>
-  <link rel="stylesheet" href="assets/css/styles.css">
+
+  <link
+    rel="stylesheet"
+    href="assets/css/styles.css"
+  >
+
+  <style>
+    /* MY REQUESTS: CLOSED COMMUNICATION LOOP */
+
+    .requester-ticket-dialog {
+      width: min(880px, calc(100vw - 28px));
+    }
+
+    .requester-ticket-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .requester-summary-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .requester-summary-cell {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface-2);
+    }
+
+    .requester-summary-cell small,
+    .requester-summary-cell strong {
+      display: block;
+    }
+
+    .requester-summary-cell small {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 850;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .requester-summary-cell strong {
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+    }
+
+    .requester-description {
+      margin-top: 14px;
+      padding: 13px 14px;
+      border-left: 4px solid var(--teal);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .requester-description small,
+    .requester-description strong {
+      display: block;
+    }
+
+    .requester-description small {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 850;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .requester-description strong {
+      margin-top: 5px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .requester-section {
+      margin-top: 18px;
+    }
+
+    .requester-section-heading h3,
+    .requester-section-heading p {
+      margin: 0;
+    }
+
+    .requester-section-heading h3 {
+      font-size: 14px;
+    }
+
+    .requester-section-heading p {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .requester-timeline {
+      display: grid;
+      gap: 10px;
+      margin-top: 11px;
+    }
+
+    .requester-message {
+      display: grid;
+      gap: 6px;
+      padding: 12px 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .requester-message.is-requester {
+      margin-left: min(90px, 12%);
+      border-color: #bddfdc;
+      background: var(--teal-soft);
+    }
+
+    .requester-message.is-receiver {
+      margin-right: min(90px, 12%);
+      background: var(--blue-soft);
+    }
+
+    .requester-message.is-system {
+      background: var(--surface-2);
+    }
+
+    .requester-message-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .requester-message-header strong {
+      font-size: 11px;
+    }
+
+    .requester-message-header small {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .requester-message p {
+      margin: 0;
+      color: #334155;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .requester-attachment-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .requester-attachment {
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      color: #415163;
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .requester-reply-actions {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .requester-file-control {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .requester-file-control input {
+      max-width: 360px;
+    }
+
+    .requester-unread-badge {
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 760px) {
+      .requester-summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .requester-message.is-requester,
+      .requester-message.is-receiver {
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      .requester-reply-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
-<body class="workspace-page" data-page="my-tickets">
+
+<body
+  class="workspace-page"
+  data-page="my-tickets"
+>
   <div class="content-shell">
     <main>
       <div class="page-heading">
-        <div><h1>My requests</h1><p>See updates, answer questions, and follow each request through completion. Future email replies will stay in the same request conversation.</p></div>
-        <div class="page-actions"><a class="btn btn-primary" href="index.html">+ New request</a></div>
+        <div>
+          <div class="eyebrow">
+            Requester communication
+          </div>
+
+          <h1>My requests</h1>
+
+          <p>
+            See updates, answer questions, add supporting information,
+            and keep every reply in the same request conversation.
+          </p>
+        </div>
+
+        <div class="page-actions">
+          <a
+            class="btn btn-primary"
+            href="index.html"
+          >
+            + New request
+          </a>
+        </div>
       </div>
 
-      <section class="kpi-grid" aria-label="Ticket summary">
-        <div class="kpi"><div class="kpi-label">Open tickets</div><div class="kpi-value" id="openTicketCount">0</div><div class="kpi-meta">Requests still in progress</div></div>
-        <div class="kpi"><div class="kpi-label">Waiting on me</div><div class="kpi-value" id="waitingTicketCount">0</div><div class="kpi-meta warn" id="waitingTicketMeta">Nothing is waiting on you</div></div>
-        <div class="kpi"><div class="kpi-label">Closed or resolved</div><div class="kpi-value" id="closedTicketCount">0</div><div class="kpi-meta good">Visible for reference</div></div>
-        <div class="kpi"><div class="kpi-label">Communication</div><div class="kpi-value" style="font-size:23px">Site + Email</div><div class="kpi-meta">One closed feedback loop</div></div>
+      <section
+        class="kpi-grid"
+        aria-label="Request summary"
+      >
+        <div class="kpi">
+          <div class="kpi-label">
+            Open requests
+          </div>
+
+          <div
+            class="kpi-value"
+            id="openTicketCount"
+          >
+            0
+          </div>
+
+          <div class="kpi-meta">
+            Requests still in progress
+          </div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-label">
+            Waiting on me
+          </div>
+
+          <div
+            class="kpi-value"
+            id="waitingTicketCount"
+          >
+            0
+          </div>
+
+          <div
+            class="kpi-meta warn"
+            id="waitingTicketMeta"
+          >
+            Nothing is waiting on you
+          </div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-label">
+            Unread messages
+          </div>
+
+          <div
+            class="kpi-value"
+            id="unreadMessageCount"
+          >
+            0
+          </div>
+
+          <div
+            class="kpi-meta"
+            id="unreadMessageMeta"
+          >
+            No new receiver messages
+          </div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-label">
+            Closed or resolved
+          </div>
+
+          <div
+            class="kpi-value"
+            id="closedTicketCount"
+          >
+            0
+          </div>
+
+          <div class="kpi-meta good">
+            Visible for reference
+          </div>
+        </div>
       </section>
 
       <section class="card mt-18">
         <div class="card-header">
-          <div><h2>My recent requests</h2><p>Open any request to see routing, SLA, and conversation history.</p></div>
-        </div>
-        <div class="card-body">
-          <div class="toolbar">
-            <div class="toolbar-left"><input class="control search-control" id="ticketSearch" type="search" placeholder="Search my requests" aria-label="Search my requests"></div>
-            <div class="toolbar-right"><select class="control" id="ticketStatusFilter" aria-label="Filter tickets by status"><option value="all">Open and recent</option><option value="open">Open only</option><option value="closed">Closed or resolved</option></select></div>
+          <div>
+            <h2>My recent requests</h2>
+
+            <p>
+              Open a request to review its shared timeline and reply
+              without creating a duplicate ticket.
+            </p>
           </div>
         </div>
+
+        <div class="card-body">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <input
+                class="control search-control"
+                id="ticketSearch"
+                type="search"
+                placeholder="Search my requests"
+                aria-label="Search my requests"
+              >
+            </div>
+
+            <div class="toolbar-right">
+              <select
+                class="control"
+                id="ticketStatusFilter"
+                aria-label="Filter requests by status"
+              >
+                <option value="all">
+                  Open and recent
+                </option>
+
+                <option value="open">
+                  Open only
+                </option>
+
+                <option value="closed">
+                  Closed or resolved
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Ticket</th><th>Category</th><th>Priority</th><th>Status</th><th>Assigned team</th><th>Last update</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Request</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assigned team</th>
+                <th>Last update</th>
+              </tr>
+            </thead>
+
             <tbody id="myTicketsBody"></tbody>
           </table>
         </div>
@@ -41,8 +397,223 @@
     </main>
   </div>
 
-  <script src="assets/js/store.js" defer></script>
-  <script src="assets/js/layout.js" defer></script>
-  <script src="assets/js/pages/my-tickets.js" defer></script>
+  <dialog
+    class="requester-ticket-dialog"
+    id="requesterTicketDialog"
+    aria-labelledby="requesterTicketTitle"
+  >
+    <div class="dialog-header">
+      <div>
+        <div class="requester-ticket-badges">
+          <span
+            class="badge badge-gray"
+            id="requesterStatusBadge"
+          >
+            Status
+          </span>
+
+          <span
+            class="badge badge-blue"
+            id="requesterQueueBadge"
+          >
+            Assigned team
+          </span>
+
+          <span
+            class="badge badge-gray"
+            id="requesterPriorityBadge"
+          >
+            Priority
+          </span>
+        </div>
+
+        <h2 id="requesterTicketTitle">
+          Request
+        </h2>
+
+        <p id="requesterTicketSubtitle"></p>
+      </div>
+
+      <button
+        class="close-button"
+        type="button"
+        data-close-requester-ticket
+        aria-label="Close"
+      >
+        x
+      </button>
+    </div>
+
+    <div class="dialog-body">
+      <section
+        class="requester-summary-grid"
+        aria-label="Request summary"
+      >
+        <div class="requester-summary-cell">
+          <small>Current owner</small>
+
+          <strong id="requesterTicketOwner">
+            Unassigned
+          </strong>
+        </div>
+
+        <div class="requester-summary-cell">
+          <small>Location</small>
+
+          <strong id="requesterTicketLocation">
+            Not provided
+          </strong>
+        </div>
+
+        <div class="requester-summary-cell">
+          <small>Last updated</small>
+
+          <strong id="requesterTicketUpdated">
+            Not available
+          </strong>
+        </div>
+      </section>
+
+      <section class="requester-description">
+        <small>Original request</small>
+
+        <strong id="requesterTicketDescription"></strong>
+      </section>
+
+      <div
+        class="notice notice-info mt-18"
+        id="requesterResponseNotice"
+        hidden
+      >
+        <span aria-hidden="true">i</span>
+
+        <div>
+          <strong>Your response is needed</strong>
+
+          <p>
+            Reply below. MasterFlow will return this request to the
+            receiving team's active work without creating another ticket.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="notice notice-success mt-18"
+        id="requesterClosedNotice"
+        hidden
+      >
+        <span aria-hidden="true">✓</span>
+
+        <div>
+          <strong>This request is complete</strong>
+
+          <p>
+            The full conversation remains available for reference.
+          </p>
+        </div>
+      </div>
+
+      <section class="requester-section">
+        <div class="requester-section-heading">
+          <h3>Conversation timeline</h3>
+
+          <p>
+            Requester-visible messages and status changes remain in one history.
+          </p>
+        </div>
+
+        <div
+          class="requester-timeline"
+          id="requesterTimeline"
+          aria-live="polite"
+        ></div>
+      </section>
+
+      <section
+        class="requester-section"
+        id="requesterReplySection"
+      >
+        <div class="requester-section-heading">
+          <h3 id="requesterReplyTitle">
+            Add a message
+          </h3>
+
+          <p id="requesterReplyHint">
+            Your reply will be added to this request and visible to
+            the receiving team.
+          </p>
+        </div>
+
+        <form
+          id="requesterReplyForm"
+          class="mt-12"
+        >
+          <div class="field">
+            <label for="requesterReplyText">
+              Reply or provide the requested information
+            </label>
+
+            <textarea
+              class="textarea"
+              id="requesterReplyText"
+              placeholder="Add the exact location, identifier, answer, or update the receiving team requested."
+            ></textarea>
+          </div>
+
+          <div class="requester-reply-actions">
+            <label
+              class="requester-file-control"
+              for="requesterReplyAttachments"
+            >
+              <span>Add supporting files</span>
+
+              <input
+                id="requesterReplyAttachments"
+                type="file"
+                multiple
+              >
+
+              <small id="requesterAttachmentSummary">
+                Prototype stores file names in the shared timeline.
+              </small>
+            </label>
+
+            <button
+              class="btn btn-primary"
+              id="requesterReplySubmit"
+              type="submit"
+            >
+              Add message
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="dialog-footer">
+      <button
+        class="btn btn-secondary"
+        type="button"
+        data-close-requester-ticket
+      >
+        Close
+      </button>
+    </div>
+  </dialog>
+
+  <script
+    src="assets/js/store.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/layout.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/pages/my-tickets.js"
+    defer
+  ></script>
 </body>
 </html>
