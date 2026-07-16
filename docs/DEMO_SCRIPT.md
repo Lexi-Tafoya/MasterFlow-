@@ -1,5 +1,7 @@
 # MasterFlow three-minute demo
 
+> Superseded by `FINAL_DEMO_SCRIPT.md`, which is the current judged-demo script (freight is intentionally kept out of that judged ticketing narrative and the run time/structure differ). Kept here for the longer combined ticketing + freight walkthrough this script still describes accurately.
+
 ## 0:00-0:20 — frame the problem
 
 “Master Electronics already has team queues and specialized request forms, but employees must search a very large catalog to find the right one. MasterFlow keeps the routing and business requirements while replacing category hunting with one simple request experience. It also creates a controlled workspace for freight opportunities before cost is incurred.”

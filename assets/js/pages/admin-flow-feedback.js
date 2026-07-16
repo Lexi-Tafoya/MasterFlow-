@@ -1256,6 +1256,51 @@
           : "published"
     };
 
+    let applicationOutcome =
+      "Low-risk improvement published by the category manager.";
+
+    if (risk !== "governed") {
+      try {
+        const result =
+          Templates.applyGovernedProposal(
+            proposal
+          );
+
+        proposal.appliedToTemplate =
+          result.applied;
+
+        proposal.applicationSummary =
+          result.summary;
+
+        if (result.applied) {
+          applicationOutcome =
+            `Low-risk improvement published by the category manager. ${result.summary}`;
+        } else {
+          applicationOutcome =
+            `Low-risk improvement recorded, but not applied: ${result.summary}`;
+        }
+      } catch (error) {
+        console.error(
+          "Could not apply low-risk proposal.",
+          error
+        );
+
+        proposal.appliedToTemplate =
+          false;
+
+        proposal.applicationSummary =
+          error.message ||
+          "The change could not be applied automatically.";
+
+        applicationOutcome =
+          `Low-risk improvement recorded, but could not be applied: ${proposal.applicationSummary}`;
+
+        UI.showToast(
+          proposal.applicationSummary
+        );
+      }
+    }
+
     const proposals =
       read(PROPOSAL_KEY);
 
@@ -1294,10 +1339,7 @@
                 "Submitted to Megan for " +
                 "enterprise approval."
               )
-            : (
-                "Low-risk improvement published " +
-                "by the category manager."
-              )
+            : applicationOutcome
       }
     );
 
@@ -1433,6 +1475,27 @@
       proposal.status ===
         "approved"
     ) {
+      let result;
+
+      try {
+        result =
+          Templates.applyGovernedProposal(
+            proposal
+          );
+      } catch (error) {
+        console.error(
+          "Could not apply governed proposal.",
+          error
+        );
+
+        UI.showToast(
+          error.message ||
+          "The approved change could not be applied."
+        );
+
+        return;
+      }
+
       proposal.status =
         "published";
 
@@ -1442,6 +1505,12 @@
       proposal.publishedBy =
         "Megan Delia";
 
+      proposal.appliedToTemplate =
+        result.applied;
+
+      proposal.applicationSummary =
+        result.summary;
+
       updateLinkedFeedback(
         proposal,
         {
@@ -1449,12 +1518,14 @@
             "published",
 
           outcome:
-            "Governed improvement approved and published by Megan Delia."
+            `Published by Megan Delia. ${result.summary}`
         }
       );
 
       UI.showToast(
-        "Approved proposal published."
+        result.applied
+          ? "Approved proposal published and applied."
+          : "Governance decision published."
       );
     } else {
       return;
@@ -1593,10 +1664,15 @@
                 "Governed proposal " +
                 "sent to Megan."
               )
-            : (
-                "Low-risk improvement " +
-                "published."
-              )
+            : proposal.appliedToTemplate
+              ? (
+                  "Low-risk improvement " +
+                  "published and applied."
+                )
+              : (
+                  "Low-risk improvement " +
+                  "recorded, but not applied."
+                )
         );
       }
     );

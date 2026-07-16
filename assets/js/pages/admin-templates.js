@@ -33,15 +33,6 @@
 
   const ROLE_CONTEXTS = {
     "platform-admin": {
-      eyebrow:
-        "Enterprise administrator",
-
-      title:
-        "Megan Delia governs MasterFlow",
-
-      description:
-        "Company-wide ownership, guarded changes, access, routing policy, and platform health.",
-
       badge:
         "Enterprise scope",
 
@@ -62,15 +53,6 @@
     },
 
     "category-owner": {
-      eyebrow:
-        "Request category owner",
-
-      title:
-        "Design actionable IT request flows",
-
-      description:
-        "Teach MasterFlow what IT needs, improve questions and recognition, and test the employee and receiver experience.",
-
       badge:
         "IT category scope",
 
@@ -96,15 +78,6 @@
     },
 
     "queue-manager": {
-      eyebrow:
-        "Queue manager",
-
-      title:
-        "Monitor intake quality for IT queues",
-
-      description:
-        "Review which request flows feed the team, identify missing information, and recommend improvements without changing governed behavior.",
-
       badge:
         "Managed queues",
 
@@ -257,9 +230,6 @@
       badge.textContent = role.badge;
     }
 
-    setText("adminRoleEyebrow", role.eyebrow);
-    setText("adminRoleTitle", role.title);
-    setText("adminRoleDescription", role.description);
     setHtml(
       "adminRolePermissions",
       role.permissions

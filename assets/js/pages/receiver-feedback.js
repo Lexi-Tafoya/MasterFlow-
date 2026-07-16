@@ -932,7 +932,13 @@
     isWaiting,
     isSlaRisk,
     dueLabel,
-    priorityLabel
+    priorityLabel,
+    isApprovalRequired,
+    isAwaitingApproval,
+    isApprovedForFulfillment,
+    requestedCost,
+    numericRequestedCost,
+    approvalRoute
   };
 
   initQueueManager();

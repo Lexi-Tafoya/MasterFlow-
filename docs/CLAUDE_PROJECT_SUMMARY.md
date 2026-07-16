@@ -19,9 +19,10 @@ They share role control, assignment, approvals, notifications, SLA/deadline moni
 
 ## Users and access
 
-- **Every employee:** Home, Smart Request, My Requests, Help Articles, P1 fast lane.
+- **Every employee:** Home, Smart Request, My Requests, Help Articles, P1 fast lane, Project Summary.
 - **Ticket receiver:** requester functions plus Assigned Work, authorized Ticket Queues, Freight Optimization, Reporting.
-- **Administrator:** receiver functions plus Request Template Manager, Rules & Access, Project Summary.
+- **Administrator:** receiver functions plus Request Template Manager, Rules & Access.
+- Project Summary is visible to every role (an "About" page); it is not Administrator-only.
 - Prototype role selector is for judging only; production access comes from SSO and server-enforced permissions.
 
 Megan Delia and Business Enablement own triage for requests that cannot be safely classified.

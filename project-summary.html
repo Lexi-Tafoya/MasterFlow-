@@ -3,112 +3,389 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="MasterFlow product direction and Claude handoff summary.">
+  <meta name="description" content="MasterFlow project summary: a simpler AI-assisted intake and governance layer that preserves the enterprise controls Master Electronics already trusts.">
   <title>MasterFlow - Project summary</title>
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body class="workspace-page" data-page="project-summary">
   <div class="content-shell">
     <main>
+
+      <!-- ============================================================
+           HERO + LIVE METRICS
+           ============================================================ -->
       <section class="summary-hero">
-        <div class="eyebrow">MasterFlow prototype direction</div>
-        <h1>One simple front door for support requests and operational freight decisions</h1>
-        <p>MasterFlow preserves existing business-team queues and request requirements, but removes the need for employees to hunt through a large ServiceNow catalog. It also gives Sales and Logistics one controlled workspace for freight opportunities that require human action.</p>
+        <div class="eyebrow">MasterFlow · judge-facing product summary</div>
+        <h1>MasterFlow improves the quality of work before it reaches the team</h1>
+        <p>It is a simpler, AI-assisted operational layer for employee intake, receiver readiness, communication, and governed continuous improvement &mdash; while preserving the queues, routing, SLAs, approvals, ownership, and controls the company already trusts. It does not replace ServiceNow wholesale, and it never silently merges, assigns, routes, or approves work.</p>
       </section>
 
+      <section class="kpi-grid mt-18" aria-label="Live prototype metrics">
+        <div class="kpi">
+          <div class="kpi-label">Active requests</div>
+          <div class="kpi-value" id="mfActiveRequests">&mdash;</div>
+          <div class="kpi-meta" id="mfActiveRequestsMeta">Open items in the shared queue</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Avg. classification confidence</div>
+          <div class="kpi-value" id="mfAvgConfidence">&mdash;</div>
+          <div class="kpi-meta" id="mfAvgConfidenceMeta">Across current requests</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Active P1 incidents</div>
+          <div class="kpi-value" id="mfActiveP1">&mdash;</div>
+          <div class="kpi-meta" id="mfActiveP1Meta">Shipping-stopped fast lane</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Governed improvements published</div>
+          <div class="kpi-value" id="mfPublished">&mdash;</div>
+          <div class="kpi-meta" id="mfPublishedMeta">Flow changes approved by governance</div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           1. EXECUTIVE SUMMARY
+           ============================================================ -->
       <section class="card mt-18">
-        <div class="card-header"><div><h2>The core ticketing experience</h2><p>AI assembles the correct existing form; it does not eliminate required business information.</p></div></div>
+        <div class="card-header">
+          <div>
+            <h2>Executive summary</h2>
+            <p>Employees should not need to understand a ticket catalog to ask for help.</p>
+          </div>
+          <span class="badge badge-blue">40% Business impact</span>
+        </div>
         <div class="card-body">
-          <div class="summary-flow">
-            <div class="summary-step"><strong>1. Describe</strong><span>Employee states the need in natural language.</span></div>
-            <div class="summary-step"><strong>2. Match</strong><span>AI suggests an existing catalog request and confidence.</span></div>
-            <div class="summary-step"><strong>3. Build</strong><span>Known profile and message details are pre-filled.</span></div>
-            <div class="summary-step"><strong>4. Confirm</strong><span>Employee supplies only missing required fields.</span></div>
-            <div class="summary-step"><strong>5. Route</strong><span>The request enters the existing team queue with an SLA.</span></div>
+          <div class="grid grid-2">
+            <div>
+              <p>Master Electronics spends more than <strong id="mfServiceNowCost">$300,000</strong> per year on ServiceNow, primarily for ticket management. Employees still face a complicated intake experience: they may not know the correct request type, queue, or department, and requests often arrive without enough information for a receiver to begin work.</p>
+              <p>MasterFlow lets an employee describe the problem naturally, gathers the information the receiving team actually needs, and routes the request through the company&rsquo;s existing controls. The judges care whether the project solves the problem &mdash; not how many features exist &mdash; so every part of this page traces back to that.</p>
+            </div>
+            <div class="notice notice-info">
+              <span>i</span>
+              <div>
+                <strong>Stated business baseline</strong>
+                <p>The annual ServiceNow cost is the project&rsquo;s stated baseline, shown as fixed business context. Operational counts on this page are read live from the prototype&rsquo;s shared state.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
+      <!-- ============================================================
+           2. THE BUSINESS PROBLEM  /  3. THE SOLUTION
+           ============================================================ -->
       <div class="grid grid-2 mt-18">
         <section class="card">
-          <div class="card-header"><div><h2>Locked product decisions</h2><p>These decisions should not be casually reversed during the one-week build.</p></div></div>
+          <div class="card-header"><div><h2>The problem today</h2><p>Intake friction wastes employee and receiver time.</p></div></div>
           <div class="card-body">
-            <ul class="decision-list">
-              <li>Every employee can create requests; receiver and administrator functions are role-controlled.</li>
-              <li>The home page stays minimal: one request input, P1 fast lane, My Requests, and Help Articles.</li>
-              <li>Existing catalog routing to team queues is preserved. MasterFlow improves intake rather than replacing ownership.</li>
-              <li>Different catalog items keep different required fields through one configurable dynamic-form engine.</li>
-              <li>Low-confidence or unknown requests route to Megan Delia - Triage in Business Enablement.</li>
-              <li>Shipping-stopped incidents bypass AI and create a P1 immediately.</li>
-              <li>Common template, routing, approval, role, and SLA changes should not require specialized development.</li>
-              <li>Production permissions would come from SSO; the role switch is for demonstration only.</li>
+            <div class="summary-flow">
+              <div class="summary-step"><strong>1. Search</strong><span>Hunt the request catalog.</span></div>
+              <div class="summary-step"><strong>2. Pick a form</strong><span>Guess the right request type.</span></div>
+              <div class="summary-step"><strong>3. Re-enter</strong><span>Repeat known details.</span></div>
+              <div class="summary-step"><strong>4. Submit</strong><span>Often incomplete.</span></div>
+              <div class="summary-step"><strong>5. Wait</strong><span>Receiver chases missing info.</span></div>
+            </div>
+            <ul class="decision-list mt-18">
+              <li>Employee time is wasted and requests can be routed incorrectly.</li>
+              <li>Receivers spend time interpreting raw fields, or return work for missing information.</li>
+              <li>Queue managers see recurring problems but lack a direct improvement loop.</li>
+              <li>Administrators must protect controls without hand-maintaining every intake form.</li>
             </ul>
           </div>
         </section>
 
         <section class="card">
-          <div class="card-header"><div><h2>Demonstration request templates</h2><p>Four distinct forms prove that the engine can support very different business processes.</p></div></div>
+          <div class="card-header"><div><h2>The MasterFlow way</h2><p>Better work arrives, routed through existing ownership.</p></div></div>
           <div class="card-body">
-            <div class="list">
-              <div class="list-row"><div><div class="list-title">Printer Ink Request</div><div class="list-meta"><span>IT Information</span><span>Printer, location, ink type, status</span></div></div><span class="badge badge-blue">Simple</span></div>
-              <div class="list-row"><div><div class="list-title">Equipment Out of Service</div><div class="list-meta"><span>Facilities</span><span>Location, urgency, MHE number, last user</span></div></div><span class="badge badge-red">Operational</span></div>
-              <div class="list-row"><div><div class="list-title">Corrective Action - Warehouse</div><div class="list-meta"><span>Quality</span><span>Problem, pending order, customer, evidence</span></div></div><span class="badge badge-purple">Governed</span></div>
-              <div class="list-row"><div><div class="list-title">Stock Check Phoenix</div><div class="list-meta"><span>DC Connect</span><span>Part, check type, control/order number</span></div></div><span class="badge badge-teal">Warehouse</span></div>
+            <div class="summary-flow">
+              <div class="summary-step"><strong>1. Describe</strong><span>Natural language.</span></div>
+              <div class="summary-step"><strong>2. Identify</strong><span>Match flow, extract facts.</span></div>
+              <div class="summary-step"><strong>3. One question</strong><span>Ask only what&rsquo;s missing.</span></div>
+              <div class="summary-step"><strong>4. Ready</strong><span>Readiness + Receiver Brief.</span></div>
+              <div class="summary-step"><strong>5. Route</strong><span>Existing queue, actionable.</span></div>
+            </div>
+            <div class="grid grid-2 mt-18">
+              <div class="rule-card">
+                <h3>Routing readiness</h3>
+                <p>Does MasterFlow know <em>where</em> the request belongs? Measures the required routing facts before it reaches a queue.</p>
+              </div>
+              <div class="rule-card">
+                <h3>Work readiness</h3>
+                <p>Does the receiving team have enough to <em>begin work</em>? Measures the diagnostic facts a resolver needs.</p>
+              </div>
             </div>
           </div>
         </section>
       </div>
 
+      <!-- ============================================================
+           4. WHAT MASTERFLOW PRESERVES
+           ============================================================ -->
       <section class="card mt-18">
-        <div class="card-header"><div><h2>Freight optimization operating model</h2><p>Scan all eligible orders silently; create human work only when a decision, approval, investigation, or customer conversation is required.</p></div></div>
+        <div class="card-header"><div><h2>What MasterFlow preserves</h2><p>The experience changes; the trusted enterprise controls do not.</p></div></div>
+        <div class="card-body">
+          <div class="notice notice-success">
+            <span>&#10003;</span>
+            <div>
+              <strong>MasterFlow changes the employee and operational experience without discarding the controls the company already trusts.</strong>
+              <p>Existing queues &middot; routing &middot; SLAs &middot; approvals &middot; department ownership &middot; P1 escalation &middot; safety controls &middot; governance &middot; human decision authority.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           5. END-TO-END OPERATIONAL STORY
+           ============================================================ -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>One continuous operational story</h2><p>Requester &rarr; AI-assisted intake &rarr; Receiver &rarr; Queue &amp; Category Manager &rarr; Governance &rarr; Intelligence.</p></div></div>
         <div class="card-body">
           <div class="grid grid-3">
-            <div class="rule-card"><h3>Below 70% confidence</h3><p>Normally record for analysis without interrupting operations. A high-value exception may be shown for human review.</p></div>
-            <div class="rule-card"><h3>70% to 89%</h3><p>Create a review item only when expected savings exceed the economic threshold and the decision can happen before cutoff.</p></div>
-            <div class="rule-card"><h3>90% or higher</h3><p>Potential automatic path only when customer promise, inventory, export, service, reliability, and approval guardrails all pass.</p></div>
+            <div class="rule-card">
+              <h3>Requester</h3>
+              <p>Describes the issue naturally, answers only necessary questions, sees relevant help guidance and an honest completion estimate, and keeps communicating inside the same request.</p>
+            </div>
+            <div class="rule-card">
+              <h3>MasterFlow intake</h3>
+              <p>Classifies the request, extracts known details, measures routing and work readiness, produces a Receiver Brief, and preserves existing controls.</p>
+            </div>
+            <div class="rule-card">
+              <h3>Receiver</h3>
+              <p>Opens an actionable summary, claims or assigns work with an explainable owner recommendation, requests information, communicates with the requester, and resolves.</p>
+            </div>
+            <div class="rule-card">
+              <h3>IT Queue &amp; Category Manager</h3>
+              <p>Manages queue health and SLA exposure, reviews assignment recommendations, spots repeated intake problems, edits owned request flows, and submits governed changes.</p>
+            </div>
+            <div class="rule-card">
+              <h3>Megan Delia &middot; Governance</h3>
+              <p>Sets thresholds, protects routing/SLA/priority/approval/P1/safety controls, and approves or rejects enterprise-impacting changes before they publish.</p>
+            </div>
+            <div class="rule-card">
+              <h3>MasterFlow Intelligence</h3>
+              <p>Shows work readiness, classification health, returned requests, feedback patterns, flow performance, and the strongest improvement opportunity.</p>
+            </div>
           </div>
-          <div class="notice notice-warning mt-18"><span>!</span><div><strong>No indefinite operational holds.</strong><p>A hold needs a named owner, decision deadline, and automatic release to the original approved shipping plan. Promise dates are never silently changed.</p></div></div>
         </div>
       </section>
 
-      <div class="grid grid-2 mt-18">
-        <section class="card">
-          <div class="card-header"><div><h2>Required judging flow</h2><p>The prototype must work end to end without live company integrations.</p></div></div>
-          <div class="card-body">
-            <ol class="decision-list">
-              <li>Create a natural-language printer request, review the dynamic form, submit it, and see the numbered record in My Requests and the receiving queue.</li>
-              <li>Use Shipping is stopped to create a P1 without relying on AI classification, then show the incident in the operational queue.</li>
-              <li>Open freight opportunity ABI173, explain the 67% confidence and failed guardrails, and record a controlled decision.</li>
-              <li>Open Request Template Manager and change a queue, SLA, trigger phrase, or required field without editing code.</li>
-            </ol>
+      <!-- ============================================================
+           6. ROLE MODEL
+           ============================================================ -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Four working personas</h2><p>Each sees only what its job needs.</p></div></div>
+        <div class="card-body">
+          <div class="grid grid-2">
+            <div class="rule-card">
+              <div class="persona-head"><h3>Regular user</h3><span class="badge badge-blue">Requester</span></div>
+              <p>Submit, monitor, and communicate about personal requests. Home, Smart Request, My Requests, Help Articles, and the P1 fast lane.</p>
+            </div>
+            <div class="rule-card">
+              <div class="persona-head"><h3>Ticket receiver</h3><span class="badge badge-teal">Operations</span></div>
+              <p>Complete work in authorized queues: Work Center, assignment, communication, and reporting.</p>
+            </div>
+            <div class="rule-card">
+              <div class="persona-head"><h3>IT Queue &amp; Category Manager</h3><span class="badge badge-purple">Governed</span></div>
+              <p>Manage operational workload and improve owned request flows &mdash; within the guardrails set by governance.</p>
+            </div>
+            <div class="rule-card">
+              <div class="persona-head"><h3>Megan Delia &mdash; Enterprise Administrator</h3><span class="badge badge-amber">Governance</span></div>
+              <p>Govern MasterFlow across the company and protect enterprise controls. Approves or rejects changes that affect routing, SLA, priority, approval, P1, or safety.</p>
+            </div>
           </div>
-        </section>
+          <div class="notice notice-info mt-18">
+            <span>i</span>
+            <div>
+              <strong>How roles appear in this prototype</strong>
+              <p>The top demo-view selector switches between Regular user, Ticket receiver, and Administrator. Inside Administration, a persona switch separates the IT Queue &amp; Category Manager from Megan, the Enterprise Administrator, so each governance boundary is visible. In production, access would come from SSO and server-enforced permissions.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <section class="card">
-          <div class="card-header"><div><h2>Prototype boundaries</h2><p>These integrations are represented honestly rather than claimed as live.</p></div></div>
-          <div class="card-body">
+      <!-- ============================================================
+           7. BUSINESS IMPACT
+           ============================================================ -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Business impact &mdash; mechanisms, not guesses</h2><p>How the design creates value, with honest labeling.</p></div></div>
+        <div class="card-body">
+          <div class="grid grid-3">
+            <div class="rule-card">
+              <h3>Observed in the prototype</h3>
+              <p>Live counts of requests, classification confidence, triage volume, feedback, and published improvements &mdash; all read from shared state on this page.</p>
+            </div>
+            <div class="rule-card">
+              <h3>Derived prototype estimate</h3>
+              <p><strong>~8 receiver minutes avoided</strong> per work-ready request, because the Receiver Brief removes back-and-forth. Labeled as an estimate, not a measured production result.</p>
+            </div>
+            <div class="rule-card">
+              <h3>Future production measurement</h3>
+              <p>Reduced catalog search time, fewer routing errors, fewer returned requests, and better value from the existing ticketing investment &mdash; measurable once integrated.</p>
+            </div>
+          </div>
+          <ul class="decision-list mt-18">
+            <li>Less time searching catalogs and fewer manually completed fields at intake.</li>
+            <li>Higher work readiness at submission means less receiver interpretation effort.</li>
+            <li>Feedback &rarr; proposal &rarr; governed publication turns recurring problems into governed flow improvements.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           8. TECHNICAL EXECUTION
+           ============================================================ -->
+      <section class="card mt-18">
+        <div class="card-header">
+          <div><h2>Technical execution</h2><p>A layered, explainable architecture &mdash; no framework, backend, or live integration required.</p></div>
+          <span class="badge badge-teal">30% Technical</span>
+        </div>
+        <div class="card-body">
+          <div class="summary-flow">
+            <div class="summary-step"><strong>Requester experience</strong><span>Natural-language intake.</span></div>
+            <div class="summary-step"><strong>Request engine</strong><span>Classify, extract, readiness, brief.</span></div>
+            <div class="summary-step"><strong>Shared state</strong><span>localStorage source of truth.</span></div>
+            <div class="summary-step"><strong>Receiver &amp; manager</strong><span>Work, assign, feedback.</span></div>
+            <div class="summary-step"><strong>Governance &amp; intelligence</strong><span>Publish, measure.</span></div>
+          </div>
+          <div class="grid grid-3 mt-18">
             <ul class="decision-list">
-              <li>Fictional or sanitized demonstration data only.</li>
-              <li>Browser localStorage simulates persistence; there is no production database.</li>
-              <li>AI classification is a deterministic prototype matcher, ready to be replaced by an approved model.</li>
-              <li>ERP, OMS, OnlineComponents.com, Outlook, carrier, and SSO connections are simulated.</li>
-              <li>No customer email is sent and no live order hold is written to an operational system.</li>
-              <li>Migration, security hardening, model governance, and production audit controls are future implementation work.</li>
+              <li>Deterministic local request classification</li>
+              <li>Recognition aliases and trigger phrases</li>
+              <li>Structured field extraction</li>
+              <li>One-question-at-a-time clarification</li>
+              <li>Vague-location validation</li>
+            </ul>
+            <ul class="decision-list">
+              <li>Routing readiness and work readiness</li>
+              <li>Receiver Brief generation</li>
+              <li>Shipping-stopped P1 bypass</li>
+              <li>Shared ticket timeline and replies</li>
+              <li>Explainable assignment recommendations</li>
+            </ul>
+            <ul class="decision-list">
+              <li>Role-based access control</li>
+              <li>Feedback and proposal contracts</li>
+              <li>Governed proposal publication</li>
+              <li>Safe localStorage parsing and reset</li>
+              <li>Role-scoped reporting</li>
             </ul>
           </div>
-        </section>
-      </div>
-
-      <section class="card mt-18">
-        <div class="card-header"><div><h2>Claude Code handoff</h2><p>Keep prompts narrow so Claude reads only the files required for the current change.</p></div></div>
-        <div class="card-body">
-          <div class="code-note">Read CLAUDE.md and FILE_MAP.md first. This is an existing MasterFlow prototype; do not rebuild it or change the architecture. For the current task, inspect only the page file and its matching assets/js/pages file, plus shared files only when necessary. Preserve the locked business decisions in docs/CLAUDE_PROJECT_SUMMARY.md. Make one focused change, test it, and report the exact files changed.</div>
         </div>
       </section>
+
+      <!-- ============================================================
+           9. JUDGING ALIGNMENT
+           ============================================================ -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>How MasterFlow aligns with the judging criteria</h2><p>Business impact is the first tiebreaker.</p></div></div>
+        <div class="card-body">
+          <div class="grid grid-3">
+            <div class="rule-card">
+              <div class="persona-head"><h3>Business impact</h3><span class="badge badge-blue">40%</span></div>
+              <ul class="decision-list mt-12">
+                <li>Reduced intake friction</li>
+                <li>Better receiver readiness, fewer returns</li>
+                <li>Continuous, governed improvement</li>
+                <li>Preserved enterprise controls</li>
+                <li>Credible tie to current ServiceNow cost</li>
+              </ul>
+            </div>
+            <div class="rule-card">
+              <div class="persona-head"><h3>Technical execution</h3><span class="badge badge-teal">30%</span></div>
+              <ul class="decision-list mt-12">
+                <li>Complete end-to-end workflow</li>
+                <li>Explainable AI-assisted behavior</li>
+                <li>P1 guardrails and role permissions</li>
+                <li>Communication loop and state persistence</li>
+                <li>Governed proposal application</li>
+              </ul>
+            </div>
+            <div class="rule-card">
+              <div class="persona-head"><h3>Usability &amp; clarity</h3><span class="badge badge-purple">30%</span></div>
+              <ul class="decision-list mt-12">
+                <li>Natural-language, one question at a time</li>
+                <li>Plain language and role-specific pages</li>
+                <li>Receiver Brief and clear next actions</li>
+                <li>Clearly protected controls</li>
+                <li>Consistent, responsive, accessible design</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           10. WINNING DEMO
+           ============================================================ -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>The winning demo sequence</h2><p>Every step below works in this prototype.</p></div></div>
+        <div class="card-body">
+          <ol class="decision-list">
+            <li>An employee types &ldquo;Paper jam.&rdquo; MasterFlow identifies the printer issue.</li>
+            <li>MasterFlow asks for the exact station, and asks for scope or impact only when required.</li>
+            <li>It shows routing and work readiness plus an honest typical completion estimate.</li>
+            <li>A receiver-ready request is created, numbered, and visible in My Requests and the team queue.</li>
+            <li>The receiver opens the Receiver Brief and requests missing information.</li>
+            <li>The requester replies inside the same ticket; the timeline updates.</li>
+            <li>The Queue Manager identifies a recurring intake problem and captures feedback.</li>
+            <li>The Category Manager creates an improvement proposal from that feedback.</li>
+            <li>Megan approves and publishes the governed change &mdash; and the actual request flow changes.</li>
+            <li>Reporting shows the improvement opportunity and result.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           11. PROTOTYPE BOUNDARIES
+           ============================================================ -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Prototype boundaries</h2><p>Stated honestly &mdash; this makes the solution more credible.</p></div></div>
+        <div class="card-body">
+          <div class="grid grid-2">
+            <ul class="decision-list">
+              <li>No production authentication; the role selector is for demonstration only.</li>
+              <li>No production database &mdash; browser localStorage simulates persistence.</li>
+              <li>No live ServiceNow migration, ERP, or Outlook integration.</li>
+              <li>No production AI API dependency; classification is deterministic and local.</li>
+            </ul>
+            <ul class="decision-list">
+              <li>No full enterprise audit engine or complex deployment workflow.</li>
+              <li>No autonomous approval, silent duplicate merging, or mandatory auto-assignment.</li>
+              <li>Duplicate awareness at intake is intentionally deferred, not claimed as working.</li>
+              <li>A separate, authorized Freight Optimization workspace exists but is kept out of the ticketing story.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           12. FINAL CALL TO ACTION
+           ============================================================ -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Start the demo</h2><p>Jump straight into any part of the journey.</p></div></div>
+        <div class="card-body">
+          <div class="cta-row">
+            <a class="btn btn-primary" href="index.html">Start the requester demo</a>
+            <a class="btn btn-secondary" href="assigned-work.html">Open Work Center</a>
+            <a class="btn btn-secondary" href="ticket-queues.html">Open Queue Manager</a>
+            <a class="btn btn-secondary" href="admin-rules-access.html">Open Platform Governance</a>
+            <a class="btn btn-secondary" href="reporting.html">Open MasterFlow Intelligence</a>
+          </div>
+          <p class="muted small mt-12">Work Center and Reporting require the Ticket receiver demo view; Queue Manager and Platform Governance require the Administrator demo view. Choose the matching view in the top-right selector &mdash; if a link is not available for your current view, MasterFlow will say so and return you to a safe page.</p>
+          <div class="notice notice-success mt-18">
+            <span>&#10003;</span>
+            <div>
+              <strong>MasterFlow demonstrates a practical path to a simpler employee request experience, higher-quality operational work, stronger feedback loops, and governed continuous improvement &mdash; without discarding the enterprise controls already in place.</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
   <script src="assets/js/store.js" defer></script>
   <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/pages/project-summary.js" defer></script>
 </body>
 </html>

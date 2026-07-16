@@ -25,17 +25,12 @@
 
   const APPROVAL_FINAL_STATUSES = new Set(["Rejected"]);
 
-  function isApprovalRequired(ticket) {
-    return String(ticket && ticket.status || "") === "Approval required";
-  }
-
-  function isAwaitingApproval(ticket) {
-    return String(ticket && ticket.status || "") === "Awaiting approval";
-  }
-
-  function isApprovedForFulfillment(ticket) {
-    return String(ticket && ticket.status || "") === "Approved - Ready to fulfill";
-  }
+  const isApprovalRequired = Feedback.isApprovalRequired;
+  const isAwaitingApproval = Feedback.isAwaitingApproval;
+  const isApprovedForFulfillment = Feedback.isApprovedForFulfillment;
+  const requestedCost = Feedback.requestedCost;
+  const numericRequestedCost = Feedback.numericRequestedCost;
+  const approvalRouteFor = Feedback.approvalRoute;
 
   function isApprovalFinal(ticket) {
     return APPROVAL_FINAL_STATUSES.has(String(ticket && ticket.status || ""));
@@ -43,40 +38,6 @@
 
   function isFinished(ticket) {
     return Feedback.isClosed(ticket) || isApprovalFinal(ticket);
-  }
-
-  function requestedCost(ticket) {
-    const details = ticket && ticket.details || {};
-    return String(details.estimatedCost || details.cost || details.amount || "").trim();
-  }
-
-  function numericRequestedCost(ticket) {
-    const value = requestedCost(ticket).replace(/[^0-9.-]/g, "");
-    const amount = Number(value);
-    return Number.isFinite(amount) ? amount : 0;
-  }
-
-  function approvalRouteFor(ticket) {
-    const details = ticket && ticket.details || {};
-    const existing = details.approval && typeof details.approval === "object"
-      ? details.approval
-      : {};
-    const threshold = Number(Store.getState().settings.directorApprovalThreshold || 1000);
-    const amount = numericRequestedCost(ticket);
-    const requiresDirector = amount >= threshold;
-
-    return {
-      approverRole: existing.approverRole || (requiresDirector ? "Area Director" : "Department Manager"),
-      approvalLabel: existing.approvalLabel || (requiresDirector ? "Director approval" : "Manager approval"),
-      threshold,
-      amount,
-      status: existing.status || "not-sent",
-      requestedAt: existing.requestedAt || "",
-      requestedBy: existing.requestedBy || "",
-      decisionAt: existing.decisionAt || "",
-      decisionBy: existing.decisionBy || "",
-      decisionNote: existing.decisionNote || ""
-    };
   }
 
   function suggestedActionFor(ticket, analysis) {
@@ -386,10 +347,22 @@
     }).join("");
   }
 
+  function workCardBasics(ticket) {
+    return {
+      analysis: Feedback.analyzeTicket(ticket),
+      reasons: priorityReasons(ticket).map((reason) => `<span>${UI.escapeHtml(reason)}</span>`).join("")
+    };
+  }
+
+  function claimButtonMarkup(ticket) {
+    return !ticket.assignee || ticket.assignee === "Unassigned"
+      ? `<button class="btn btn-primary btn-sm" type="button" data-claim-ticket="${UI.escapeHtml(ticket.id)}">Claim ticket</button>`
+      : "";
+  }
+
   function recommendedMarkup(item, index) {
     const ticket = item.ticket;
-    const analysis = Feedback.analyzeTicket(ticket);
-    const reasons = priorityReasons(ticket).map((reason) => `<span>${UI.escapeHtml(reason)}</span>`).join("");
+    const { analysis, reasons } = workCardBasics(ticket);
 
     return `
       <article class="work-card work-card-recommended is-${item.bucket}">
@@ -412,9 +385,7 @@
           <div class="work-reason-list">${reasons}</div>
         </div>
         <div class="work-card-actions">
-          ${!ticket.assignee || ticket.assignee === "Unassigned"
-            ? `<button class="btn btn-primary btn-sm" type="button" data-claim-ticket="${UI.escapeHtml(ticket.id)}">Claim ticket</button>`
-            : ""}
+          ${claimButtonMarkup(ticket)}
           <button class="btn btn-secondary btn-sm" type="button" data-ticket-id="${UI.escapeHtml(ticket.id)}">Open request</button>
         </div>
       </article>
@@ -423,8 +394,7 @@
 
   function workCardMarkup(item) {
     const ticket = item.ticket;
-    const analysis = Feedback.analyzeTicket(ticket);
-    const reasons = priorityReasons(ticket).map((reason) => `<span>${UI.escapeHtml(reason)}</span>`).join("");
+    const { analysis, reasons } = workCardBasics(ticket);
 
     return `
       <article class="work-card is-${item.bucket}">
@@ -451,9 +421,7 @@
           <div class="work-reason-list">${reasons}</div>
         </div>
         <div class="work-card-actions">
-          ${!ticket.assignee || ticket.assignee === "Unassigned"
-            ? `<button class="btn btn-primary btn-sm" type="button" data-claim-ticket="${UI.escapeHtml(ticket.id)}">Claim ticket</button>`
-            : ""}
+          ${claimButtonMarkup(ticket)}
           <button class="btn btn-secondary btn-sm" type="button" data-ticket-id="${UI.escapeHtml(ticket.id)}">${isFinished(ticket) ? "View" : "Open"}</button>
         </div>
       </article>

@@ -61,12 +61,12 @@
 },
 "ticket-queues": {
   href: "ticket-queues.html",
-  label: "Legacy ticket queues",
+  label: "Queue Manager",
   icon: "☷",
   group: null,
   roles: ["receiver", "admin"],
-  title: "Opening Work Center",
-  subtitle: "Ticket queues are now part of the unified Work Center."
+  title: "Queue Manager",
+  subtitle: "Pending approvals, queue health, coverage, and improvement recommendations."
 },
     freight: {
       href: "freight-optimization.html",
@@ -108,10 +108,10 @@
       href: "project-summary.html",
       label: "Project summary",
       icon: "i",
-      group: "Administration",
-      roles: ["admin"],
+      group: "About",
+      roles: ["requester", "receiver", "admin"],
       title: "Project summary",
-      subtitle: "Locked product direction and Claude handoff context."
+      subtitle: "How MasterFlow solves the intake problem - a judge-facing overview."
     }
   };
 
@@ -193,7 +193,7 @@
 
   function navMarkup(role) {
     const pageCounts = counts();
-    const groupOrder = ["For me", "Operations", "Administration"];
+    const groupOrder = ["For me", "Operations", "Administration", "About"];
     return groupOrder.map((group) => {
       const links = Object.entries(pages)
         .filter(([, definition]) => definition.group === group && definition.roles.includes(role))

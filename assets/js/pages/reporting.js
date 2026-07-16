@@ -2205,6 +2205,140 @@
           `;
   }
 
+  function renderFreightOutcomes(
+    freightOpportunities,
+    settings
+  ) {
+    const opportunities =
+      freightOpportunities || [];
+
+    const identified =
+      opportunities.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.internalSavings || 0
+          ),
+        0
+      );
+
+    const captured =
+      opportunities
+        .filter(
+          (item) =>
+            item.decision === "hold"
+        )
+        .reduce(
+          (total, item) =>
+            total +
+            Number(
+              item.internalSavings || 0
+            ),
+          0
+        );
+
+    const guardrailBlocked =
+      opportunities.filter(
+        (item) =>
+          (item.guardrails || []).some(
+            (guardrail) =>
+              guardrail.result === "fail"
+          )
+      ).length;
+
+    setText(
+      "reportFreightOpportunities",
+      opportunities.length
+    );
+
+    setText(
+      "reportFreightIdentified",
+      UI.formatMoney(identified, 0)
+    );
+
+    setText(
+      "reportFreightCaptured",
+      UI.formatMoney(captured, 0)
+    );
+
+    setText(
+      "reportFreightGuardrailBlocked",
+      guardrailBlocked
+    );
+
+    const target =
+      Number(
+        settings.freightSavingsTarget || 0
+      );
+
+    const ytd =
+      Number(
+        settings.verifiedSavingsYtd || 0
+      );
+
+    setText(
+      "reportFreightYtd",
+      `${UI.formatMoney(ytd, 0)} of ${UI.formatMoney(target, 0)}`
+    );
+
+    setWidth(
+      "reportFreightYtdProgress",
+      target > 0
+        ? percentage(ytd, target)
+        : 0
+    );
+
+    const body =
+      byId("reportFreightDecisionBody");
+
+    if (!body) {
+      return;
+    }
+
+    const decided =
+      opportunities.filter(
+        (item) => item.decision
+      );
+
+    const decisionLabels = {
+      hold: "Time-boxed hold approved",
+      release: "Released unchanged",
+      sales: "Sent to Sales for review"
+    };
+
+    body.innerHTML =
+      decided.length
+        ? decided
+            .map(
+              (item) => `
+                <tr>
+                  <td>
+                    <strong>${escapeHtml(item.customerName)}</strong>
+                    <div class="muted small">${escapeHtml(item.customerNumber)} &middot; ${escapeHtml(item.orderNumber)}</div>
+                  </td>
+
+                  <td>${escapeHtml(decisionLabels[item.decision] || item.decision)}</td>
+
+                  <td>${UI.formatMoney(Number(item.internalSavings || 0), 0)}</td>
+
+                  <td>${escapeHtml(item.decisionBy || "Not recorded")}</td>
+
+                  <td>${escapeHtml(UI.formatDate(item.decisionAt))}</td>
+                </tr>
+              `
+            )
+            .join("")
+        : `
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  No freight decisions have been recorded yet.
+                </div>
+              </td>
+            </tr>
+          `;
+  }
+
   function renderGovernance(
     tickets,
     feedback,
@@ -2761,6 +2895,11 @@
       lowConfidence,
       feedback,
       scope
+    );
+
+    renderFreightOutcomes(
+      state.freightOpportunities,
+      state.settings
     );
 
     renderGovernance(

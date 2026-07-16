@@ -26,21 +26,44 @@
         </div>
 
         <aside class="flow-role-panel">
-          <label>View as</label>
+          <div class="flow-role-panel-header">
+            <label for="adminRoleSelect">View as</label>
+            <span class="badge" id="adminRoleBadge">Enterprise scope</span>
+          </div>
+
           <select id="adminRoleSelect" class="select">
             <option value="platform-admin">Megan Delia — Enterprise Administrator</option>
             <option value="category-owner">IT Queue & Category Manager</option>
+            <option value="queue-manager">Queue Manager — Intake Quality (read-only)</option>
           </select>
+
+          <div class="flow-role-metrics">
+            <span><strong id="visibleFlowCount">0</strong><small id="visibleFlowHint">of 0 flows</small></span>
+            <span><strong id="feedbackSignalCount">0</strong><small>feedback signals</small></span>
+            <span><strong id="pendingProposalCount">0</strong><small>pending proposals</small></span>
+            <span><strong id="governedControlCount">View</strong><small>edit level</small></span>
+          </div>
+
+          <div class="flow-role-scope" id="adminRolePermissions"></div>
         </aside>
+      </div>
+
+      <div class="notice notice-info">
+        <span aria-hidden="true">i</span>
+        <div>
+          <strong></strong>
+          <p></p>
+        </div>
       </div>
 
       <div class="template-manager">
         <aside class="card template-list-card">
-          <h2>Request Flows</h2>
-
-<p id="templateCount">
-  Loading…
-</p>
+          <div class="card-header">
+            <div>
+              <h2>Request Flows</h2>
+              <p id="templateCount">Loading…</p>
+            </div>
+          </div>
 
 <input
   id="templateSearch"
@@ -51,7 +74,13 @@
         </aside>
 
         <form id="templateForm" class="card">
-          <h2 id="editorTitle"></h2>
+          <div class="card-header">
+            <div>
+              <div class="eyebrow"></div>
+              <h2 id="editorTitle"></h2>
+              <p></p>
+            </div>
+          </div>
           <div id="templateEditorBody"></div>
           <button type="submit" class="btn btn-primary">Save</button>
         </form>

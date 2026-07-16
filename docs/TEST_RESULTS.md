@@ -1,5 +1,7 @@
 # MasterFlow prototype validation
 
+> Superseded by `FINAL_AUDIT.md` for the current known-issue list. This file predates the Project Summary rewrite and the smart-request.js fix, and its claims below have not been re-verified in a live browser since.
+
 Validated locally as a multipage browser application using fictional state.
 
 ## End-to-end passes
@@ -16,7 +18,7 @@ Validated locally as a multipage browser application using fictional state.
 - A freight Sales-review decision persists and updates the opportunity status.
 - Administrator can change the Printer Ink queue without code.
 - The next Smart Request immediately displays the updated queue.
-- Project Summary loads with product decisions and Claude handoff context.
+- Project Summary loads with live prototype metrics and product decisions (rewritten since; see `FINAL_AUDIT.md`).
 - All requester, receiver, and administrator pages pass a role-aware browser smoke test.
 - Mobile requester home renders and remains usable.
 - Browser tests produced zero console errors.

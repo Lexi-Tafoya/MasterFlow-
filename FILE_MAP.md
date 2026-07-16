@@ -26,7 +26,7 @@ Use this map to keep Claude context small.
 | Page | Script | Purpose |
 |---|---|---|
 | `assigned-work.html` | `assets/js/pages/assigned-work.js` | Personal work inbox |
-| `ticket-queues.html` | `assets/js/pages/ticket-queues.js` | Team queues, assignment, P1, SLA |
+| `ticket-queues.html` | `assets/js/pages/receiver-feedback.js` | Queue Manager: approvals, queue health, coverage, and feedback. The page is a thin shell; receiver-feedback.js holds the working logic |
 | `freight-optimization.html` | `assets/js/pages/freight-optimization.js` | Freight opportunities and decisions |
 | `reporting.html` | `assets/js/pages/reporting.js` | Ticket and freight outcomes |
 
@@ -36,7 +36,7 @@ Use this map to keep Claude context small.
 |---|---|---|
 | `admin-templates.html` | `assets/js/pages/admin-templates.js` | No-code request-template configuration |
 | `admin-rules-access.html` | `assets/js/pages/admin-rules-access.js` | Thresholds, routing, approvals, roles |
-| `project-summary.html` | none beyond shared layout | Visual product and Claude handoff summary |
+| `project-summary.html` | `assets/js/pages/project-summary.js` | Judge-facing product summary with live prototype metrics |
 
 ## Context documents
 

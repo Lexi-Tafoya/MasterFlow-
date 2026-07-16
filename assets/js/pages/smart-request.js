@@ -4,6 +4,7 @@
   const Store = window.MasterFlowStore;
   const Templates = window.MasterFlowTemplates;
   const UI = window.MasterFlowUI;
+  const Troubleshooting = window.MasterFlowTroubleshooting;
   if (!Store || !Templates || !UI || !UI.layoutReady) return;
 
   const DRAFT_KEY = "masterflowSmartDraft";
@@ -26,8 +27,127 @@
   const pickerDialog = document.getElementById("requestPickerDialog");
   const picker = document.getElementById("requestPicker");
   const pickerSearch = document.getElementById("requestPickerSearch");
+  const troubleshootingPanel = document.getElementById("troubleshootingPanel");
+  const troubleshootingDialog = document.getElementById("requestTroubleshootingDialog");
+
+  let activeGuide = null;
+  let activeSession = null;
+  let troubleshootingCompletedSession = null;
 
   function escape(value) { return UI.escapeHtml(value); }
+
+  function modeLabel(mode) {
+    if (mode === "preparation") return "Checklist";
+    if (mode === "safety") return "Safety";
+    return "Guide";
+  }
+
+  function renderTroubleshootingPanel() {
+    if (!Troubleshooting || !troubleshootingPanel) return;
+
+    const guide = Troubleshooting.guideForTemplate(activeTemplate);
+    activeGuide = guide;
+
+    if (!guide) {
+      troubleshootingPanel.hidden = true;
+      return;
+    }
+
+    troubleshootingPanel.hidden = false;
+    document.getElementById("troubleshootingTitle").textContent = guide.title;
+    document.getElementById("troubleshootingSummary").textContent = guide.summary;
+    document.getElementById("troubleshootingModeBadge").textContent = modeLabel(guide.mode);
+    document.getElementById("troubleshootingTime").textContent = `About ${guide.estimatedMinutes} min`;
+    document.getElementById("troubleshootingReason").textContent = guide.mode === "preparation"
+      ? "Recommended so support has everything needed to start immediately."
+      : "Recommended before this is routed to a person.";
+
+    const resultBanner = document.getElementById("troubleshootingResult");
+    const startButton = document.getElementById("troubleshootingStart");
+    const skipButton = document.getElementById("troubleshootingSkip");
+
+    if (troubleshootingCompletedSession) {
+      resultBanner.hidden = false;
+      resultBanner.textContent = `Troubleshooting recorded: ${troubleshootingCompletedSession.result || "steps completed"}. These notes will be included with this request.`;
+      startButton.hidden = true;
+      skipButton.hidden = true;
+    } else {
+      resultBanner.hidden = true;
+      startButton.hidden = false;
+      skipButton.hidden = false;
+    }
+  }
+
+  function updateTroubleshootingProgress() {
+    const checkboxes = Array.from(
+      document.getElementById("requestTroubleshootingSteps").querySelectorAll('input[type="checkbox"]')
+    );
+    const completed = checkboxes.filter((checkbox) => checkbox.checked).length;
+    document.getElementById("requestTroubleshootingProgress").textContent = `${completed} of ${checkboxes.length} complete`;
+  }
+
+  function troubleshootingSessionPatch(defaultResult) {
+    const checkboxes = Array.from(
+      document.getElementById("requestTroubleshootingSteps").querySelectorAll('input[type="checkbox"]:checked')
+    );
+    return {
+      completedSteps: checkboxes.map((checkbox) => checkbox.dataset.stepText),
+      affectedScope: document.getElementById("requestTroubleshootingScope").value,
+      identifiers: document.getElementById("requestTroubleshootingIdentifiers").value.trim(),
+      result: document.getElementById("requestTroubleshootingOutcome").value || defaultResult || "",
+      notes: document.getElementById("requestTroubleshootingNotes").value.trim()
+    };
+  }
+
+  function openTroubleshootingDialog() {
+    if (!activeGuide || !troubleshootingDialog) return;
+
+    activeSession = Troubleshooting.startSession({
+      guide: activeGuide,
+      source: "smart-request",
+      templateId: activeTemplate.id,
+      issueText: draft.text
+    });
+
+    document.getElementById("requestTroubleshootingTitle").textContent = activeGuide.title;
+    document.getElementById("requestTroubleshootingSummary").textContent = activeGuide.summary;
+    document.getElementById("requestTroubleshootingMeaning").textContent = activeGuide.meaning;
+    document.getElementById("requestTroubleshootingEscalation").textContent = activeGuide.escalation;
+    document.getElementById("requestTroubleshootingRecord").textContent = activeGuide.record;
+
+    document.getElementById("requestTroubleshootingBadges").innerHTML = `
+      <span class="badge badge-blue">${escape(activeTemplate.catalog)}</span>
+      <span class="badge badge-teal">${escape(modeLabel(activeGuide.mode))}</span>
+      <span class="badge badge-gray">About ${escape(activeGuide.estimatedMinutes)} min</span>
+    `;
+
+    document.getElementById("requestTroubleshootingStepsTitle").textContent =
+      activeGuide.mode === "preparation"
+        ? "Review this checklist"
+        : activeGuide.mode === "safety"
+          ? "Complete these safety and containment steps"
+          : "Try these steps in order";
+
+    document.getElementById("requestTroubleshootingSteps").innerHTML = activeGuide.steps.map((step, index) => `
+      <label class="troubleshooting-step">
+        <input type="checkbox" data-step-text="${escape(step)}">
+        <span class="troubleshooting-step-number">${index + 1}</span>
+        <span>${escape(step)}</span>
+      </label>
+    `).join("");
+
+    document.getElementById("requestTroubleshootingOutcome").value = "";
+    document.getElementById("requestTroubleshootingScope").value = "";
+    document.getElementById("requestTroubleshootingIdentifiers").value = "";
+    document.getElementById("requestTroubleshootingNotes").value = "";
+
+    document.getElementById("requestTroubleshootingP1").hidden = !activeGuide.emergency;
+    document.getElementById("requestTroubleshootingSolved").hidden = !activeGuide.allowSolved;
+
+    updateTroubleshootingProgress();
+
+    if (!troubleshootingDialog.open) troubleshootingDialog.showModal();
+  }
 
   function fieldMarkup(field) {
     /*
@@ -299,13 +419,7 @@
         if (input) input.focus();
       });
     });
-    if (activeTemplate.article) {
-      document.getElementById("articlePanel").hidden = false;
-      document.getElementById("articleTitle").textContent = activeTemplate.article.title;
-      document.getElementById("articleSummary").textContent = activeTemplate.article.summary;
-    } else {
-      document.getElementById("articlePanel").hidden = true;
-    }
+    renderTroubleshootingPanel();
   }
 
   function renderPicker(query) {
@@ -372,17 +486,57 @@
     draft.confidence = confidence;
     draft.reason = reason;
     draft.manual = true;
+    troubleshootingCompletedSession = null;
     window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     pickerDialog.close();
     render();
     UI.showToast(`Changed to ${activeTemplate.name}.`);
   });
 
-  document.getElementById("articleResolved").addEventListener("click", () => {
-    window.sessionStorage.removeItem(DRAFT_KEY);
-    window.sessionStorage.setItem("masterflowFlash", "Marked as solved without creating a ticket.");
-    window.location.href = "index.html";
-  });
+  if (troubleshootingPanel) {
+    document.getElementById("troubleshootingStart").addEventListener("click", openTroubleshootingDialog);
+
+    document.getElementById("troubleshootingSkip").addEventListener("click", () => {
+      troubleshootingPanel.hidden = true;
+    });
+  }
+
+  if (troubleshootingDialog) {
+    document.querySelectorAll("[data-close-request-troubleshooting]").forEach((button) => {
+      button.addEventListener("click", () => troubleshootingDialog.close());
+    });
+
+    document.getElementById("requestTroubleshootingSteps").addEventListener("change", updateTroubleshootingProgress);
+
+    document.getElementById("requestTroubleshootingP1").addEventListener("click", () => {
+      troubleshootingDialog.close();
+      UI.openCriticalDialog();
+    });
+
+    document.getElementById("requestTroubleshootingSolved").addEventListener("click", () => {
+      if (!activeSession || !activeGuide || !activeGuide.allowSolved) return;
+      Troubleshooting.finishSession(activeSession, troubleshootingSessionPatch("Solved"), "solved");
+      troubleshootingDialog.close();
+      window.sessionStorage.removeItem(DRAFT_KEY);
+      window.sessionStorage.setItem("masterflowFlash", "Marked as solved without creating a ticket.");
+      window.location.href = "index.html";
+    });
+
+    document.getElementById("requestTroubleshootingContinue").addEventListener("click", () => {
+      if (!activeSession || !activeGuide) return;
+      const defaultResult = activeGuide.mode === "preparation" || activeGuide.mode === "safety"
+        ? "Information collected"
+        : "No change";
+      troubleshootingCompletedSession = Troubleshooting.finishSession(
+        activeSession,
+        troubleshootingSessionPatch(defaultResult),
+        "escalated"
+      );
+      troubleshootingDialog.close();
+      renderTroubleshootingPanel();
+      UI.showToast("Troubleshooting notes will be included with this request.");
+    });
+  }
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -529,7 +683,12 @@
           draft.reportingData || null,
 
         clarificationCount:
-          draft.clarificationCount || 0,        
+          draft.clarificationCount || 0,
+
+        troubleshootingSummary:
+          troubleshootingCompletedSession
+            ? Troubleshooting.formatForRequest(troubleshootingCompletedSession)
+            : "",
       },
       historyText: isHardwarePurchase
         ? numericEstimatedCost > 0

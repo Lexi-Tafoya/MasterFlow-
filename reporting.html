@@ -579,6 +579,93 @@
         </section>
       </div>
 
+      <!-- MASTERFLOW INTELLIGENCE: FREIGHT OUTCOMES -->
+      <section class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>Freight optimization outcomes</h2>
+
+            <p>
+              Savings identified and recorded decisions from the
+              Freight Optimization workspace.
+            </p>
+          </div>
+
+          <span class="badge badge-teal">Freight</span>
+        </div>
+
+        <div class="card-body">
+          <div class="kpi-grid">
+            <article class="kpi">
+              <div class="kpi-label">Opportunities reviewed</div>
+              <div class="kpi-value" id="reportFreightOpportunities">0</div>
+              <div class="kpi-meta">Scanned orders needing a decision</div>
+            </article>
+
+            <article class="kpi">
+              <div class="kpi-label">Savings identified</div>
+              <div class="kpi-value" id="reportFreightIdentified">$0</div>
+              <div class="kpi-meta">Across all open and decided opportunities</div>
+            </article>
+
+            <article class="kpi">
+              <div class="kpi-label">Savings captured by decision</div>
+              <div class="kpi-value" id="reportFreightCaptured">$0</div>
+              <div class="kpi-meta good" id="reportFreightCapturedMeta">From approved time-boxed holds</div>
+            </article>
+
+            <article class="kpi">
+              <div class="kpi-label">Guardrail-blocked auto-actions</div>
+              <div class="kpi-value" id="reportFreightGuardrailBlocked">0</div>
+              <div class="kpi-meta">Required human review before any action</div>
+            </article>
+          </div>
+
+          <div class="metric-list mt-18">
+            <div>
+              <div class="metric-row">
+                <span>Verified savings toward annual target</span>
+
+                <strong id="reportFreightYtd">
+                  $0 of $0
+                </strong>
+              </div>
+
+              <div class="progress">
+                <span
+                  id="reportFreightYtdProgress"
+                  style="width:0%"
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap mt-18">
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer / order</th>
+                  <th>Decision</th>
+                  <th>Savings</th>
+                  <th>Decided by</th>
+                  <th>When</th>
+                </tr>
+              </thead>
+
+              <tbody id="reportFreightDecisionBody">
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state">
+                      Freight decisions are loading.
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- MASTERFLOW INTELLIGENCE: GOVERNANCE -->
       <section
         class="card mt-18"
@@ -785,20 +872,6 @@
         ></span>
       </div>
 
-      <!--
-        Compatibility elements for the previous reporting.js.
-        These remain hidden and prevent errors until reporting.js
-        is replaced with the matching MasterFlow Intelligence logic.
-      -->
-      <div hidden aria-hidden="true">
-        <span id="reportOpenBacklog">0</span>
-        <span id="reportVerifiedSavings">$0</span>
-        <span id="reportSavingsTarget">0%</span>
-        <span id="savingsProgress"></span>
-        <span id="savingsProgressLabel">0%</span>
-        <div id="ticketQueueChart"></div>
-        <div id="freightSavingsChart"></div>
-      </div>
     </main>
   </div>
 

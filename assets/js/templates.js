@@ -1391,6 +1391,100 @@
     return get(template.id);
   }
 
+  function applyGovernedProposal(proposal) {
+    const templateId = String(proposal.templateId || "").trim();
+    if (!templateId) {
+      return { applied: false, summary: "Governance decision published; no request-flow ID was linked." };
+    }
+
+    const template = get(templateId);
+    if (!template || template.id !== templateId) {
+      throw new Error(`Request flow "${templateId}" was not found.`);
+    }
+
+    const updated = clone(template);
+    const after = String(proposal.after || "").trim();
+
+    const feedback = (() => {
+      const ids = new Set(proposal.relatedFeedbackIds || []);
+      try {
+        const items = JSON.parse(window.localStorage.getItem("masterflowFlowFeedbackV1") || "[]");
+        return (Array.isArray(items) ? items : []).find((item) => ids.has(item.id)) || null;
+      } catch (error) {
+        return null;
+      }
+    })();
+
+    const numericValue = (value) => {
+      const match = String(value || "").trim().match(/-?\d+(?:\.\d+)?/);
+      return match ? Number(match[0]) : Number.NaN;
+    };
+
+    const unique = (items) => [...new Set(items.map((item) => String(item || "").trim()).filter(Boolean))];
+
+    let summary = "";
+
+    if (proposal.changeType === "destination-queue") {
+      if (!after) throw new Error("The proposed queue is empty.");
+      updated.queue = after;
+      summary = `Receiving queue changed to ${after}.`;
+    } else if (proposal.changeType === "response-sla") {
+      const hours = numericValue(after);
+      if (!Number.isFinite(hours) || hours <= 0) throw new Error("The proposed response SLA does not contain a valid positive number.");
+      updated.responseSlaHours = hours;
+      summary = `Response SLA changed to ${hours} hour${hours === 1 ? "" : "s"}.`;
+    } else if (proposal.changeType === "resolution-sla") {
+      const hours = numericValue(after);
+      if (!Number.isFinite(hours) || hours <= 0) throw new Error("The proposed resolution SLA does not contain a valid positive number.");
+      updated.resolutionSlaHours = hours;
+      summary = `Resolution SLA changed to ${hours} hour${hours === 1 ? "" : "s"}.`;
+    } else if (proposal.changeType === "default-priority") {
+      const match = after.match(/\bP[1-4]\b/i);
+      if (!match) throw new Error("The proposed priority must include P1, P2, P3, or P4.");
+      const priorities = { P1: "P1 - Critical", P2: "P2 - High", P3: "P3 - Normal", P4: "P4 - Low" };
+      updated.priority = priorities[match[0].toUpperCase()];
+      summary = `Default priority changed to ${updated.priority}.`;
+    } else if (proposal.changeType === "recognition-alias") {
+      const aliases = unique(after.split(/\n|,/));
+      if (!aliases.length) throw new Error("No recognition alias was supplied.");
+      updated.keywords = unique([...(updated.keywords || []), ...aliases]);
+      summary = `${aliases.length} recognition alias${aliases.length === 1 ? "" : "es"} added.`;
+    } else if (proposal.changeType === "suggested-first-action") {
+      updated.diagnostics = { ...(updated.diagnostics || {}), suggestedFirstAction: after };
+      summary = "Suggested First Action updated.";
+    } else if (proposal.changeType === "receiver-brief") {
+      updated.receiverBrief = after;
+      summary = "Receiver Brief wording updated.";
+    } else if (proposal.changeType === "question-wording") {
+      const diagnosticId = String((feedback && feedback.evidence && feedback.evidence.diagnosticId) || "").trim();
+      const questions = updated.diagnostics && Array.isArray(updated.diagnostics.questions) ? updated.diagnostics.questions : [];
+      const question = questions.find((item) => item.id === diagnosticId);
+      if (!diagnosticId || !question) {
+        return { applied: false, summary: "Question-wording decision published; no diagnostic question ID was linked." };
+      }
+      question.question = after;
+      summary = `Diagnostic question "${diagnosticId}" updated.`;
+    } else if (proposal.changeType === "work-readiness") {
+      const diagnosticId = String((feedback && feedback.evidence && feedback.evidence.diagnosticId) || "").trim();
+      if (!diagnosticId) {
+        return { applied: false, summary: "Work-readiness decision published; no diagnostic requirement ID was linked." };
+      }
+      updated.diagnostics = {
+        ...(updated.diagnostics || {}),
+        requiredForWork: unique([
+          ...(updated.diagnostics && Array.isArray(updated.diagnostics.requiredForWork) ? updated.diagnostics.requiredForWork : []),
+          diagnosticId
+        ])
+      };
+      summary = `"${diagnosticId}" added as a work-readiness requirement.`;
+    } else {
+      return { applied: false, summary: "Governance decision published; this change remains represented by the proposal record." };
+    }
+
+    save(updated);
+    return { applied: true, summary };
+  }
+
   function reset() {
     window.localStorage.removeItem(STORAGE_KEY);
     return getAll();
@@ -1663,6 +1757,7 @@
     getAll,
     get,
     save,
+    applyGovernedProposal,
     reset,
     classify,
     extract
