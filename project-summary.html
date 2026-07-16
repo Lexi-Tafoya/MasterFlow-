@@ -3,21 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="MasterFlow project summary: a simpler AI-assisted intake and governance layer that preserves the enterprise controls Master Electronics already trusts.">
+  <meta name="description" content="MasterFlow project summary: a simpler AI-assisted intake, operations, governance, and ServiceNow-transition layer for Problem #4.">
   <title>MasterFlow - Project summary</title>
   <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/SUMMARY_APPEND.css">
 </head>
 <body class="workspace-page" data-page="project-summary">
   <div class="content-shell">
     <main>
 
-      <!-- ============================================================
-           HERO + LIVE METRICS
-           ============================================================ -->
+      <!-- 1. OVERVIEW -->
       <section class="summary-hero">
-        <div class="eyebrow">MasterFlow · judge-facing product summary</div>
+        <div class="eyebrow">MasterFlow · product summary</div>
         <h1>MasterFlow improves the quality of work before it reaches the team</h1>
-        <p>It is a simpler, AI-assisted operational layer for employee intake, receiver readiness, communication, and governed continuous improvement &mdash; while preserving the queues, routing, SLAs, approvals, ownership, and controls the company already trusts. It does not replace ServiceNow wholesale, and it never silently merges, assigns, routes, or approves work.</p>
+        <p>MasterFlow is a simpler, AI-assisted operational layer for employee intake, Service Team readiness, communication, governed continuous improvement, and a credible ServiceNow transition &mdash; while preserving the queues, routing, SLAs, approvals, ownership, and controls the company already trusts. It never silently merges, assigns, routes, or approves work.</p>
       </section>
 
       <section class="kpi-grid mt-18" aria-label="Live prototype metrics">
@@ -39,345 +38,289 @@
         <div class="kpi">
           <div class="kpi-label">Governed improvements published</div>
           <div class="kpi-value" id="mfPublished">&mdash;</div>
-          <div class="kpi-meta" id="mfPublishedMeta">Flow changes approved by governance</div>
+          <div class="kpi-meta" id="mfPublishedMeta">Queue-owned + governed flow changes</div>
         </div>
       </section>
 
-      <!-- ============================================================
-           1. EXECUTIVE SUMMARY
-           ============================================================ -->
+      <!-- 2. OFFICIAL PROBLEM #4 -->
       <section class="card mt-18">
-        <div class="card-header">
-          <div>
-            <h2>Executive summary</h2>
-            <p>Employees should not need to understand a ticket catalog to ask for help.</p>
-          </div>
-          <span class="badge badge-blue">40% Business impact</span>
+        <div class="card-header"><div><h2>Problem #4 — Ticketing System Replacement</h2><p>The challenge MasterFlow is built to solve.</p></div></div>
+        <div class="card-body">
+          <p>Master Electronics spends more than <strong id="mfServiceNowCost">$300,000</strong> per year on ServiceNow but uses it mainly for basic ticket management. The platform is more complex and costly than current needs require, and enhancements often require specialized development. The challenge is to create a simpler, more cost-effective ticketing solution that improves usability, visibility, reporting, and flexibility for internal teams &mdash; including migration of existing tickets, users, and knowledge, and at least one AI-assisted workflow.</p>
         </div>
+      </section>
+
+      <!-- 3. BUSINESS BASELINE -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Business baseline</h2><p>The starting conditions, stated accurately.</p></div><span class="badge badge-blue">Business Impact</span></div>
         <div class="card-body">
           <div class="grid grid-2">
-            <div>
-              <p>Master Electronics spends more than <strong id="mfServiceNowCost">$300,000</strong> per year on ServiceNow, primarily for ticket management. Employees still face a complicated intake experience: they may not know the correct request type, queue, or department, and requests often arrive without enough information for a receiver to begin work.</p>
-              <p>MasterFlow lets an employee describe the problem naturally, gathers the information the receiving team actually needs, and routes the request through the company&rsquo;s existing controls. The judges care whether the project solves the problem &mdash; not how many features exist &mdash; so every part of this page traces back to that.</p>
-            </div>
+            <ul class="decision-list">
+              <li>More than <strong>$300,000</strong>/year is spent on ServiceNow, primarily for basic ticket management.</li>
+              <li>The platform is highly capable but more complex and costly than current needs require.</li>
+              <li>Common enhancements may require specialized development.</li>
+              <li>Employees must decide the form, category, queue, and ownership before they can ask for help.</li>
+              <li>Incomplete requests create repeated clarification; incorrect routing delays work.</li>
+              <li>Service Team members spend time interpreting and correcting requests.</li>
+              <li>Queue Managers lack a strong, structured improvement loop; Administrators carry heavy configuration and governance burden.</li>
+            </ul>
             <div class="notice notice-info">
               <span>i</span>
               <div>
-                <strong>Stated business baseline</strong>
-                <p>The annual ServiceNow cost is the project&rsquo;s stated baseline, shown as fixed business context. Operational counts on this page are read live from the prototype&rsquo;s shared state.</p>
+                <strong>Two separate business measures — never combined.</strong>
+                <p>The <strong>ServiceNow platform cost baseline</strong> ($300k/year fixed licensing) is distinct from <strong>operational ticket-resolution spend</strong> (parts, vendor, labor per ticket), which is reported separately in MasterFlow Intelligence. Any savings figures are labeled as modeled or estimated.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ============================================================
-           2. THE BUSINESS PROBLEM  /  3. THE SOLUTION
-           ============================================================ -->
-      <div class="grid grid-2 mt-18">
-        <section class="card">
-          <div class="card-header"><div><h2>The problem today</h2><p>Intake friction wastes employee and receiver time.</p></div></div>
-          <div class="card-body">
-            <div class="summary-flow">
-              <div class="summary-step"><strong>1. Search</strong><span>Hunt the request catalog.</span></div>
-              <div class="summary-step"><strong>2. Pick a form</strong><span>Guess the right request type.</span></div>
-              <div class="summary-step"><strong>3. Re-enter</strong><span>Repeat known details.</span></div>
-              <div class="summary-step"><strong>4. Submit</strong><span>Often incomplete.</span></div>
-              <div class="summary-step"><strong>5. Wait</strong><span>Receiver chases missing info.</span></div>
-            </div>
-            <ul class="decision-list mt-18">
-              <li>Employee time is wasted and requests can be routed incorrectly.</li>
-              <li>Receivers spend time interpreting raw fields, or return work for missing information.</li>
-              <li>Queue managers see recurring problems but lack a direct improvement loop.</li>
-              <li>Administrators must protect controls without hand-maintaining every intake form.</li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="card-header"><div><h2>The MasterFlow way</h2><p>Better work arrives, routed through existing ownership.</p></div></div>
-          <div class="card-body">
-            <div class="summary-flow">
-              <div class="summary-step"><strong>1. Describe</strong><span>Natural language.</span></div>
-              <div class="summary-step"><strong>2. Identify</strong><span>Match flow, extract facts.</span></div>
-              <div class="summary-step"><strong>3. One question</strong><span>Ask only what&rsquo;s missing.</span></div>
-              <div class="summary-step"><strong>4. Ready</strong><span>Readiness + Receiver Brief.</span></div>
-              <div class="summary-step"><strong>5. Route</strong><span>Existing queue, actionable.</span></div>
-            </div>
-            <div class="grid grid-2 mt-18">
-              <div class="rule-card">
-                <h3>Routing readiness</h3>
-                <p>Does MasterFlow know <em>where</em> the request belongs? Measures the required routing facts before it reaches a queue.</p>
-              </div>
-              <div class="rule-card">
-                <h3>Work readiness</h3>
-                <p>Does the receiving team have enough to <em>begin work</em>? Measures the diagnostic facts a resolver needs.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- ============================================================
-           4. WHAT MASTERFLOW PRESERVES
-           ============================================================ -->
+      <!-- 4. MASTERFLOW'S RESPONSE -->
       <section class="card mt-18">
-        <div class="card-header"><div><h2>What MasterFlow preserves</h2><p>The experience changes; the trusted enterprise controls do not.</p></div></div>
-        <div class="card-body">
-          <div class="notice notice-success">
-            <span>&#10003;</span>
-            <div>
-              <strong>MasterFlow changes the employee and operational experience without discarding the controls the company already trusts.</strong>
-              <p>Existing queues &middot; routing &middot; SLAs &middot; approvals &middot; department ownership &middot; P1 escalation &middot; safety controls &middot; governance &middot; human decision authority.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           5. END-TO-END OPERATIONAL STORY
-           ============================================================ -->
-      <section class="card mt-18">
-        <div class="card-header"><div><h2>One continuous operational story</h2><p>Requester &rarr; AI-assisted intake &rarr; Receiver &rarr; Queue &amp; Category Manager &rarr; Governance &rarr; Intelligence.</p></div></div>
-        <div class="card-body">
-          <div class="grid grid-3">
-            <div class="rule-card">
-              <h3>Requester</h3>
-              <p>Describes the issue naturally, answers only necessary questions, sees relevant help guidance and an honest completion estimate, and keeps communicating inside the same request.</p>
-            </div>
-            <div class="rule-card">
-              <h3>MasterFlow intake</h3>
-              <p>Classifies the request, extracts known details, measures routing and work readiness, produces a Receiver Brief, and preserves existing controls.</p>
-            </div>
-            <div class="rule-card">
-              <h3>Receiver</h3>
-              <p>Opens an actionable summary, claims or assigns work with an explainable owner recommendation, requests information, communicates with the requester, and resolves.</p>
-            </div>
-            <div class="rule-card">
-              <h3>IT Queue &amp; Category Manager</h3>
-              <p>Manages queue health and SLA exposure, reviews assignment recommendations, spots repeated intake problems, edits owned request flows, and submits governed changes.</p>
-            </div>
-            <div class="rule-card">
-              <h3>Megan Delia &middot; Governance</h3>
-              <p>Sets thresholds, protects routing/SLA/priority/approval/P1/safety controls, and approves or rejects enterprise-impacting changes before they publish.</p>
-            </div>
-            <div class="rule-card">
-              <h3>MasterFlow Intelligence</h3>
-              <p>Shows work readiness, classification health, returned requests, feedback patterns, flow performance, and the strongest improvement opportunity.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           6. ROLE MODEL
-           ============================================================ -->
-      <section class="card mt-18">
-        <div class="card-header"><div><h2>Four working personas</h2><p>Each sees only what its job needs.</p></div></div>
+        <div class="card-header"><div><h2>MasterFlow&rsquo;s response — remove unnecessary decisions from the employee</h2><p>The employee describes what is happening; MasterFlow does the rest.</p></div></div>
         <div class="card-body">
           <div class="grid grid-2">
-            <div class="rule-card">
-              <div class="persona-head"><h3>Regular user</h3><span class="badge badge-blue">Requester</span></div>
-              <p>Submit, monitor, and communicate about personal requests. Home, Smart Request, My Requests, Help Articles, and the P1 fast lane.</p>
-            </div>
-            <div class="rule-card">
-              <div class="persona-head"><h3>Ticket receiver</h3><span class="badge badge-teal">Operations</span></div>
-              <p>Complete work in authorized queues: Work Center, assignment, communication, and reporting.</p>
-            </div>
-            <div class="rule-card">
-              <div class="persona-head"><h3>IT Queue &amp; Category Manager</h3><span class="badge badge-purple">Governed</span></div>
-              <p>Manage operational workload and improve owned request flows &mdash; within the guardrails set by governance.</p>
-            </div>
-            <div class="rule-card">
-              <div class="persona-head"><h3>Megan Delia &mdash; Enterprise Administrator</h3><span class="badge badge-amber">Governance</span></div>
-              <p>Govern MasterFlow across the company and protect enterprise controls. Approves or rejects changes that affect routing, SLA, priority, approval, P1, or safety.</p>
-            </div>
-          </div>
-          <div class="notice notice-info mt-18">
-            <span>i</span>
             <div>
-              <strong>How roles appear in this prototype</strong>
-              <p>The top demo-view selector switches between Regular user, Ticket receiver, and Administrator. Inside Administration, a persona switch separates the IT Queue &amp; Category Manager from Megan, the Enterprise Administrator, so each governance boundary is visible. In production, access would come from SSO and server-enforced permissions.</p>
+              <p>The employee should not have to decide the department, queue, category, request type, priority, form, required fields, knowledge article, or troubleshooting path. They describe the problem in their own words. MasterFlow interprets the request, reuses employee profile context, makes the routing decision, selects the request flow, and gathers what the receiving team needs.</p>
+              <p><strong>The objective is not to ask only one question.</strong> MasterFlow asks <strong>one focused question at a time, and keeps asking the right questions until the receiving team has what it needs to begin work</strong> &mdash; minimizing unnecessary effort while maximizing work readiness. It recommends relevant self-service, preserves safety and P1 controls, builds a complete Receiver Brief, routes to the correct queue, applies queue-owned automatic-assignment rules, supports communication on a shared timeline, and turns recurring problems into governed improvements.</p>
+            </div>
+            <div class="grid grid-2">
+              <div class="rule-card"><h3>Routing readiness</h3><p>Does MasterFlow know <em>where</em> the request belongs? Measures the required routing facts before it reaches a queue.</p></div>
+              <div class="rule-card"><h3>Work readiness</h3><p>Does the receiving team have enough to <em>begin work</em>? Measures the diagnostic facts a resolver needs.</p></div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ============================================================
-           7. BUSINESS IMPACT
-           ============================================================ -->
+      <!-- 5. END-TO-END OPERATIONAL FLOW -->
       <section class="card mt-18">
-        <div class="card-header"><div><h2>Business impact &mdash; mechanisms, not guesses</h2><p>How the design creates value, with honest labeling.</p></div></div>
+        <div class="card-header"><div><h2>One continuous operational flow</h2><p>Employee &rarr; AI-assisted intake &rarr; Service Team &rarr; Queue Manager &rarr; Governance &rarr; Intelligence &rarr; ServiceNow transition.</p></div></div>
         <div class="card-body">
-          <div class="grid grid-3">
-            <div class="rule-card">
-              <h3>Observed in the prototype</h3>
-              <p>Live counts of requests, classification confidence, triage volume, feedback, and published improvements &mdash; all read from shared state on this page.</p>
-            </div>
-            <div class="rule-card">
-              <h3>Derived prototype estimate</h3>
-              <p><strong>~8 receiver minutes avoided</strong> per work-ready request, because the Receiver Brief removes back-and-forth. Labeled as an estimate, not a measured production result.</p>
-            </div>
-            <div class="rule-card">
-              <h3>Future production measurement</h3>
-              <p>Reduced catalog search time, fewer routing errors, fewer returned requests, and better value from the existing ticketing investment &mdash; measurable once integrated.</p>
-            </div>
+          <div class="cap-grid">
+            <div class="cap-card"><h3>Employee</h3><p>Describes the issue naturally, answers only necessary questions, sees relevant help and an honest completion estimate, and keeps communicating inside the same request.</p></div>
+            <div class="cap-card"><h3>MasterFlow intake</h3><p>Classifies, extracts known details, measures routing and work readiness, produces a Receiver Brief, and preserves existing controls.</p></div>
+            <div class="cap-card"><h3>Service Team</h3><p>Opens an actionable summary, claims or assigns work, requests information, communicates, records cost, and resolves.</p></div>
+            <div class="cap-card"><h3>Queue Manager</h3><p>Manages queue health, sets automatic-assignment rules, publishes queue-owned flow changes directly, and owns local transition readiness.</p></div>
+            <div class="cap-card"><h3>Enterprise Governance</h3><p>Protects routing/SLA/priority/approval/P1/safety, runs Enterprise Triage, manages People &amp; Access, and reviews cost and audit.</p></div>
+            <div class="cap-card"><h3>Intelligence &amp; transition</h3><p>Reports service performance and ticket cost, and tracks the ServiceNow transition to cutover.</p></div>
           </div>
-          <ul class="decision-list mt-18">
-            <li>Less time searching catalogs and fewer manually completed fields at intake.</li>
-            <li>Higher work readiness at submission means less receiver interpretation effort.</li>
-            <li>Feedback &rarr; proposal &rarr; governed publication turns recurring problems into governed flow improvements.</li>
-          </ul>
+          <div class="notice notice-success mt-18">
+            <span>&#10003;</span>
+            <div><strong>The experience changes; the trusted enterprise controls do not.</strong>
+            <p>Existing queues · routing · SLAs · approvals · department ownership · P1 escalation · safety controls · governance · human decision authority are all preserved.</p></div>
+          </div>
         </div>
       </section>
 
-      <!-- ============================================================
-           8. TECHNICAL EXECUTION
-           ============================================================ -->
+      <!-- 6. BUSINESS IMPACT -->
       <section class="card mt-18">
-        <div class="card-header">
-          <div><h2>Technical execution</h2><p>A layered, explainable architecture &mdash; no framework, backend, or live integration required.</p></div>
-          <span class="badge badge-teal">30% Technical</span>
+        <div class="card-header"><div><h2>Business Impact</h2><p>Implemented capabilities that change business outcomes, and why each matters.</p></div><span class="badge badge-blue">Business Impact</span></div>
+        <div class="card-body">
+          <div class="cap-grid">
+            <div class="cap-card"><h3>Natural-language intake</h3><p class="cap-why">Employees ask for help in plain words instead of navigating a catalog.</p><p>Reduces intake friction and abandoned/mis-filed requests.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>Automatic category &amp; queue routing</h3><p class="cap-why">Employees should not need to understand the org chart to get help.</p><p>Fewer incorrect routes and reassignment delays; work reaches the right team faster.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>Work-ready information gathering + Receiver Brief</h3><p class="cap-why">Requests often arrive without enough to act on.</p><p>Less clarification back-and-forth; the Service Team can begin work immediately.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>Guided troubleshooting &amp; self-resolution</h3><p class="cap-why">Some issues can be solved before a ticket is created.</p><p>Deflects avoidable tickets and speeds resolution.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>Duplicate &amp; team-request awareness</h3><p class="cap-why">Teams frequently report the same issue.</p><p>Prevents duplicate work and surfaces existing requests.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>P1 fast lane + Bat Phone</h3><p class="cap-why">Shipping-stopped emergencies cannot wait in a queue.</p><p>Immediate escalation protects critical warehouse operations.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>Automatic assignment + average close time</h3><p class="cap-why">Owners and cycle time drive throughput.</p><p>Right owner sooner; managers see where time is lost.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>Ticket cost + category cost reporting (YoY)</h3><p class="cap-why">Leaders need to see operational spend by category.</p><p>Shows replacement vs repair vs vendor cost, separate from the platform baseline.</p><div class="cap-status"><span class="badge badge-amber">Working + modeled history</span></div></div>
+            <div class="cap-card"><h3>Continuous flow improvement</h3><p class="cap-why">Recurring problems should improve the flow, not just be worked around.</p><p>Feedback &rarr; recommendation &rarr; queue-owned publish closes the loop.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>Enterprise Triage + rerouting</h3><p class="cap-why">Some requests genuinely cannot be auto-routed.</p><p>A true last resort with structured rerouting that preserves history and feeds improvement.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>Queue-owned configuration</h3><p class="cap-why">Enhancements should not require developers.</p><p>Queue Managers improve their own flows without heavy development.</p><div class="cap-status"><span class="badge badge-green">Working</span></div></div>
+            <div class="cap-card"><h3>ServiceNow transition readiness</h3><p class="cap-why">Replacing ServiceNow must not lose work or history.</p><p>A credible, staged path to reduce software and administrative cost.</p><div class="cap-status"><span class="badge badge-amber">Reporting simulation</span></div></div>
+          </div>
         </div>
+      </section>
+
+      <!-- 7. TECHNICAL EXECUTION -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Technical Execution</h2><p>A layered, explainable architecture &mdash; no framework, backend, or live integration required.</p></div><span class="badge badge-teal">Technical Execution</span></div>
         <div class="card-body">
           <div class="summary-flow">
             <div class="summary-step"><strong>Requester experience</strong><span>Natural-language intake.</span></div>
             <div class="summary-step"><strong>Request engine</strong><span>Classify, extract, readiness, brief.</span></div>
             <div class="summary-step"><strong>Shared state</strong><span>localStorage source of truth.</span></div>
-            <div class="summary-step"><strong>Receiver &amp; manager</strong><span>Work, assign, feedback.</span></div>
-            <div class="summary-step"><strong>Governance &amp; intelligence</strong><span>Publish, measure.</span></div>
+            <div class="summary-step"><strong>Service Team &amp; Queue Manager</strong><span>Work, assign, cost, improve.</span></div>
+            <div class="summary-step"><strong>Governance &amp; intelligence</strong><span>Triage, access, publish, measure.</span></div>
           </div>
           <div class="grid grid-3 mt-18">
             <ul class="decision-list">
-              <li>Deterministic local request classification</li>
-              <li>Recognition aliases and trigger phrases</li>
-              <li>Structured field extraction</li>
-              <li>One-question-at-a-time clarification</li>
-              <li>Vague-location validation</li>
+              <li>Template-driven request engine with deterministic classification scoring</li>
+              <li>Language normalization, misspelling tolerance, and recognition aliases</li>
+              <li>Structured field extraction and diagnostic profiles</li>
+              <li>Clarification prioritization (one focused question at a time)</li>
+              <li>Routing-readiness and work-readiness calculation</li>
             </ul>
             <ul class="decision-list">
-              <li>Routing readiness and work readiness</li>
-              <li>Receiver Brief generation</li>
-              <li>Shipping-stopped P1 bypass</li>
-              <li>Shared ticket timeline and replies</li>
-              <li>Explainable assignment recommendations</li>
+              <li>Receiver Brief generation and shared, reusable ticket timeline</li>
+              <li>Shipping-stopped P1 detection with safety bypass</li>
+              <li>Automatic-assignment rules with availability fallback</li>
+              <li>SLA state calculation, approvals, and the cost &amp; outcome model</li>
+              <li>Triage rerouting that preserves legacy identity and feeds a feedback loop</li>
             </ul>
             <ul class="decision-list">
-              <li>Role-based access control</li>
-              <li>Feedback and proposal contracts</li>
-              <li>Governed proposal publication</li>
-              <li>Safe localStorage parsing and reset</li>
-              <li>Role-scoped reporting</li>
+              <li>Role-scoped navigation and a shared state model</li>
+              <li>Governance audit, access audit, and guardrails</li>
+              <li>Flow-version tracking and governed publication</li>
+              <li>ServiceNow mapping model and reconciliation reporting</li>
+              <li>Responsive, accessible design; browser-based QA throughout</li>
             </ul>
+          </div>
+          <div class="notice notice-info mt-18"><span>i</span><div><strong>Deterministic, explainable intelligence.</strong><p>Classification, extraction, and readiness are local, rule- and score-based, and inspectable — there is no external AI API or machine-learning dependency. This keeps behavior predictable, auditable, and enterprise-controllable.</p></div></div>
+        </div>
+      </section>
+
+      <!-- 8. USABILITY & CLARITY -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Usability &amp; Clarity</h2><p>User-facing design decisions and the benefit of each.</p></div><span class="badge badge-purple">Usability &amp; Clarity</span></div>
+        <div class="card-body">
+          <div class="cap-grid">
+            <div class="cap-card"><h3>Natural-language landing + curated examples</h3><p>Anyone can start in seconds; examples show what to type.</p></div>
+            <div class="cap-card"><h3>One focused question at a time, until work-ready</h3><p>No wall of fields; the request is completed only as far as it needs to be.</p></div>
+            <div class="cap-card"><h3>Live Understanding + clear routing feedback</h3><p>The employee sees what MasterFlow understood and where it is going.</p></div>
+            <div class="cap-card"><h3>&ldquo;Not sure&rdquo; and vague-answer handling</h3><p>No dead ends; MasterFlow adapts instead of blocking.</p></div>
+            <div class="cap-card"><h3>Editable review with no required blanks</h3><p>The review is a true review, not another form to fight.</p></div>
+            <div class="cap-card"><h3>Cancel, self-resolve, false-alarm exits</h3><p>Honest off-ramps that avoid junk tickets.</p></div>
+            <div class="cap-card"><h3>Professional role switcher &amp; role-scoped pages</h3><p>Each persona sees only what its job needs.</p></div>
+            <div class="cap-card"><h3>Work Center, Queue Manager, Flow Studio</h3><p>Operations are fast, prioritized, and self-serviceable.</p></div>
+            <div class="cap-card"><h3>Enterprise Governance, Triage, People &amp; Access</h3><p>The Administrator sees attention, risk, access, and cost at a glance.</p></div>
+            <div class="cap-card"><h3>Role-scoped ServiceNow Transition reporting</h3><p>Managers see their queues; Administrators see the enterprise.</p></div>
+            <div class="cap-card"><h3>Clear empty states, responsive layout, accessible controls</h3><p>The product feels finished at any screen size.</p></div>
+            <div class="cap-card"><h3>Honest prototype labels</h3><p>Simulated and modeled areas are clearly marked.</p></div>
           </div>
         </div>
       </section>
 
-      <!-- ============================================================
-           9. JUDGING ALIGNMENT
-           ============================================================ -->
+      <!-- 9. CAPABILITY INVENTORY POINTER -->
       <section class="card mt-18">
-        <div class="card-header"><div><h2>How MasterFlow aligns with the judging criteria</h2><p>Business impact is the first tiebreaker.</p></div></div>
+        <div class="card-header"><div><h2>Complete capability inventory</h2><p>The full audited inventory — capability, purpose, requirement, category, location, and status.</p></div></div>
         <div class="card-body">
-          <div class="grid grid-3">
-            <div class="rule-card">
-              <div class="persona-head"><h3>Business impact</h3><span class="badge badge-blue">40%</span></div>
-              <ul class="decision-list mt-12">
-                <li>Reduced intake friction</li>
-                <li>Better receiver readiness, fewer returns</li>
-                <li>Continuous, governed improvement</li>
-                <li>Preserved enterprise controls</li>
-                <li>Credible tie to current ServiceNow cost</li>
-              </ul>
-            </div>
-            <div class="rule-card">
-              <div class="persona-head"><h3>Technical execution</h3><span class="badge badge-teal">30%</span></div>
-              <ul class="decision-list mt-12">
-                <li>Complete end-to-end workflow</li>
-                <li>Explainable AI-assisted behavior</li>
-                <li>P1 guardrails and role permissions</li>
-                <li>Communication loop and state persistence</li>
-                <li>Governed proposal application</li>
-              </ul>
-            </div>
-            <div class="rule-card">
-              <div class="persona-head"><h3>Usability &amp; clarity</h3><span class="badge badge-purple">30%</span></div>
-              <ul class="decision-list mt-12">
-                <li>Natural-language, one question at a time</li>
-                <li>Plain language and role-specific pages</li>
-                <li>Receiver Brief and clear next actions</li>
-                <li>Clearly protected controls</li>
-                <li>Consistent, responsive, accessible design</li>
-              </ul>
-            </div>
+          <p class="summary-subhead">The sections above group MasterFlow&rsquo;s capabilities by evaluation category. A complete, maintained inventory of every capability (what it does, why it exists, which Problem #4 requirement it supports, where it appears, and whether it is working, simulated, modeled, or a planned production integration) is kept in <strong>docs/MASTERFLOW_CAPABILITY_INVENTORY.md</strong>.</p>
+        </div>
+      </section>
+
+      <!-- 10. PROBLEM #4 REQUIREMENT ALIGNMENT -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Problem #4 requirement alignment</h2><p>Every official requirement, the MasterFlow capability, where it lives, and honest status.</p></div></div>
+        <div class="card-body matrix-wrap">
+          <table>
+            <thead><tr><th>Requirement</th><th>MasterFlow capability</th><th>Where</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Create / edit / assign / track / close tickets; standard fields</td><td>Smart Request intake + Work Center actions + dynamic form engine</td><td>Home, Smart Request, Work Center</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+              <tr><td>Configurable queues + automated routing (category, priority, team, business rules)</td><td>Template-driven routing + queue-owned Flow Studio + automatic-assignment rules</td><td>Flow Studio, Queue Manager</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+              <tr><td>Response &amp; resolution SLAs + breach risk</td><td>SLA state calculation + SLA-risk views</td><td>Work Center, Queue Manager, Reporting</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+              <tr><td>Email-based ticket creation</td><td>Documented production approach (inbound mail → intake engine)</td><td>Transition Strategy</td><td><span class="badge badge-gray">Production approach documented</span></td></tr>
+              <tr><td>Two-way requester communication</td><td>Shared timeline with requester replies from My Requests</td><td>My Requests, Work Center</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+              <tr><td>Searchable knowledge base + self-service</td><td>Help Articles + guided troubleshooting + self-resolution</td><td>Help Articles, intake</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+              <tr><td>Incident / service-request / change workflows + approvals</td><td>Request types + approval routing (e.g., hardware over threshold)</td><td>Smart Request, Work Center, Governance</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+              <tr><td>Reporting: volume, resolution time, SLA, backlog, team performance</td><td>MasterFlow Intelligence + queue health + team workload</td><td>Reporting, Queue Manager</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+              <tr><td>Roles, permissions, queues, access levels</td><td>Role-scoped navigation + People &amp; Access + guardrails</td><td>Governance → People &amp; Access</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+              <tr><td>Migrate ServiceNow tickets, users, knowledge; field mapping + validation</td><td>ServiceNow Transition reporting + field mapping + reconciliation</td><td>ServiceNow Transition, Transition Strategy</td><td><span class="badge badge-amber">Simulated + approach documented</span></td></tr>
+              <tr><td>At least one AI-assisted workflow</td><td>Classification, clarification, Receiver Brief, assignment suggestions, triage-improvement signals</td><td>Throughout intake &amp; triage</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+              <tr><td>Reduce software &amp; administrative cost</td><td>Simpler intake, queue-owned config (less dev), ServiceNow replacement path</td><td>Whole product</td><td><span class="badge badge-amber">Modeled benefit</span></td></tr>
+              <tr><td>Easier configuration without heavy development</td><td>No-code Flow Studio + assignment rules + governance thresholds</td><td>Flow Studio, Governance</td><td><span class="badge badge-green">Working prototype</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 11. VERIFIED EXAMPLES -->
+      <section class="card mt-18">
+        <div class="card-header"><div><h2>Try these verified requests</h2><p>Type any of these on the Home screen to experience MasterFlow as intended. Each has been browser-tested.</p></div></div>
+        <div class="card-body">
+          <div class="example-grid">
+            <div class="example-card"><span class="example-type">Printer issue</span><code class="example-input">Printer stopped working at Pack Station 14</code><p>Printer recognition, diagnostic + exact-location questions, troubleshooting, Receiver Brief, IT Help Desk routing, automatic assignment.</p></div>
+            <div class="example-card"><span class="example-type">New hardware</span><code class="example-input">I need a new scanner for Receiving Line 2</code><p>Service request, hardware detail gathering, approval + cost behavior, IT Information routing.</p></div>
+            <div class="example-card"><span class="example-type">Equipment safety</span><code class="example-input">Forklift 3 will not lift and has been taken out of service</code><p>Equipment classification, safety/impact questions, Facilities routing, no unsafe troubleshooting.</p></div>
+            <div class="example-card"><span class="example-type">Systems access</span><code class="example-input">I need access to the shared Sales folder</code><p>Access request, Systems Intake, required context, approval workflow.</p></div>
+            <div class="example-card"><span class="example-type">HVAC</span><code class="example-input">It is too hot near the Shipping area</code><p>HVAC recognition, exact-area + impact questions, Facilities routing.</p></div>
+            <div class="example-card"><span class="example-type">Stock check</span><code class="example-input">Can someone verify the date code for part 12345 in Phoenix?</code><p>Stock Check classification, part extraction, requested result, Phoenix routing.</p></div>
+            <div class="example-card"><span class="example-type">P1 — shipping stopped</span><code class="example-input">Shipping is completely stopped at Packaging Line 2</code><p>P1 detection, Bat Phone instruction, critical-info gathering, immediate escalation.</p></div>
+            <div class="example-card"><span class="example-type">General triage</span><code class="example-input">I need help with something at my station, but I do not know who owns it</code><p>Clarification, General Triage as a last resort, Enterprise Triage, rerouting, improvement feedback.</p></div>
           </div>
         </div>
       </section>
 
-      <!-- ============================================================
-           10. WINNING DEMO
-           ============================================================ -->
+      <!-- 12. SERVICENOW TRANSITION STRATEGY -->
       <section class="card mt-18">
-        <div class="card-header"><div><h2>The winning demo sequence</h2><p>Every step below works in this prototype.</p></div></div>
+        <div class="card-header"><div><h2>ServiceNow Transition Strategy</h2><p>How a production move off ServiceNow would work — without losing tickets, history, users, knowledge, SLA data, approvals, or continuity.</p></div><span class="badge badge-blue">Proposed production approach</span></div>
         <div class="card-body">
-          <ol class="decision-list">
-            <li>An employee types &ldquo;Paper jam.&rdquo; MasterFlow identifies the printer issue.</li>
-            <li>MasterFlow asks for the exact station, and asks for scope or impact only when required.</li>
-            <li>It shows routing and work readiness plus an honest typical completion estimate.</li>
-            <li>A receiver-ready request is created, numbered, and visible in My Requests and the team queue.</li>
-            <li>The receiver opens the Receiver Brief and requests missing information.</li>
-            <li>The requester replies inside the same ticket; the timeline updates.</li>
-            <li>The Queue Manager identifies a recurring intake problem and captures feedback.</li>
-            <li>The Category Manager creates an improvement proposal from that feedback.</li>
-            <li>Megan approves and publishes the governed change &mdash; and the actual request flow changes.</li>
-            <li>Reporting shows the improvement opportunity and result.</li>
-          </ol>
+          <div class="layer-grid">
+            <div class="layer-step"><strong>1. Discover</strong><span>Inventory ServiceNow data and define destinations.</span></div>
+            <div class="layer-step"><strong>2. Map</strong><span>Field, user, group, category, SLA, and approval mapping.</span></div>
+            <div class="layer-step"><strong>3. Validate</strong><span>Required-field, mapping, and duplicate checks.</span></div>
+            <div class="layer-step"><strong>4. Dry run</strong><span>Full validation with no writes.</span></div>
+            <div class="layer-step"><strong>5. Bulk import</strong><span>Load validated records while ServiceNow stays live.</span></div>
+            <div class="layer-step"><strong>6. Delta sync</strong><span>Incremental sync of changes since import.</span></div>
+            <div class="layer-step"><strong>7. Reconcile</strong><span>Compare counts and key fields; quarantine failures.</span></div>
+            <div class="layer-step"><strong>8. Cut over</strong><span>Redirect new intake to MasterFlow after a short freeze.</span></div>
+            <div class="layer-step"><strong>9. Stabilize</strong><span>Monitor; ServiceNow read-only during validation.</span></div>
+            <div class="layer-step"><strong>10. Rollback ready</strong><span>Controlled rollback retained until sign-off.</span></div>
+          </div>
+
+          <details class="mt-18"><summary class="transition-summary"><strong>Technical migration approach (expand)</strong></summary>
+            <ul class="decision-list mt-12">
+              <li><strong>Proposed production connector:</strong> authenticated ServiceNow REST / Table API with pagination, rate-limit handling, retry, and resume-after-failure.</li>
+              <li><strong>Idempotent imports</strong> keyed on ServiceNow <code>sys_id</code>, preserving the legacy ID and number so nothing is duplicated or lost.</li>
+              <li><strong>Transformation + validation</strong> per field, with an exception quarantine for failed records and full audit logs.</li>
+              <li><strong>Incremental (delta) synchronization</strong> based on ServiceNow update timestamps; last-update comparison and duplicate prevention resolve dual-run conflicts.</li>
+              <li><strong>Attachment, comment/journal, approval, and SLA transfer</strong> with count reconciliation and checksum validation.</li>
+              <li><strong>Rollback</strong> stops new MasterFlow intake, restores ServiceNow as the active path, reconciles the cutover window, and retries the wave — imported records are retained for audit, never mass-deleted.</li>
+            </ul>
+          </details>
+
+          <div class="notice notice-success mt-18"><span>&#10003;</span><div><strong>Open work does not miss a beat.</strong><p>Imported open tickets preserve original submitted date, current status, queue, owner, <strong>SLA elapsed time</strong>, requester communication, work notes, attachments, approvals, and history. A migrated ticket visibly shows &ldquo;Imported from ServiceNow&rdquo; with its legacy reference (e.g., INC0012345) kept searchable and auditable. An old ticket&rsquo;s age and SLA are never reset to look better.</p></div></div>
+
+          <h3 class="mt-18">Readiness gates</h3>
+          <div class="readiness-grid mt-12">
+            <div class="readiness-item"><span>Users &amp; queues mapped</span><span class="badge badge-green">Ready</span></div>
+            <div class="readiness-item"><span>Queue Managers confirmed</span><span class="badge badge-green">Ready</span></div>
+            <div class="readiness-item"><span>Categories &amp; templates active</span><span class="badge badge-amber">Ready with warnings</span></div>
+            <div class="readiness-item"><span>Priorities &amp; statuses mapped</span><span class="badge badge-green">Ready</span></div>
+            <div class="readiness-item"><span>SLA &amp; approval rules mapped</span><span class="badge badge-amber">Ready with warnings</span></div>
+            <div class="readiness-item"><span>Knowledge imported</span><span class="badge badge-green">Ready</span></div>
+            <div class="readiness-item"><span>Open tickets reconciled</span><span class="badge badge-amber">In progress</span></div>
+            <div class="readiness-item"><span>Rollback plan approved</span><span class="badge badge-green">Ready</span></div>
+          </div>
+          <p class="summary-subhead mt-12">Live, role-scoped transition status is on the <a href="admin-migration.html">ServiceNow Transition</a> page (Administrators and Queue Managers).</p>
         </div>
       </section>
 
-      <!-- ============================================================
-           11. PROTOTYPE BOUNDARIES
-           ============================================================ -->
+      <!-- 13. PROTOTYPE BOUNDARIES -->
       <section class="card mt-18">
-        <div class="card-header"><div><h2>Prototype boundaries</h2><p>Stated honestly &mdash; this makes the solution more credible.</p></div></div>
+        <div class="card-header"><div><h2>Prototype boundaries</h2><p>An honest distinction between what the prototype proves and what production would add.</p></div></div>
         <div class="card-body">
           <div class="grid grid-2">
             <ul class="decision-list">
-              <li>No production authentication; the role selector is for demonstration only.</li>
-              <li>No production database &mdash; browser localStorage simulates persistence.</li>
-              <li>No live ServiceNow migration, ERP, or Outlook integration.</li>
-              <li>No production AI API dependency; classification is deterministic and local.</li>
+              <li>No live ServiceNow API credentials — transition reporting is a modeled simulation.</li>
+              <li>No live corporate email integration — email intake is a documented approach.</li>
+              <li>Local browser storage simulates persistence; a simulated user directory backs People &amp; Access.</li>
+              <li>Historical comparisons and ticket-cost history are modeled and labeled.</li>
             </ul>
             <ul class="decision-list">
-              <li>No full enterprise audit engine or complex deployment workflow.</li>
+              <li>The role switcher is a demonstration control; production access comes from SSO and server-enforced permissions.</li>
+              <li>Classification is deterministic and local — no external AI API dependency.</li>
               <li>No autonomous approval, silent duplicate merging, or mandatory auto-assignment.</li>
-              <li>Duplicate awareness at intake is intentionally deferred, not claimed as working.</li>
-              <li>A separate, authorized Freight Optimization workspace exists but is kept out of the ticketing story.</li>
+              <li>MasterFlow is focused entirely on Problem #4 — Ticketing System Replacement.</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <!-- ============================================================
-           12. FINAL CALL TO ACTION
-           ============================================================ -->
+      <!-- 14. CURRENT READINESS -->
       <section class="card mt-18">
-        <div class="card-header"><div><h2>Start the demo</h2><p>Jump straight into any part of the journey.</p></div></div>
+        <div class="card-header"><div><h2>Current readiness</h2><p>Where MasterFlow stands today.</p></div></div>
         <div class="card-body">
           <div class="cta-row">
             <a class="btn btn-primary" href="index.html">Start the requester demo</a>
             <a class="btn btn-secondary" href="assigned-work.html">Open Work Center</a>
             <a class="btn btn-secondary" href="ticket-queues.html">Open Queue Manager</a>
-            <a class="btn btn-secondary" href="admin-rules-access.html">Open Platform Governance</a>
+            <a class="btn btn-secondary" href="admin-rules-access.html">Open Enterprise Governance</a>
             <a class="btn btn-secondary" href="reporting.html">Open MasterFlow Intelligence</a>
           </div>
-          <p class="muted small mt-12">Work Center and Reporting require the Ticket receiver demo view; Queue Manager and Platform Governance require the Administrator demo view. Choose the matching view in the top-right selector &mdash; if a link is not available for your current view, MasterFlow will say so and return you to a safe page.</p>
-          <div class="notice notice-success mt-18">
-            <span>&#10003;</span>
-            <div>
-              <strong>MasterFlow demonstrates a practical path to a simpler employee request experience, higher-quality operational work, stronger feedback loops, and governed continuous improvement &mdash; without discarding the enterprise controls already in place.</strong>
-            </div>
-          </div>
+          <p class="muted small mt-12">Work Center, Queue Manager, and Flow Studio require the Service Team workspace; Enterprise Governance, Enterprise Triage, and ServiceNow Transition require the Administrator view (Transition is also available to Queue Managers). Choose the matching view in the top-right selector — if a link is not available for your current view, MasterFlow will say so and return you to a safe page.</p>
+          <div class="notice notice-success mt-18"><span>&#10003;</span><div><strong>MasterFlow demonstrates a practical path to a simpler employee request experience, higher-quality operational work, stronger feedback loops, governed continuous improvement, and a credible ServiceNow transition — without discarding the enterprise controls already in place.</strong></div></div>
         </div>
       </section>
 

@@ -822,9 +822,44 @@
           item.id === fieldId
       );
   
+      /*
+       * Diagnostic answers arrive with a marker id such as
+       * "__diagnostic_affectedScope" that has no matching form
+       * field. Resolve it to the diagnostic question's human
+       * report label so it never leaks into the request summary.
+       */
+      const isDiagnosticMarker =
+        /^__diagnostic_/.test(String(fieldId));
+
+      const diagnosticQuestion =
+        isDiagnosticMarker
+          ? (
+              (template.diagnostics &&
+                template.diagnostics.questions) ||
+              []
+            ).find(
+              (item) =>
+                item.id ===
+                String(fieldId).replace(
+                  /^__diagnostic_/,
+                  ""
+                )
+            )
+          : null;
+
       const fieldLabel = field
         ? field.label
-        : fieldId;
+        : diagnosticQuestion
+          ? diagnosticQuestion.reportLabel ||
+            diagnosticQuestion.label
+          : isDiagnosticMarker
+            ? String(fieldId)
+                .replace(/^__diagnostic_/, "")
+                .replace(/([a-z])([A-Z])/g, "$1 $2")
+                .replace(/^./, (character) =>
+                  character.toUpperCase()
+                )
+            : fieldId;
   
       const fieldAnswers = {
         ...(
@@ -868,7 +903,7 @@
       }
   
       const expandedText =
-        `${previousResult.originalText}. ` +
+        `${String(previousResult.originalText || "").replace(/[.\s]+$/, "")}. ` +
         `${fieldLabel}: ${cleanAnswer}.`;
   
       /*

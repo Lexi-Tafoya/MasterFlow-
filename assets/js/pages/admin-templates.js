@@ -540,8 +540,11 @@
     });
   }
 
-  const firstVisibleTemplate = getVisibleTemplates()[0];
-  if (firstVisibleTemplate) activeId = firstVisibleTemplate.id;
+  const flowParam = new URLSearchParams(window.location.search).get("flow");
+  const visibleForInit = getVisibleTemplates();
+  const requestedFlow = flowParam && visibleForInit.some((template) => template.id === flowParam) ? flowParam : "";
+  const firstVisibleTemplate = visibleForInit[0];
+  activeId = requestedFlow || (firstVisibleTemplate ? firstVisibleTemplate.id : "");
   workingTemplate = activeId ? clone(Templates.get(activeId)) : null;
   renderRoleSummary();
   renderList();

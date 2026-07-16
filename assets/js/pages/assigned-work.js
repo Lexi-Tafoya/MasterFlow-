@@ -655,8 +655,37 @@
       : '<div class="empty-state">No timeline activity has been recorded.</div>';
   }
 
+  function renderCostSummary(ticket) {
+    const section = document.getElementById("receiverCostSummary");
+    const body = document.getElementById("receiverCostBody");
+    if (!section || !body) return;
+    const c = ticket.cost;
+    if (!c) { section.hidden = true; body.innerHTML = ""; return; }
+    section.hidden = false;
+    const money = (n) => "$" + (Number(n) || 0).toFixed(2);
+    const statusLabel = c.status === "none" ? "No direct cost" : c.status === "pending" ? "Cost pending final invoice" : "Cost recorded";
+    const items = (c.items || []).map((it) => `<div class="cost-line"><span>${UI.escapeHtml(it.type)}${it.desc ? " — " + UI.escapeHtml(it.desc) : ""} ${it.qty > 1 ? "×" + it.qty : ""}</span><strong>${money(it.total)}</strong></div>`).join("");
+    const estRow = c.estimate ? `<div class="cost-line"><span>Approved estimate</span><strong>${money(c.estimate)}</strong></div><div class="cost-line"><span>Actual (confirmed)</span><strong>${money(c.totalCost)}</strong></div>` : "";
+    body.innerHTML = `
+      <div class="cost-summary-grid">
+        <div class="cost-kv"><small>Outcome</small><span>${UI.escapeHtml(ticket.status)}</span></div>
+        <div class="cost-kv"><small>Cost outcome</small><span>${UI.escapeHtml(statusLabel)}</span></div>
+        <div class="cost-kv"><small>Direct spend</small><span>${money(c.directCost)}</span></div>
+        <div class="cost-kv"><small>Labor</small><span>${c.laborHours || 0} hr · ${money(c.laborCost)}</span></div>
+        <div class="cost-kv"><small>Total ticket cost</small><span><strong>${money(c.totalCost)}</strong></span></div>
+        ${c.assetAction ? `<div class="cost-kv"><small>Asset</small><span>${UI.escapeHtml(c.assetAction)}</span></div>` : ""}
+        ${c.vendor ? `<div class="cost-kv"><small>Vendor</small><span>${UI.escapeHtml(c.vendor)}</span></div>` : ""}
+        ${c.poNumber ? `<div class="cost-kv"><small>PO / ref</small><span>${UI.escapeHtml(c.poNumber)}</span></div>` : ""}
+        <div class="cost-kv"><small>Entered by</small><span>${UI.escapeHtml(c.enteredBy || "—")} · ${UI.escapeHtml(UI.formatDate(c.confirmedAt))}</span></div>
+      </div>
+      ${items ? `<div class="cost-lines">${items}</div>` : ""}
+      ${estRow ? `<div class="cost-lines">${estRow}</div>` : ""}
+      ${c.notes ? `<p class="muted">${UI.escapeHtml(c.notes)}</p>` : ""}`;
+  }
+
   function renderReceiverTicket(ticket) {
     currentTicketId = ticket.id;
+    renderCostSummary(ticket);
     const analysis = Feedback.analyzeTicket(ticket);
 
     document.getElementById("receiverTicketTitle").textContent = `${ticket.number} - ${ticket.title}`;
@@ -698,7 +727,7 @@
     const approvalRequired = isApprovalRequired(ticket);
     const awaitingApproval = isAwaitingApproval(ticket);
     const approvedForFulfillment = isApprovedForFulfillment(ticket);
-    const canReopen = ["Resolved", "Closed"].includes(ticket.status);
+    const canReopen = ["Resolved", "Closed", "Closed — No Action"].includes(ticket.status);
     const approvalRoute = approvalRouteFor(ticket);
 
     const claimButton = document.getElementById("receiverClaimTicket");
@@ -752,6 +781,7 @@
     requestInfoButton.hidden = closed;
     addUpdateButton.hidden = closed;
     resolveButton.hidden = closed || approvalRequired || awaitingApproval;
+    document.getElementById("receiverCloseNoAction").hidden = closed;
     reopenButton.hidden = !canReopen;
     actionPanel.hidden = closed && !canReopen;
     document.getElementById("receiverActionNote").value = "";
@@ -958,15 +988,129 @@
     }
   });
 
-  document.getElementById("receiverResolveTicket").addEventListener("click", () => {
+  /* ---------- Cost & outcome capture at resolution ---------- */
+  const COST_TYPES = ["Hardware replacement", "Hardware repair", "Parts or supplies", "Software or license", "Vendor service", "Shipping or service fee", "Internal labor", "Other"];
+  let costItems = [];
+  const money = (n) => "$" + (Number(n) || 0).toFixed(2);
+
+  function currentTicketObj() {
+    return Store.getState().tickets.find((t) => t.id === currentTicketId) || null;
+  }
+
+  function openCostDialog() {
     const note = requireNote("resolve the ticket");
     if (!note) return;
+    const t = currentTicketObj();
+    if (!t) return;
+    costItems = [];
+    document.getElementById("costResolutionNote").value = note;
+    document.getElementById("costStatus").value = "";
+    document.getElementById("costLaborHours").value = "";
+    document.getElementById("costLaborRate").value = "";
+    document.getElementById("costVendor").value = "";
+    document.getElementById("costAsset").value = "";
+    document.getElementById("costPo").value = "";
+    document.getElementById("costActual").value = "";
+    document.getElementById("costNotes").value = "";
+    document.getElementById("costDetails").hidden = true;
+    // Show an approved estimate if the approval workflow captured one.
+    const est = t.details && t.details.approval && Number(t.details.approval.amount);
+    const estRow = document.getElementById("costEstimateRow");
+    if (est) {
+      estRow.hidden = false;
+      document.getElementById("costEstimateValue").textContent = money(est);
+    } else {
+      estRow.hidden = true;
+    }
+    renderCostItems();
+    recalcCost();
+    const d = document.getElementById("costDialog");
+    if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
+  }
+
+  function renderCostItems() {
+    const c = document.getElementById("costItems");
+    c.innerHTML = costItems.map((it, i) => `
+      <div class="cost-item-row" data-i="${i}">
+        <select class="select cost-it-type" data-f="type">${COST_TYPES.map((t) => `<option ${t === it.type ? "selected" : ""}>${t}</option>`).join("")}</select>
+        <input class="input cost-it-desc" data-f="desc" placeholder="Description" value="${UI.escapeHtml(it.desc || "")}">
+        <input class="input cost-it-qty" data-f="qty" type="number" min="1" step="1" value="${it.qty || 1}">
+        <input class="input cost-it-unit" data-f="unit" type="number" min="0" step="0.01" placeholder="Unit $" value="${it.unit != null ? it.unit : ""}">
+        <span class="cost-it-total">${money((Number(it.qty) || 1) * (Number(it.unit) || 0))}</span>
+        <button class="btn btn-ghost btn-sm cost-it-remove" type="button" aria-label="Remove">&times;</button>
+      </div>`).join("");
+  }
+
+  function recalcCost() {
+    const direct = costItems.reduce((s, it) => s + (Number(it.qty) || 1) * (Number(it.unit) || 0), 0);
+    const hours = Number(document.getElementById("costLaborHours").value) || 0;
+    const rate = Number(document.getElementById("costLaborRate").value) || 0;
+    const labor = hours * rate;
+    const actualField = document.getElementById("costActual");
+    const total = actualField.value !== "" ? Number(actualField.value) || 0 : direct + labor;
+    document.getElementById("costTotalDirect").textContent = money(direct);
+    document.getElementById("costTotalLabor").textContent = money(labor);
+    document.getElementById("costTotalAll").textContent = money(total);
+    return { direct, hours, rate, labor, total };
+  }
+
+  document.getElementById("costStatus").addEventListener("change", (e) => {
+    const recorded = e.target.value === "recorded" || e.target.value === "pending";
+    document.getElementById("costDetails").hidden = !recorded;
+    if (recorded && !costItems.length && e.target.value === "recorded") { costItems.push({ type: COST_TYPES[0], desc: "", qty: 1, unit: "" }); renderCostItems(); }
+    recalcCost();
+  });
+  document.getElementById("costAddItem").addEventListener("click", () => { costItems.push({ type: COST_TYPES[0], desc: "", qty: 1, unit: "" }); renderCostItems(); recalcCost(); });
+  document.getElementById("costItems").addEventListener("input", (e) => {
+    const row = e.target.closest(".cost-item-row"); if (!row) return;
+    const i = Number(row.dataset.i); const f = e.target.dataset.f; if (f == null) return;
+    costItems[i][f] = e.target.value;
+    row.querySelector(".cost-it-total").textContent = money((Number(costItems[i].qty) || 1) * (Number(costItems[i].unit) || 0));
+    recalcCost();
+  });
+  document.getElementById("costItems").addEventListener("click", (e) => {
+    if (!e.target.closest(".cost-it-remove")) return;
+    const row = e.target.closest(".cost-item-row"); costItems.splice(Number(row.dataset.i), 1); renderCostItems(); recalcCost();
+  });
+  ["costLaborHours", "costLaborRate", "costActual"].forEach((id) => document.getElementById(id).addEventListener("input", recalcCost));
+  document.querySelectorAll("[data-close-cost]").forEach((b) => b.addEventListener("click", () => {
+    const d = document.getElementById("costDialog"); if (d.open) d.close(); else d.removeAttribute("open");
+  }));
+
+  document.getElementById("costConfirm").addEventListener("click", () => {
+    const note = document.getElementById("costResolutionNote").value.trim();
+    const status = document.getElementById("costStatus").value;
+    if (!note) { UI.showToast("Add a resolution note."); document.getElementById("costResolutionNote").focus(); return; }
+    if (!status) { UI.showToast("Choose a cost outcome."); document.getElementById("costStatus").focus(); return; }
+    const totals = recalcCost();
+    if (status === "recorded" && totals.total <= 0) { UI.showToast("Enter the actual cost, or choose No direct cost."); return; }
+    const est = (currentTicketObj().details && currentTicketObj().details.approval && Number(currentTicketObj().details.approval.amount)) || 0;
+    const cost = {
+      status,
+      items: status === "none" ? [] : costItems.map((it) => ({ type: it.type, desc: it.desc, qty: Number(it.qty) || 1, unit: Number(it.unit) || 0, total: (Number(it.qty) || 1) * (Number(it.unit) || 0) })),
+      directCost: status === "none" ? 0 : totals.direct,
+      laborHours: status === "none" ? 0 : totals.hours,
+      laborRate: totals.rate,
+      laborCost: status === "none" ? 0 : totals.labor,
+      totalCost: status === "none" ? 0 : totals.total,
+      vendor: document.getElementById("costVendor").value.trim(),
+      assetAction: document.getElementById("costAsset").value,
+      poNumber: document.getElementById("costPo").value.trim(),
+      notes: document.getElementById("costNotes").value.trim(),
+      estimate: est,
+      enteredBy: Store.CURRENT_USER.name,
+      confirmedAt: new Date().toISOString()
+    };
+    const label = status === "none" ? "no direct cost" : status === "pending" ? "cost pending final invoice" : `${money(cost.totalCost)} total`;
+    const d = document.getElementById("costDialog"); if (d.open) d.close(); else d.removeAttribute("open");
     updateCurrentTicket(
-      { status: "Resolved" },
-      `Resolved by ${Store.CURRENT_USER.name}: ${note}`,
+      { status: "Resolved", outcome: "resolved", cost },
+      `Resolved by ${Store.CURRENT_USER.name} (${label}): ${note}`,
       "Ticket resolved."
     );
   });
+
+  document.getElementById("receiverResolveTicket").addEventListener("click", openCostDialog);
 
   document.getElementById("receiverReopenTicket").addEventListener("click", () => {
     updateCurrentTicket(
@@ -974,6 +1118,66 @@
       `Reopened by ${Store.CURRENT_USER.name}.`,
       "Ticket reopened."
     );
+  });
+
+  function openCloseNoActionDialog() {
+    if (!currentTicketId) return;
+    const form = document.getElementById("closeNoActionForm");
+    if (form) form.reset();
+    const dialog = document.getElementById("closeNoActionDialog");
+    if (dialog && !dialog.open) dialog.showModal();
+  }
+
+  function confirmCloseNoAction() {
+    const reason = document.getElementById("closeNoActionReason").value;
+    const explanation = document.getElementById("closeNoActionExplanation").value.trim();
+    if (!reason) {
+      UI.showToast("Choose a closure reason.");
+      return;
+    }
+    if (explanation.length < 4) {
+      UI.showToast("Add a meaningful explanation before closing without action.");
+      document.getElementById("closeNoActionExplanation").focus();
+      return;
+    }
+    const requesterNote =
+      `This request was closed without action because: ${reason}. ` +
+      `The Service Team added the following explanation: ${explanation}`;
+    const updated = updateTicketWithComment(
+      currentTicketId,
+      {
+        status: "Closed — No Action",
+        outcome: "closed-no-action",
+        closureReason: reason,
+        closureExplanation: explanation,
+        closedAt: new Date().toISOString(),
+        closedBy: Store.CURRENT_USER.name
+      },
+      `Closed without action by ${Store.CURRENT_USER.name} — ${reason}.`,
+      requesterNote,
+      "requester"
+    );
+    document.getElementById("closeNoActionDialog").close();
+    const form = document.getElementById("closeNoActionForm");
+    if (form) form.reset();
+    if (updated) {
+      UI.showToast(`${updated.number} closed without action.`);
+      renderReceiverTicket(updated);
+    }
+  }
+
+  document.getElementById("receiverCloseNoAction").addEventListener("click", openCloseNoActionDialog);
+  document.getElementById("confirmCloseNoAction").addEventListener("click", confirmCloseNoAction);
+  document.querySelectorAll("[data-close-noaction]").forEach((button) => {
+    button.addEventListener("click", () => document.getElementById("closeNoActionDialog").close());
+  });
+
+  document.getElementById("receiverFlowStudio").addEventListener("click", () => {
+    const ticket = Store.getTicket(currentTicketId);
+    const templateId = ticket && ticket.details && ticket.details.requestTemplateId;
+    window.location.href = templateId
+      ? `admin-templates.html?flow=${encodeURIComponent(templateId)}`
+      : "admin-templates.html";
   });
 
   document.getElementById("receiverTimeline").addEventListener("click", (event) => {

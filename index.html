@@ -23,7 +23,13 @@
                 <strong>MasterFlow Assistant</strong>
                 <small>Building your request as you answer</small>
               </div>
-              <span class="chat-status">● Ready</span>
+              <div class="chat-panel-header-right">
+                <span class="chat-status">● Ready</span>
+                <div class="chat-exit-actions">
+                  <button type="button" class="chat-exit" data-solved>I solved it</button>
+                  <button type="button" class="chat-exit chat-exit-cancel" data-cancel-request>Cancel</button>
+                </div>
+              </div>
             </div>
 
             <div class="request-canvas-grid">
@@ -109,32 +115,33 @@
           </a>
         </div>
 
-        <div class="prompt-examples" aria-label="Example requests">
-          <button type="button" data-example="I need ink for the Zebra printer at Pack Station 14">
-            “I need toner for Pack Station 14.”
-          </button>
-
-          <button type="button" data-example="Forklift FL-24 will not move near Receiving Door 5">
-            “Forklift FL-24 will not move.”
-          </button>
-
-          <button type="button" data-example="Please stock check part 2888-2 for date codes in Phoenix">
-            “I need a stock check.”
-          </button>
-
-          <button type="button" data-example="OMS is not refreshing the order hold status">
-            “OMS is not updating.”
-          </button>
+        <div class="prompt-examples-block" aria-labelledby="tryExampleLabel">
+          <div class="prompt-examples-head">
+            <strong id="tryExampleLabel">Try an example</strong>
+            <small>Click any request to see MasterFlow interpret it, ask only what is missing, and prepare a work-ready ticket.</small>
+          </div>
+          <div class="prompt-examples" aria-label="Example requests">
+            <button type="button" data-example="Paper jam at Pack Station 14">Paper jam at Pack Station 14</button>
+            <button type="button" data-example="The printer at Pack Station 14 stopped working">The printer at Pack Station 14 stopped working</button>
+            <button type="button" data-example="My laptop is running very slowly">My laptop is running very slowly</button>
+            <button type="button" data-example="I need access to the shared Sales folder">I need access to the shared Sales folder</button>
+            <button type="button" data-example="The scanner at Receiving is not reading labels">The scanner at Receiving is not reading labels</button>
+            <button type="button" data-example="Forklift 3 will not lift and has been taken out of service">Forklift 3 will not lift and has been taken out of service</button>
+            <button type="button" data-example="It is too hot near the Shipping area">It is too hot near the Shipping area</button>
+            <button type="button" data-example="Can someone verify the date code for part 12345 in Phoenix?">Can someone verify the date code for part 12345 in Phoenix?</button>
+            <button type="button" data-example="Shipping is completely stopped at Packaging Line 2" class="prompt-example-critical">Shipping is completely stopped at Packaging Line 2</button>
+            <button type="button" data-example="I need help, but I am not sure which team owns this">I need help, but I am not sure which team owns this</button>
+          </div>
         </div>
       </section>
     </main>
   </div>
 
-  <script src="assets/js/store.js" defer></script>
-  <script src="assets/js/layout.js" defer></script>
-  <script src="assets/js/templates.js" defer></script>
-<script src="assets/js/request-engine.js" defer></script>
-<script src="assets/js/request-engine-v2.js" defer></script>
-<script src="assets/js/pages/home.js" defer></script>
+  <script src="assets/js/store.js?v=rc2" defer></script>
+  <script src="assets/js/layout.js?v=rc2" defer></script>
+  <script src="assets/js/templates.js?v=rc2" defer></script>
+  <script src="assets/js/request-engine.js?v=rc2" defer></script>
+  <script src="assets/js/request-engine-v2.js?v=rc2" defer></script>
+  <script src="assets/js/pages/home.js?v=rc2" defer></script>
 </body>
 </html>

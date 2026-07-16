@@ -30,6 +30,18 @@
         </div>
       </div>
 
+      <div class="persona-bar" id="servicePersonaBar">
+        <div class="persona-bar-info">
+          <span class="persona-eyebrow">Service Team role</span>
+          <strong id="personaTitle">Queue Manager</strong>
+          <span class="persona-desc" id="personaDesc"></span>
+        </div>
+        <div class="persona-switch" role="group" aria-label="Switch Service Team role">
+          <button type="button" class="persona-option" data-persona="manager">Queue Manager</button>
+          <button type="button" class="persona-option" data-persona="member">Service Team Member</button>
+        </div>
+      </div>
+
       <section class="kpi-grid queue-manager-kpis" aria-label="Queue Manager summary">
         <div class="kpi">
           <div class="kpi-label">Active queue volume</div>
@@ -59,7 +71,7 @@
             <h2>Pending approvals</h2>
             <p>
               Authorized Queue Manager access represents the manager or director
-              approval role in this prototype. Ticket receivers can prepare and route
+              approval role in this prototype. Service Team Members can prepare and route
               requests, but they cannot approve their own work.
             </p>
           </div>
@@ -106,9 +118,21 @@
           </div>
           <div class="card-body">
             <div class="queue-recommendation" id="qmRecommendation"></div>
-            <button class="btn btn-primary mt-18" type="button" id="qmSubmitRecommendation">
-              Submit recommendation
-            </button>
+            <div class="queue-recommendation-status" id="qmRecommendationStatus" hidden></div>
+            <div class="queue-recommendation-actions">
+              <button class="btn btn-primary" type="button" id="qmPublishRecommendation">
+                Review &amp; publish
+              </button>
+              <button class="btn btn-secondary" type="button" id="qmOpenFlowStudio">
+                Open in Flow Studio
+              </button>
+              <button class="btn btn-ghost btn-sm" type="button" id="qmSubmitRecommendation">
+                Log as feedback
+              </button>
+            </div>
+            <p class="queue-recommendation-note muted">
+              Queue-owned change &middot; publishes immediately &middot; no administrator approval required.
+            </p>
           </div>
         </article>
       </section>
@@ -118,7 +142,7 @@
           <div class="card-header">
             <div>
               <h2>Team workload</h2>
-              <p>Active load and risk by current owner.</p>
+              <p>Active load and risk by current owner. <span id="qmTeamAvgClose" class="muted"></span></p>
             </div>
           </div>
           <div class="table-wrap">
@@ -130,6 +154,7 @@
                   <th>High impact</th>
                   <th>Waiting</th>
                   <th>SLA risk</th>
+                  <th title="Average time from request created to completed (resolved or closed without action). Open tickets are excluded.">Avg. close time</th>
                 </tr>
               </thead>
               <tbody id="qmWorkloadBody"></tbody>
@@ -148,6 +173,40 @@
             <div class="manager-insight-list" id="qmCoverageList"></div>
           </div>
         </article>
+      </section>
+
+      <section class="card mt-18" id="qmAssignmentSection">
+        <div class="card-header">
+          <div>
+            <h2>Automatic assignment rules</h2>
+            <p>
+              Assign incoming requests to the right owner automatically. Rules run
+              <strong>after</strong> routing, so the queue never changes &mdash; they only
+              choose an owner within your queues. Publishing is immediate; no administrator
+              approval is required.
+            </p>
+          </div>
+          <span class="badge badge-teal">Queue-owned</span>
+        </div>
+        <div class="card-body">
+          <div class="assignment-rules-toolbar">
+            <button class="btn btn-primary btn-sm" type="button" id="qmNewAssignmentRule">+ New rule</button>
+            <span class="muted" id="qmAssignmentSummary"></span>
+          </div>
+          <div class="assignment-viewonly-note" id="qmAssignmentViewOnly" hidden>
+            You are viewing as a Service Team Member. Assignment rules are read-only &mdash; switch to Queue Manager to create or edit them.
+          </div>
+          <div class="assignment-rule-list" id="qmAssignmentRuleList" aria-live="polite"></div>
+
+          <div class="assignment-availability">
+            <h3>Team availability</h3>
+            <p class="muted">
+              When a primary owner is unavailable, matching requests go to the backup owner,
+              then fall back as configured. Availability is a prototype control.
+            </p>
+            <div class="assignment-availability-list" id="qmAvailabilityList"></div>
+          </div>
+        </div>
       </section>
 
       <section class="grid grid-2 mt-18">
@@ -193,6 +252,110 @@
       </section>
     </main>
   </div>
+
+  <dialog id="assignmentRuleDialog" class="assignment-rule-dialog" aria-labelledby="assignmentRuleTitle">
+    <form method="dialog" id="assignmentRuleForm">
+      <div class="dialog-header">
+        <div>
+          <h2 id="assignmentRuleTitle">New assignment rule</h2>
+          <p>Rules only assign an owner within your queues. They never change routing, priority, or SLA.</p>
+        </div>
+        <button class="close-button" type="button" data-close-assignment aria-label="Close">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label for="ruleName">Rule name</label>
+          <input class="input" id="ruleName" type="text" required placeholder="Example: Printer specialist assignment">
+        </div>
+        <div class="assignment-form-grid">
+          <div class="field">
+            <label for="ruleQueue">Queue</label>
+            <select class="select" id="ruleQueue" required></select>
+          </div>
+          <div class="field">
+            <label for="ruleFlow">Request type</label>
+            <select class="select" id="ruleFlow" required></select>
+          </div>
+        </div>
+        <div class="assignment-form-grid">
+          <div class="field">
+            <label for="rulePrimary">Primary owner</label>
+            <select class="select" id="rulePrimary" required></select>
+          </div>
+          <div class="field">
+            <label for="ruleBackup">Backup owner (optional)</label>
+            <select class="select" id="ruleBackup"></select>
+          </div>
+        </div>
+        <div class="assignment-form-grid">
+          <div class="field">
+            <label for="ruleFallback">If no one is available</label>
+            <select class="select" id="ruleFallback">
+              <option value="unassigned">Leave unassigned and flag for the Queue Manager</option>
+              <option value="manager">Route to the Queue Manager</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="rulePriority">Rule priority</label>
+            <input class="input" id="rulePriority" type="number" min="1" max="99" value="1">
+            <small class="muted">Lower numbers win when more than one rule matches.</small>
+          </div>
+        </div>
+        <div class="field">
+          <label for="ruleNotes">Notes (optional)</label>
+          <textarea class="textarea" id="ruleNotes" rows="2" placeholder="Why this rule exists."></textarea>
+        </div>
+        <label class="assignment-active-toggle">
+          <input type="checkbox" id="ruleActive" checked>
+          <span>Active &mdash; apply this rule to new requests</span>
+        </label>
+
+        <div class="assignment-test">
+          <div class="assignment-test-header">
+            <strong>Test this rule</strong>
+            <button class="btn btn-secondary btn-sm" type="button" id="ruleTestButton">Preview assignment</button>
+          </div>
+          <p class="muted">See who a matching request would be assigned to right now, using current availability.</p>
+          <div class="assignment-test-result" id="ruleTestResult" hidden></div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn btn-secondary" type="button" data-close-assignment>Cancel</button>
+        <button class="btn btn-primary" type="button" id="ruleSaveButton">Publish rule</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="improvementPublishDialog" class="improvement-publish-dialog" aria-labelledby="improvementPublishTitle">
+    <div class="dialog-header">
+      <div>
+        <h2 id="improvementPublishTitle">Publish request-flow improvement</h2>
+        <p>This is a queue-owned change. It publishes immediately and does not require administrator approval.</p>
+      </div>
+      <button class="close-button" type="button" data-close-improvement aria-label="Close">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <div class="improvement-diff">
+        <div class="improvement-diff-col improvement-before">
+          <h3>Before</h3>
+          <p id="improvementBefore"></p>
+        </div>
+        <div class="improvement-diff-col improvement-after">
+          <h3>After</h3>
+          <p id="improvementAfter"></p>
+        </div>
+      </div>
+      <div class="improvement-unchanged">
+        <h3>What stays unchanged</h3>
+        <p id="improvementUnchanged"></p>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" id="improvementOpenStudio">Open in Flow Studio</button>
+      <button class="btn btn-secondary" type="button" data-close-improvement>Cancel</button>
+      <button class="btn btn-primary" type="button" id="improvementConfirmPublish">Publish now</button>
+    </div>
+  </dialog>
 
   <script src="assets/js/store.js" defer></script>
   <script src="assets/js/layout.js" defer></script>

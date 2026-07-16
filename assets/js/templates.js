@@ -283,7 +283,7 @@
       name: "General Request - Needs Triage",
       description: "Use when MasterFlow cannot safely match an existing request type.",
       catalog: "Business Enablement",
-      queue: "Megan Delia - Triage",
+      queue: "Enterprise Triage",
       priority: "P3 - Normal",
       responseSlaHours: 4,
       resolutionSlaHours: 48,
@@ -333,6 +333,61 @@
     ],
 
     "printer-connectivity": [
+      "printer stopped working",
+      "printer stopped",
+      "printer does not work",
+      "printer not working",
+      "printer is broken",
+      "printer broken",
+      "printer will not print",
+      "printer wont print",
+      "will not print",
+      "nothing printed",
+      "nothing is coming out",
+      "nothing comes out",
+      "printer not responding",
+      "printer is not responding",
+      "printer keeps jamming",
+      "keeps jamming",
+      "printer light not turning on",
+      "printer no lights",
+      "no lights on the printer",
+      "label printer",
+      "label printer not responding",
+      "packaging printer",
+      "packaging printer issue",
+      "work printer",
+      "work printer stopped",
+      "printer issue",
+      "printer problem",
+      "scanner will not read",
+      "scanner does not read",
+      "will not read anything",
+      "does not read anything",
+      "not reading",
+      "cannot read",
+      "reads nothing",
+      "laptop running slow",
+      "computer running slow",
+      "running slow",
+      "runs slow",
+      "runs slowly",
+      "laptop slow",
+      "laptop is slow",
+      "computer slow",
+      "computer is slow",
+      "pc slow",
+      "pc is slow",
+      "machine is slow",
+      "system is slow",
+      "slow laptop",
+      "slow computer",
+      "slow pc",
+      "slow performance",
+      "so slow",
+      "too slow",
+      "keeps eating the labels",
+      "eating the labels",
       "paper jam",
       "printer jam",
       "jammed printer",
@@ -369,6 +424,22 @@
     ],
 
     "equipment-out-of-service": [
+      "conveyor stopped",
+      "conveyor is stopped",
+      "conveyor not moving",
+      "conveyor not running",
+      "belt stopped",
+      "strange noise",
+      "unusual noise",
+      "weird noise",
+      "loud noise",
+      "grinding noise",
+      "rattling noise",
+      "making a noise",
+      "making noise",
+      "equipment noise",
+      "machine stopped",
+      "equipment stopped",
       "forklift issue",
       "forklift broken",
       "forklift won't start",
@@ -392,6 +463,15 @@
     ],
 
     "corrective-action-warehouse": [
+      "damaged material",
+      "received damaged",
+      "damaged goods",
+      "material damaged",
+      "arrived damaged",
+      "damaged on arrival",
+      "received the wrong",
+      "received wrong",
+      "wrong item",
       "wrong part",
       "wrong quantity",
       "missing quantity",
@@ -409,6 +489,13 @@
     ],
 
     "stock-check-phoenix": [
+      "verify the date code",
+      "verify date code",
+      "check the date code",
+      "confirm the date code",
+      "confirm date code",
+      "check date code",
+      "date code",
       "stock check",
       "check stock",
       "inventory check",
@@ -426,6 +513,19 @@
     ],
 
     "systems-intake": [
+      "shared folder",
+      "shared drive",
+      "network drive",
+      "file share",
+      "shared sales folder",
+      "access to the shared",
+      "access to a shared",
+      "access to shared",
+      "folder access",
+      "drive access",
+      "need access to",
+      "request access to",
+      "access request",
       "oms issue",
       "oms not updating",
       "oms not refreshing",
@@ -444,6 +544,15 @@
     ],
 
     "facilities-hvac": [
+      "ac broken",
+      "ac is broken",
+      "ac broke",
+      "air conditioner broken",
+      "air conditioning broken",
+      "freezing",
+      "freezing in here",
+      "no heat",
+      "no ac",
       "hvac issue",
       "ac issue",
       "ac broken",
@@ -711,6 +820,10 @@
             "One station or device": [
               "one station",
               "this station",
+              "my station",
+              "only my station",
+              "just my station",
+              "my workstation",
               "one printer",
               "this printer"
             ],
@@ -1343,6 +1456,24 @@
     }
   }
 
+  /*
+   * Work-type classification so incidents, service requests, and
+   * change requests are visibly distinguished on the request, the
+   * ticket, and in reporting. Change-type work (system changes and
+   * enhancements) also flows through the approval workflow.
+   */
+  const WORK_TYPES = {
+    "printer-ink": "Service request",
+    "printer-connectivity": "Incident",
+    "equipment-out-of-service": "Incident",
+    "corrective-action-warehouse": "Incident",
+    "stock-check-phoenix": "Service request",
+    "systems-intake": "Change request",
+    "facilities-hvac": "Incident",
+    "new-it-hardware": "Service request",
+    "general-triage": "Needs triage"
+  };
+
  function getAll() {
     const overrides = readOverrides();
 
@@ -1363,6 +1494,12 @@
         return {
           ...clone(template),
           ...clone(override),
+
+          workType:
+            override.workType ||
+            template.workType ||
+            WORK_TYPES[template.id] ||
+            "",
 
           diagnostics: {
             ...clone(diagnostics),
@@ -1490,8 +1627,63 @@
     return getAll();
   }
 
+  /*
+   * Deterministic language normalization.
+   *
+   * Expands common contractions, repairs frequent operational
+   * misspellings and spacing, drops filler intensifiers, and
+   * standardizes light morphology so classification tolerates how
+   * employees actually type. No external model is used; every rule
+   * here is transparent, local, and testable.
+   */
+  const CONTRACTIONS = [
+    [/\bwon['’]?t\b/g, "will not"],
+    [/\bcan['’]?t\b/g, "cannot"],
+    [/\bdoesn['’]?t\b/g, "does not"],
+    [/\bdon['’]?t\b/g, "do not"],
+    [/\bdidn['’]?t\b/g, "did not"],
+    [/\bisn['’]?t\b/g, "is not"],
+    [/\baren['’]?t\b/g, "are not"],
+    [/\bwasn['’]?t\b/g, "was not"],
+    [/\bwouldn['’]?t\b/g, "would not"],
+    [/\bit['’]?s\b/g, "it is"]
+  ];
+
+  const CANONICAL = [
+    [/\bfork\s*lift\b/g, "forklift"],
+    [/\bprintr\b/g, "printer"],
+    [/\bpriner\b/g, "printer"],
+    [/\bprnter\b/g, "printer"],
+    [/\bpritner\b/g, "printer"],
+    [/\bpriner\b/g, "printer"],
+    [/\bwrking\b/g, "working"],
+    [/\bworkin\b/g, "working"],
+    [/\bscaner\b/g, "scanner"],
+    [/\bscannner\b/g, "scanner"],
+    [/\bskaner\b/g, "scanner"],
+    [/\blabtop\b/g, "laptop"],
+    [/\blaptp\b/g, "laptop"],
+    [/\bcomputor\b/g, "computer"],
+    [/\bconvyor\b/g, "conveyor"],
+    [/\bconveyer\b/g, "conveyor"],
+    [/\bconvayor\b/g, "conveyor"],
+    [/\bbroke\b/g, "broken"],
+    [/\bslowly\b/g, "slow"]
+  ];
+
+  const FILLER = /\b(?:really|very|super|extremely|totally|kinda|sorta)\b/g;
+
   function normalize(text) {
-    return String(text || "").toLowerCase().replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, " ").trim();
+    let value = String(text || "").toLowerCase();
+    CONTRACTIONS.forEach(([pattern, replacement]) => {
+      value = value.replace(pattern, replacement);
+    });
+    value = value.replace(/[^a-z0-9\s-]/g, " ");
+    CANONICAL.forEach(([pattern, replacement]) => {
+      value = value.replace(pattern, replacement);
+    });
+    value = value.replace(FILLER, " ");
+    return value.replace(/\s+/g, " ").trim();
   }
 
   function exactPhraseScore(
@@ -1733,8 +1925,8 @@
         if (explicit) return explicit[1];
         const deviceCount = input.match(/\b(\d+)\s+(?:new\s+|replacement\s+|additional\s+)?(?:scanner|scanners|laptop|laptops|monitor|monitors|printer|printers)\b/i);
         if (deviceCount) return deviceCount[1];
-        if (/\b(?:a|an|one)\s+(?:new\s+|replacement\s+|additional\s+)?(?:scanner|laptop|monitor|printer)\b/i) return "1";
-        if (/\b(?:new|replacement|additional)\s+(?:scanner|laptop|monitor|printer)\b/i) return "1";
+        if (/\b(?:a|an|one)\s+(?:new\s+|replacement\s+|additional\s+)?(?:scanner|laptop|monitor|printer)\b/i.test(input)) return "1";
+        if (/\b(?:new|replacement|additional)\s+(?:scanner|laptop|monitor|printer)\b/i.test(input)) return "1";
         return "";
       },
       estimatedCost: () => {

@@ -3,75 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MasterFlow - Freight optimization</title>
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <meta http-equiv="refresh" content="0; url=reporting.html">
+  <title>MasterFlow</title>
+  <script>window.location.replace("reporting.html");</script>
 </head>
-<body class="workspace-page" data-page="freight">
-  <div class="content-shell">
-    <main>
-      <div class="page-heading">
-        <div><h1>Freight optimization</h1><p>Every eligible order can be scanned through read-only ERP and website feeds. Only actionable exceptions become work for Sales, Logistics, or Operations.</p></div>
-        <div class="page-actions"><span class="badge badge-purple">Simulated order feed</span></div>
-      </div>
-
-      <div class="notice notice-info"><span>i</span><div><strong>Scan every order; do not create a ticket for every order.</strong><p>A work item is created only when someone must decide, approve, investigate, or communicate before cost is incurred.</p></div></div>
-
-      <section class="kpi-grid mt-18" aria-label="Freight opportunity summary">
-        <div class="kpi"><div class="kpi-label">Open opportunities</div><div class="kpi-value" id="freightOpenCount">0</div><div class="kpi-meta">Require human action</div></div>
-        <div class="kpi"><div class="kpi-label">Potential savings</div><div class="kpi-value" id="freightPotentialSavings">$0</div><div class="kpi-meta good">Open reviewed value</div></div>
-        <div class="kpi"><div class="kpi-label">Waiting on Sales</div><div class="kpi-value" id="freightSalesCount">0</div><div class="kpi-meta">Customer communication queue</div></div>
-        <div class="kpi"><div class="kpi-label">Approved in demo</div><div class="kpi-value" id="freightApprovedSavings">$0</div><div class="kpi-meta good">Potential, not yet verified</div></div>
-      </section>
-
-      <div class="grid grid-2 mt-18">
-        <section class="card">
-          <div class="card-header"><div><h2>Actionable opportunities</h2><p>Sorted by decision deadline, service risk, and expected value.</p></div></div>
-          <div class="card-body">
-            <div class="toolbar">
-              <div class="toolbar-left"><input class="control search-control" id="freightSearch" type="search" placeholder="Search customer, order, or recommendation" aria-label="Search freight opportunities"></div>
-              <div class="toolbar-right"><select class="control" id="freightStatusFilter" aria-label="Filter freight opportunities"><option value="open">Open opportunities</option><option value="all">All opportunities</option><option value="sales">Waiting on Sales</option><option value="decided">Final decisions</option></select></div>
-            </div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Customer / order</th><th>Current</th><th>Proposed</th><th>Current cost</th><th>Savings</th><th>Confidence</th><th>Decision rule</th><th>Status</th><th>Action</th></tr></thead>
-              <tbody id="freightBody"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <aside class="card policy-card">
-          <div class="card-header"><div><h2>Current prototype policy</h2><p>Authorized administrators change these values in Rules & access.</p></div></div>
-          <div class="card-body">
-            <div class="policy-row"><label><span>Minimum savings for review</span><strong id="policyMinimumSavings">$250</strong></label></div>
-            <div class="policy-row"><label><span>Normal review confidence</span><strong id="policyManualConfidence">70%</strong></label></div>
-            <div class="policy-row"><label><span>Possible auto-action confidence</span><strong id="policyAutoConfidence">90%</strong></label></div>
-            <div class="policy-row"><label><span>Annual savings target</span><strong id="policySavingsTarget">$200,000</strong></label></div>
-            <div class="notice notice-warning mt-12"><span>!</span><div><strong>No indefinite holds</strong><p>Every hold requires a named owner, cutoff, and automatic release action.</p></div></div>
-          </div>
-        </aside>
-      </div>
-    </main>
-  </div>
-
-  <dialog id="freightDialog" aria-labelledby="freightDialogTitle">
-    <div class="dialog-header">
-      <div><h2 id="freightDialogTitle">Freight opportunity</h2><p id="freightDialogSubtitle"></p></div>
-      <button class="close-button" type="button" data-close-freight aria-label="Close">×</button>
-    </div>
-    <div class="dialog-body" id="freightDialogBody"></div>
-    <div class="dialog-body" style="padding-top:0">
-      <div class="field"><label for="freightDecisionNote">Internal decision note</label><textarea class="textarea" id="freightDecisionNote" placeholder="Record the reason, customer constraint, or next step."></textarea><small>No real customer email or ERP update occurs in this prototype.</small></div>
-    </div>
-    <div class="dialog-footer">
-      <button class="btn btn-secondary" type="button" id="freightRelease">Release unchanged</button>
-      <button class="btn btn-secondary" type="button" id="freightSales">Send draft to sales owner</button>
-      <button class="btn btn-primary" type="button" id="freightHold">Approve time-boxed hold</button>
-    </div>
-  </dialog>
-
-  <script src="assets/js/store.js" defer></script>
-  <script src="assets/js/layout.js" defer></script>
-  <script src="assets/js/pages/freight-optimization.js" defer></script>
-</body>
+<body></body>
 </html>

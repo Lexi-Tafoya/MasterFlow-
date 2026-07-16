@@ -334,9 +334,9 @@
       <section class="card mt-18">
         <div class="card-header">
           <div>
-            <h2>My recent requests</h2>
+            <h2 id="requestsHeading">My recent requests</h2>
 
-            <p>
+            <p id="requestsSubhead">
               Open a request to review its shared timeline and reply
               without creating a duplicate ticket.
             </p>
@@ -344,6 +344,10 @@
         </div>
 
         <div class="card-body">
+          <div class="view-segment" role="tablist" aria-label="Choose request view">
+            <button type="button" class="view-seg-btn is-active" data-view="mine" role="tab" aria-selected="true">My requests</button>
+            <button type="button" class="view-seg-btn" data-view="team" role="tab" aria-selected="false">My team's requests</button>
+          </div>
           <div class="toolbar">
             <div class="toolbar-left">
               <input

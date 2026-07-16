@@ -7,7 +7,7 @@
   if (!Store || !UI || !UI.layoutReady) return;
 
   const FEEDBACK_KEY = "masterflowFlowFeedbackV1";
-  const CLOSED_STATUSES = new Set(["Resolved", "Closed", "Cancelled", "Rejected"]);
+  const CLOSED_STATUSES = new Set(["Resolved", "Closed", "Closed — No Action", "Cancelled", "Rejected"]);
   const FLOW_GAP_EXCLUSIONS = new Set(["Assigned owner", "Confirmed routing", "Requester response"]);
   const ISSUE_TYPES = new Set([
     "missing-information",
@@ -658,7 +658,7 @@
     function approvalCardMarkup(ticket) {
       const route = approvalRoute(ticket);
       const amount = requestedCost(ticket) || "Amount not provided";
-      const requestedBy = route.requestedBy || "Ticket receiver";
+      const requestedBy = route.requestedBy || "Service Team Member";
 
       return `
         <article class="queue-approval-card" data-approval-ticket="${UI.escapeHtml(ticket.id)}">
@@ -752,6 +752,34 @@
       UI.showToast(toastText);
     }
 
+    function formatCloseDuration(ms) {
+      const minutes = Math.round(ms / 60000);
+      if (minutes < 60) return `${minutes} min`;
+      const hours = ms / 3600000;
+      if (hours < 48) return `${Math.round(hours * 10) / 10} hr`;
+      return `${Math.round((ms / 86400000) * 10) / 10} days`;
+    }
+
+    /*
+     * Average time from created to completed across resolved and
+     * closed-without-action tickets. Open tickets are excluded, and
+     * missing/invalid timestamps are skipped so no broken value shows.
+     */
+    function avgCloseTime(list) {
+      const durations = (list || [])
+        .filter((ticket) => isClosed(ticket))
+        .map((ticket) => {
+          const created = new Date(ticket.createdAt).getTime();
+          const done = new Date(ticket.closedAt || ticket.updatedAt).getTime();
+          return Number.isFinite(created) && Number.isFinite(done) && done >= created
+            ? done - created
+            : null;
+        })
+        .filter((value) => value != null);
+      if (!durations.length) return "No closed tickets yet";
+      return formatCloseDuration(durations.reduce((a, b) => a + b, 0) / durations.length);
+    }
+
     function renderQueueManager() {
       const tickets = Store.getState().tickets.slice();
       const active = tickets.filter((ticket) => !isClosed(ticket));
@@ -794,6 +822,7 @@
         ? ownerNames.map((owner) => {
             const items = active.filter((ticket) => (ticket.assignee || "Unassigned") === owner);
             const highImpact = items.filter((ticket) => /^P1|^P2/.test(ticket.priority || "")).length;
+            const ownerAll = tickets.filter((ticket) => (ticket.assignee || "Unassigned") === owner);
             return `
               <tr>
                 <td><strong>${UI.escapeHtml(owner)}</strong></td>
@@ -801,10 +830,19 @@
                 <td>${highImpact}</td>
                 <td>${items.filter(isWaiting).length}</td>
                 <td>${items.filter(isSlaRisk).length}</td>
+                <td>${UI.escapeHtml(avgCloseTime(ownerAll))}</td>
               </tr>
             `;
           }).join("")
-        : '<tr><td colspan="5"><div class="empty-state">No active owner workload.</div></td></tr>';
+        : '<tr><td colspan="6"><div class="empty-state">No active owner workload.</div></td></tr>';
+
+      const teamAvgEl = document.getElementById("qmTeamAvgClose");
+      if (teamAvgEl) {
+        const teamAvg = avgCloseTime(tickets);
+        teamAvgEl.textContent = teamAvg === "No closed tickets yet"
+          ? "No closed tickets yet"
+          : `Team avg. close time: ${teamAvg}`;
+      }
 
       const coverage = queueNames.map((queue) => {
         const items = active.filter((ticket) => ticket.queue === queue);
@@ -870,6 +908,37 @@
         </div>
       `;
 
+      // Gate the publish action by persona, then reflect the most recent improvement.
+      const isManager = servicePersona() === "manager";
+      const publishBtn = document.getElementById("qmPublishRecommendation");
+      if (publishBtn) {
+        publishBtn.hidden = !isManager;
+        publishBtn.disabled = !currentRecommendation.gap;
+      }
+      const recNote = document.querySelector(".queue-recommendation-note");
+      if (recNote) {
+        recNote.textContent = isManager
+          ? "Queue-owned change · publishes immediately · no administrator approval required."
+          : "Service Team Members can log feedback. Switch to Queue Manager to publish changes.";
+      }
+      if (!isManager) {
+        approvalList.querySelectorAll("[data-approval-action]").forEach((button) => { button.disabled = true; });
+      }
+      const recStatus = document.getElementById("qmRecommendationStatus");
+      if (recStatus) {
+        const latest = Store.getFlowImprovements()[0];
+        if (latest) {
+          recStatus.hidden = false;
+          recStatus.innerHTML = `
+            <span class="badge badge-green">Published</span>
+            <span><strong>${UI.escapeHtml(latest.title)}</strong> is live now in ${UI.escapeHtml(latest.queue || "the queue")}. ${UI.escapeHtml(latest.approval)}.</span>
+          `;
+        } else {
+          recStatus.hidden = true;
+          recStatus.innerHTML = "";
+        }
+      }
+
       const feedback = readFeedback();
       feedbackList.innerHTML = feedback.length
         ? feedback.slice(0, 10).map((item) => `
@@ -913,13 +982,401 @@
       });
     });
 
+    // Direct-publish path for queue-owned request-flow improvements (no approval).
+    const improvementDialog = document.getElementById("improvementPublishDialog");
+    function openFlowStudioForRec() {
+      const templateId = queueToFlow(currentRecommendation ? currentRecommendation.queue : "");
+      window.location.href = templateId
+        ? `admin-templates.html?flow=${encodeURIComponent(templateId)}`
+        : "admin-templates.html";
+    }
+    function openImprovementDialog() {
+      if (!currentRecommendation || !currentRecommendation.gap) return;
+      const diff = improvementDiff(currentRecommendation);
+      document.getElementById("improvementBefore").textContent = diff.before;
+      document.getElementById("improvementAfter").textContent = diff.after;
+      document.getElementById("improvementUnchanged").textContent = diff.unchanged;
+      if (typeof improvementDialog.showModal === "function") improvementDialog.showModal();
+      else improvementDialog.setAttribute("open", "");
+    }
+    function closeImprovementDialog() {
+      if (improvementDialog.open) improvementDialog.close();
+      else improvementDialog.removeAttribute("open");
+    }
+    document.getElementById("qmPublishRecommendation").addEventListener("click", openImprovementDialog);
+    document.getElementById("qmOpenFlowStudio").addEventListener("click", openFlowStudioForRec);
+    document.getElementById("improvementOpenStudio").addEventListener("click", openFlowStudioForRec);
+    improvementDialog.querySelectorAll("[data-close-improvement]").forEach((button) => {
+      button.addEventListener("click", closeImprovementDialog);
+    });
+    document.getElementById("improvementConfirmPublish").addEventListener("click", () => {
+      if (!currentRecommendation || !currentRecommendation.gap) return;
+      const diff = improvementDiff(currentRecommendation);
+      Store.publishFlowImprovement({
+        title: currentRecommendation.title,
+        queue: currentRecommendation.queue,
+        gap: currentRecommendation.gap,
+        before: diff.before,
+        after: diff.after,
+        unchanged: diff.unchanged,
+        templateId: diff.templateId,
+        suggestedChange: currentRecommendation.suggestedChange
+      });
+      addFeedback({
+        sourceRole: "queue-manager",
+        queue: currentRecommendation.queue,
+        templateId: diff.templateId,
+        issueType: "question-wording",
+        title: `Published: ${currentRecommendation.title}`,
+        description: `${diff.after} Published directly by the Queue Manager — no administrator approval required.`,
+        suggestedChange: currentRecommendation.suggestedChange
+      });
+      closeImprovementDialog();
+      renderQueueManager();
+    });
+
     document.getElementById("qmAddFeedback").addEventListener("click", () => {
       openFeedback({ sourceRole: "queue-manager", issueType: "other" });
     });
 
+    initServicePersona();
+    initAssignmentRules();
+
     window.addEventListener("masterflow:state", renderQueueManager);
     window.addEventListener("masterflow:flow-feedback", renderQueueManager);
+    window.addEventListener("masterflow:persona", renderQueueManager);
     renderQueueManager();
+  }
+
+  // Queue-owned automatic assignment rules. Queue Managers create, edit, test,
+  // and publish these directly — no administrator approval. Rules only choose an
+  // owner within a queue the routing engine already selected.
+  const OWNED_QUEUES = ["IT Help Desk", "IT Information", "Business Enablement - Systems Intake"];
+  const OWNED_FLOWS = [
+    { templateId: "printer-connectivity", label: "Report an issue to Help Desk", queue: "IT Help Desk" },
+    { templateId: "printer-ink", label: "Printer Ink Request", queue: "IT Information" },
+    { templateId: "new-it-hardware", label: "New IT Hardware Request", queue: "IT Information" },
+    { templateId: "systems-intake", label: "Systems Intake", queue: "Business Enablement - Systems Intake" }
+  ];
+  const TEAM_MEMBERS = ["Jordan Kim", "Taylor Morgan", "Priya Shah", "Casey Rivera"];
+
+  function queueToFlow(queue) {
+    const flow = OWNED_FLOWS.find((item) => item.queue === queue);
+    return flow ? flow.templateId : "";
+  }
+
+  // Builds the before / after / unchanged preview for a queue-owned request-flow
+  // improvement. Governed elements (queue, routing, SLA, priority, approvals, P1)
+  // are always listed as unchanged.
+  function improvementDiff(rec) {
+    const gap = rec && rec.gap ? rec.gap.toLowerCase() : "";
+    const flow = OWNED_FLOWS.find((item) => item.queue === (rec && rec.queue));
+    const flowLabel = flow ? flow.label : "this request type";
+    return {
+      templateId: flow ? flow.templateId : "",
+      flowLabel,
+      before: gap
+        ? `Requests can be submitted without ${gap}, so the Service Team often has to follow up before work can start.`
+        : "The current request flow is performing well; no repeated information gap is visible.",
+      after: gap
+        ? (flow
+            ? `The "${flow.label}" intake asks for ${gap} up front, with a clear "not known" fallback so no one is blocked.`
+            : `The intake for ${flowLabel} asks for ${gap} up front, with a clear "not known" fallback so no one is blocked.`)
+        : "No change is proposed. Continue monitoring feedback.",
+      unchanged: `Queue (${(rec && rec.queue) || "unchanged"}), automatic routing, SLA targets, priority, approvals, and P1 fast-lane handling all stay exactly the same.`
+    };
+  }
+
+  // Service Team persona: a Queue Manager gets the full toolset; a Service Team
+  // Member works tickets and sees manager tools as read-only. Stored locally and
+  // kept in sync with the Flow Studio persona.
+  const SERVICE_PERSONA_KEY = "masterflowServicePersona";
+  function servicePersona() {
+    return window.localStorage.getItem(SERVICE_PERSONA_KEY) === "member" ? "member" : "manager";
+  }
+  function setServicePersona(persona) {
+    const value = persona === "member" ? "member" : "manager";
+    window.localStorage.setItem(SERVICE_PERSONA_KEY, value);
+    window.localStorage.setItem("masterflowAdminRoleV1", value === "member" ? "queue-manager" : "category-owner");
+    window.dispatchEvent(new CustomEvent("masterflow:persona", { detail: value }));
+  }
+
+  function initServicePersona() {
+    const bar = document.getElementById("servicePersonaBar");
+    if (!bar) return;
+    const titleEl = document.getElementById("personaTitle");
+    const descEl = document.getElementById("personaDesc");
+    const options = bar.querySelectorAll(".persona-option");
+    function apply() {
+      const persona = servicePersona();
+      bar.dataset.persona = persona;
+      if (titleEl) titleEl.textContent = persona === "member" ? "Service Team Member" : "Queue Manager";
+      if (descEl) {
+        descEl.textContent = persona === "member"
+          ? "Works and resolves tickets. Queue health, assignment rules, publishing, and Flow Studio are view-only."
+          : "Full queue tools: team workload, owned reporting, assignment rules, direct publishing, and Flow Studio.";
+      }
+      options.forEach((button) => {
+        const active = button.dataset.persona === persona;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+    options.forEach((button) => {
+      button.addEventListener("click", () => {
+        setServicePersona(button.dataset.persona);
+        apply();
+      });
+    });
+    window.addEventListener("masterflow:persona", apply);
+    apply();
+  }
+
+  function initAssignmentRules() {
+    const listEl = document.getElementById("qmAssignmentRuleList");
+    const availabilityEl = document.getElementById("qmAvailabilityList");
+    const summaryEl = document.getElementById("qmAssignmentSummary");
+    const newButton = document.getElementById("qmNewAssignmentRule");
+    const dialog = document.getElementById("assignmentRuleDialog");
+    if (!listEl || !dialog) return;
+
+    const titleEl = document.getElementById("assignmentRuleTitle");
+    const nameEl = document.getElementById("ruleName");
+    const queueEl = document.getElementById("ruleQueue");
+    const flowEl = document.getElementById("ruleFlow");
+    const primaryEl = document.getElementById("rulePrimary");
+    const backupEl = document.getElementById("ruleBackup");
+    const fallbackEl = document.getElementById("ruleFallback");
+    const priorityEl = document.getElementById("rulePriority");
+    const notesEl = document.getElementById("ruleNotes");
+    const activeEl = document.getElementById("ruleActive");
+    const testButton = document.getElementById("ruleTestButton");
+    const testResult = document.getElementById("ruleTestResult");
+    const saveButton = document.getElementById("ruleSaveButton");
+    let editingId = null;
+
+    queueEl.innerHTML = OWNED_QUEUES.map((q) => `<option value="${UI.escapeHtml(q)}">${UI.escapeHtml(q)}</option>`).join("");
+    flowEl.innerHTML = OWNED_FLOWS.map((f) => `<option value="${UI.escapeHtml(f.templateId)}">${UI.escapeHtml(f.label)}</option>`).join("");
+    function memberOptions(includeBlank) {
+      return (includeBlank ? '<option value="">No backup owner</option>' : "") +
+        TEAM_MEMBERS.map((m) => `<option value="${UI.escapeHtml(m)}">${UI.escapeHtml(m)}</option>`).join("");
+    }
+    primaryEl.innerHTML = memberOptions(false);
+    backupEl.innerHTML = memberOptions(true);
+
+    // Keep queue in sync with the selected request type (routing owns the queue).
+    flowEl.addEventListener("change", () => {
+      const flow = OWNED_FLOWS.find((f) => f.templateId === flowEl.value);
+      if (flow) queueEl.value = flow.queue;
+    });
+
+    function availabilityFor(name) {
+      const map = Store.getTeamAvailability();
+      return map[name] !== false;
+    }
+
+    function renderRules() {
+      const editable = servicePersona() === "manager";
+      const viewOnlyNote = document.getElementById("qmAssignmentViewOnly");
+      if (newButton) newButton.hidden = !editable;
+      if (viewOnlyNote) viewOnlyNote.hidden = editable;
+      const rules = Store.getAssignmentRules().filter((rule) => OWNED_QUEUES.includes(rule.queue));
+      const activeCount = rules.filter((r) => r.active).length;
+      summaryEl.textContent = rules.length
+        ? `${rules.length} rule${rules.length === 1 ? "" : "s"} · ${activeCount} active`
+        : "No rules yet";
+      listEl.innerHTML = rules.length
+        ? rules
+            .slice()
+            .sort((a, b) => (Number(a.priority) || 99) - (Number(b.priority) || 99))
+            .map((rule) => {
+              const flow = OWNED_FLOWS.find((f) => f.templateId === rule.templateId);
+              const flowLabel = flow ? flow.label : (rule.category || "Any request type");
+              const primaryOk = availabilityFor(rule.primaryAssignee);
+              const backupText = rule.backupAssignee ? `Backup: ${rule.backupAssignee}` : "No backup";
+              const fallbackText = rule.fallback === "manager" ? "then Queue Manager" : "then leave unassigned";
+              return `
+                <article class="assignment-rule-card${rule.active ? "" : " is-inactive"}" data-rule-id="${UI.escapeHtml(rule.id)}">
+                  <div class="assignment-rule-main">
+                    <div class="assignment-rule-heading">
+                      <strong>${UI.escapeHtml(rule.name)}</strong>
+                      <span class="badge ${rule.active ? "badge-green" : "badge-gray"}">${rule.active ? "Active" : "Paused"}</span>
+                      <span class="badge badge-gray">Priority ${UI.escapeHtml(String(rule.priority || 1))}</span>
+                    </div>
+                    <p class="assignment-rule-route">
+                      <span class="assignment-chip">${UI.escapeHtml(rule.queue)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>${UI.escapeHtml(flowLabel)}</span>
+                    </p>
+                    <p class="assignment-rule-owner">
+                      Assign to <strong>${UI.escapeHtml(rule.primaryAssignee)}</strong>${primaryOk ? "" : ' <span class="assignment-warn">(currently unavailable)</span>'}
+                      · ${UI.escapeHtml(backupText)} · ${UI.escapeHtml(fallbackText)}
+                    </p>
+                    <p class="assignment-rule-meta muted">Applied to ${Number(rule.appliedCount) || 0} request${(Number(rule.appliedCount) || 0) === 1 ? "" : "s"}${rule.notes ? " · " + UI.escapeHtml(rule.notes) : ""}</p>
+                  </div>
+                  ${editable ? `
+                  <div class="assignment-rule-actions">
+                    <button class="btn btn-ghost btn-sm" type="button" data-rule-action="toggle">${rule.active ? "Pause" : "Activate"}</button>
+                    <button class="btn btn-secondary btn-sm" type="button" data-rule-action="edit">Edit</button>
+                    <button class="btn btn-ghost btn-sm" type="button" data-rule-action="delete">Delete</button>
+                  </div>` : ""}
+                </article>
+              `;
+            })
+            .join("")
+        : '<div class="empty-state">No automatic assignment rules yet. Create one to route requests to a specific owner.</div>';
+    }
+
+    function renderAvailability() {
+      const editable = servicePersona() === "manager";
+      const map = Store.getTeamAvailability();
+      availabilityEl.innerHTML = TEAM_MEMBERS.map((name) => {
+        const available = map[name] !== false;
+        return `
+          <label class="assignment-availability-item">
+            <input type="checkbox" data-availability="${UI.escapeHtml(name)}" ${available ? "checked" : ""} ${editable ? "" : "disabled"}>
+            <span>${UI.escapeHtml(name)}</span>
+            <small class="${available ? "assignment-avail-on" : "assignment-avail-off"}">${available ? "Available" : "Unavailable"}</small>
+          </label>
+        `;
+      }).join("");
+    }
+
+    function render() {
+      renderRules();
+      renderAvailability();
+    }
+
+    function openDialog(rule) {
+      editingId = rule ? rule.id : null;
+      titleEl.textContent = rule ? "Edit assignment rule" : "New assignment rule";
+      saveButton.textContent = rule ? "Save changes" : "Publish rule";
+      nameEl.value = rule ? rule.name : "";
+      flowEl.value = rule ? rule.templateId : OWNED_FLOWS[0].templateId;
+      const flow = OWNED_FLOWS.find((f) => f.templateId === flowEl.value);
+      queueEl.value = rule ? rule.queue : (flow ? flow.queue : OWNED_QUEUES[0]);
+      primaryEl.value = rule ? rule.primaryAssignee : TEAM_MEMBERS[0];
+      backupEl.value = rule ? (rule.backupAssignee || "") : "";
+      fallbackEl.value = rule ? (rule.fallback || "unassigned") : "unassigned";
+      priorityEl.value = rule ? (rule.priority || 1) : 1;
+      notesEl.value = rule ? (rule.notes || "") : "";
+      activeEl.checked = rule ? rule.active !== false : true;
+      testResult.hidden = true;
+      testResult.innerHTML = "";
+      if (typeof dialog.showModal === "function") dialog.showModal();
+      else dialog.setAttribute("open", "");
+    }
+
+    function closeDialog() {
+      if (dialog.open) dialog.close();
+      else dialog.removeAttribute("open");
+    }
+
+    function collectRule() {
+      const flow = OWNED_FLOWS.find((f) => f.templateId === flowEl.value);
+      return {
+        id: editingId || undefined,
+        name: nameEl.value.trim(),
+        queue: queueEl.value,
+        templateId: flowEl.value,
+        category: flow ? flow.label : "",
+        primaryAssignee: primaryEl.value,
+        backupAssignee: backupEl.value || "",
+        fallback: fallbackEl.value,
+        priority: Number(priorityEl.value) || 1,
+        notes: notesEl.value.trim(),
+        active: activeEl.checked
+      };
+    }
+
+    newButton.addEventListener("click", () => openDialog(null));
+
+    listEl.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-rule-action]");
+      if (!button) return;
+      const card = button.closest("[data-rule-id]");
+      const id = card && card.dataset.ruleId;
+      if (!id) return;
+      const rule = Store.getAssignmentRules().find((r) => r.id === id);
+      if (!rule) return;
+      const action = button.dataset.ruleAction;
+      if (action === "edit") {
+        openDialog(rule);
+      } else if (action === "toggle") {
+        Store.upsertAssignmentRule(Object.assign({}, rule, { active: !rule.active }));
+        render();
+      } else if (action === "delete") {
+        if (window.confirm(`Delete the "${rule.name}" rule? New requests will no longer be auto-assigned by it.`)) {
+          Store.deleteAssignmentRule(id);
+          render();
+        }
+      }
+    });
+
+    testButton.addEventListener("click", () => {
+      const draft = collectRule();
+      const flow = OWNED_FLOWS.find((f) => f.templateId === draft.templateId);
+      const result = Store.previewAssignment({
+        queue: draft.queue,
+        category: flow ? `${draft.queue} / ${flow.label}` : draft.queue,
+        templateId: draft.templateId
+      });
+      testResult.hidden = false;
+      // Preview the *draft* owner logic directly so unsaved edits are reflected.
+      const primaryAvailable = Store.getTeamAvailability()[draft.primaryAssignee] !== false;
+      const backupAvailable = draft.backupAssignee && Store.getTeamAvailability()[draft.backupAssignee] !== false;
+      let who = "";
+      let why = "";
+      if (!draft.active) {
+        who = "No assignment";
+        why = "This rule is paused, so it would not run.";
+      } else if (primaryAvailable) {
+        who = draft.primaryAssignee;
+        why = `${draft.primaryAssignee} is available and would receive the request.`;
+      } else if (backupAvailable) {
+        who = draft.backupAssignee;
+        why = `${draft.primaryAssignee} is unavailable, so the backup owner ${draft.backupAssignee} would receive it.`;
+      } else if (draft.fallback === "manager") {
+        who = "Queue Manager";
+        why = "No configured owner is available, so it would route to the Queue Manager.";
+      } else {
+        who = "Left unassigned";
+        why = "No configured owner is available, so it would stay in the queue for you to assign.";
+      }
+      testResult.innerHTML = `
+        <div class="assignment-test-outcome">
+          <span class="muted">A "${UI.escapeHtml(flow ? flow.label : draft.templateId)}" request in ${UI.escapeHtml(draft.queue)} would be assigned to</span>
+          <strong>${UI.escapeHtml(who)}</strong>
+          <p class="muted">${UI.escapeHtml(why)} The queue stays ${UI.escapeHtml(draft.queue)}.</p>
+        </div>
+      `;
+    });
+
+    saveButton.addEventListener("click", () => {
+      const draft = collectRule();
+      if (!draft.name) {
+        nameEl.focus();
+        return;
+      }
+      Store.upsertAssignmentRule(draft);
+      closeDialog();
+      render();
+    });
+
+    dialog.querySelectorAll("[data-close-assignment]").forEach((button) => {
+      button.addEventListener("click", closeDialog);
+    });
+
+    availabilityEl.addEventListener("change", (event) => {
+      const input = event.target.closest("[data-availability]");
+      if (!input) return;
+      Store.setMemberAvailability(input.dataset.availability, input.checked);
+      render();
+    });
+
+    window.addEventListener("masterflow:state", render);
+    window.addEventListener("masterflow:persona", render);
+    render();
   }
 
   window.MasterFlowReceiverFeedback = {

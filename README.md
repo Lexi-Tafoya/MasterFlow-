@@ -1,9 +1,10 @@
 # MasterFlow working prototype
 
-MasterFlow is a dependency-free, multipage browser prototype for two Master Electronics problems:
+MasterFlow is a dependency-free, multipage browser prototype for **Problem #4 — Ticketing System Replacement**.
 
-1. Replace a complex ServiceNow catalog experience with a simple AI-assisted request front door while preserving existing team queues, required fields, SLAs, and approvals.
-2. Surface controlled freight-savings opportunities before cost is incurred without creating work for every order or disrupting warehouse execution.
+It replaces a complex ServiceNow catalog experience with a simple, AI-assisted request front door, gives the Service Team a fast Work Center, gives Queue Managers self-service configuration and reporting, gives the Enterprise Administrator governance, triage, cost, and access controls, and provides a credible ServiceNow transition path — all while preserving the queues, routing, SLAs, approvals, ownership, and controls the company already trusts.
+
+The authoritative product overview is the in-app **Project Summary** page. The full capability list is in `docs/MASTERFLOW_CAPABILITY_INVENTORY.md`.
 
 ## Run it
 
@@ -21,61 +22,48 @@ http://127.0.0.1:8000/index.html
 
 No package installation, API key, build step, database, or internet connection is required.
 
-Windows: double-click `START_MASTERFLOW.bat` when Python is installed.
-
-macOS/Linux:
-
-```bash
-./start_masterflow.sh
-```
+- Windows: double-click `START_MASTERFLOW.bat` when Python is installed.
+- macOS/Linux: `./start_masterflow.sh`
 
 ## Working pages
 
-### Everyone / requester
-
-- `index.html` — minimal natural-language request landing page
-- `smart-request.html` — AI interpretation plus dynamic existing-form renderer
+### Employee (requester)
+- `index.html` — natural-language request landing page
+- `smart-request.html` — AI interpretation + dynamic form renderer
 - `request-submitted.html` — numbered request confirmation
 - `my-tickets.html` — open and historical requests
 - `help-articles.html` — searchable self-service knowledge
 
-### Ticket receiver / operations
-
-- `assigned-work.html` — personal operational inbox
-- `ticket-queues.html` — team queues, assignment, priority, and SLA risk
-- `freight-optimization.html` — order opportunities, guardrails, and decisions
-- `reporting.html` — service performance and freight-savings outcomes
+### Service Team / operations
+- `assigned-work.html` — Work Center (personal + team inbox, cost capture at resolution)
+- `ticket-queues.html` — Queue Manager (queue health, automatic-assignment rules, direct flow publishing)
+- `admin-templates.html` — Flow Studio (queue-owned, no-code request-flow configuration)
+- `reporting.html` — service performance, SLA, owned-category, and Ticket Cost & Spend reporting
 
 ### Administrator
+- `admin-rules-access.html` — Enterprise Governance (attention board, thresholds, guardrails, People & Access, audit)
+- `enterprise-triage.html` — Enterprise Triage (low-confidence review, rerouting, improvement signals)
+- `admin-migration.html` — ServiceNow Transition (role-scoped status, mapping, reconciliation, actions, waves)
+- `project-summary.html` — product overview, capability inventory, Problem #4 alignment, transition strategy
 
-- `admin-templates.html` — no-code request-template, queue, field, SLA, and trigger configuration
-- `admin-rules-access.html` — routing, approval, role, SLA, and threshold rules
-- `project-summary.html` — visual product decisions and Claude handoff summary
-
-Use the **Demo view** selector to switch among Regular user, Ticket receiver, and Administrator. Production roles would be assigned by SSO, not by a user-controlled toggle.
+Use the **Viewing as** selector to switch among Employee, Service Team, and Administrator. Within the Service Team, a role switch separates Queue Manager from Service Team Member. Production roles would come from SSO, not a user-controlled toggle.
 
 ## Core demonstration
 
-1. Enter `I need ink for the Zebra printer at Pack Station 14`.
-2. Review the selected Printer Ink Request, prefilled values, queue, confidence, and missing fields.
-3. Submit and confirm the numbered record appears in My Requests and the receiver queue.
-4. Create a `Shipping is stopped` P1 through the direct fast lane.
-5. Open freight opportunity ABI173 and record a controlled decision.
-6. As Administrator, change a request template without editing code.
+1. Enter `Printer stopped working at Pack Station 14` and complete the guided request.
+2. Confirm the numbered record appears in My Requests and the team queue, auto-assigned by a queue rule.
+3. Trigger a `Shipping is stopped` P1 through the direct fast lane (Bat Phone).
+4. As Service Team, resolve a ticket and record its cost outcome.
+5. As Administrator, review Enterprise Governance, reroute an Enterprise Triage request, and check ServiceNow Transition status.
 
 ## Architecture
 
-- Plain HTML, CSS, and JavaScript
-- One HTML page and one page controller per screen
-- `assets/js/store.js` for fictional localStorage state
-- `assets/js/templates.js` for dynamic request definitions and prototype classification
-- `assets/js/layout.js` for navigation, role gating, shared P1 intake, and dialogs
-- `assets/css/styles.css` for the shared visual system
+- Plain HTML, CSS, and JavaScript; one HTML page and one page controller per screen
+- `assets/js/store.js` — fictional localStorage state (tickets, rules, cost, access, transition data)
+- `assets/js/templates.js` — request definitions and deterministic classification
+- `assets/js/layout.js` — navigation, role gating, shared P1 intake, dialogs
+- `assets/css/styles.css` — shared visual system
 
 ## Prototype boundaries
 
-All users, customers, orders, costs, carrier details, emails, and system behavior are fictional or simulated. The prototype does not connect to ServiceNow, ERP, OMS, OnlineComponents.com, Outlook, SSO, carrier APIs, or live order holds. No sensitive data or credentials are included.
-
-## Claude Code handoff
-
-Open this entire unzipped folder in Claude Code, then paste `PASTE_THIS_INTO_CLAUDE.txt`. Claude should read `CLAUDE.md` and `FILE_MAP.md` first and only inspect files relevant to the current task.
+All users, tickets, costs, and transition status are fictional or modeled. The prototype does not connect to ServiceNow, ERP, Outlook, or SSO. Classification is deterministic and local. No sensitive data or credentials are included. MasterFlow is focused entirely on Problem #4.

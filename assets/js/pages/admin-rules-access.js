@@ -213,20 +213,7 @@
   }
 
   function relevantApprovalRules(state) {
-    return (
-      state.approvalRules ||
-      []
-    ).filter((rule) => {
-      const text =
-        `${rule.name || ""} ${rule.approver || ""}`
-          .toLowerCase();
-
-      return !(
-        text.includes("freight") ||
-        text.includes("promise date") ||
-        text.includes("auto-apply")
-      );
-    });
+    return state.approvalRules || [];
   }
 
   function settingsWithDefaults(settings) {

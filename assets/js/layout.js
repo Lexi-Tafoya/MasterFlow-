@@ -55,7 +55,7 @@
   label: "Work Center",
   icon: "◆",
   group: "Operations",
-  roles: ["receiver", "admin"],
+  roles: ["receiver"],
   title: "Work Center",
   subtitle: "Prioritized personal and team ticket work in one place."
 },
@@ -64,19 +64,10 @@
   label: "Queue Manager",
   icon: "☷",
   group: null,
-  roles: ["receiver", "admin"],
+  roles: ["receiver"],
   title: "Queue Manager",
   subtitle: "Pending approvals, queue health, coverage, and improvement recommendations."
 },
-    freight: {
-      href: "freight-optimization.html",
-      label: "Freight optimization",
-      icon: "⇄",
-      group: "Operations",
-      roles: ["receiver", "admin"],
-      title: "Freight optimization",
-      subtitle: "Review actionable savings opportunities before cost is incurred."
-    },
     reporting: {
       href: "reporting.html",
       label: "Reporting",
@@ -84,25 +75,43 @@
       group: "Operations",
       roles: ["receiver", "admin"],
       title: "Reporting",
-      subtitle: "Measure service performance and verified freight savings."
+      subtitle: "Measure service performance, request quality, and SLA outcomes."
     },
     "admin-templates": {
       href: "admin-templates.html",
-      label: "Request templates",
+      label: "Flow Studio",
       icon: "▤",
-      group: "Administration",
-      roles: ["admin"],
-      title: "Request templates",
-      subtitle: "Configure dynamic fields, queues, SLAs, and AI trigger phrases."
+      group: "Operations",
+      roles: ["receiver"],
+      title: "Flow Studio",
+      subtitle: "Improve how requests enter your queues."
     },
     admin: {
       href: "admin-rules-access.html",
-      label: "Rules & access",
+      label: "Enterprise Governance",
       icon: "⚙",
       group: "Administration",
       roles: ["admin"],
-      title: "Rules & access",
-      subtitle: "Configure common routing, approval, SLA, and permission rules."
+      title: "Enterprise Governance",
+      subtitle: "Company-wide controls, triage, cost, access, and audit — the Administrator home."
+    },
+    "enterprise-triage": {
+      href: "enterprise-triage.html",
+      label: "Enterprise Triage",
+      icon: "⚑",
+      group: "Administration",
+      roles: ["admin"],
+      title: "Enterprise Triage",
+      subtitle: "Requests MasterFlow could not confidently route — review, clarify, and reroute."
+    },
+    "admin-migration": {
+      href: "admin-migration.html",
+      label: "ServiceNow Transition",
+      icon: "⇥",
+      group: "Administration",
+      roles: ["receiver", "admin"],
+      title: "ServiceNow Transition",
+      subtitle: "Track migration progress, data quality, reconciliation, and remaining actions."
     },
     "project-summary": {
       href: "project-summary.html",
@@ -111,16 +120,22 @@
       group: "About",
       roles: ["requester", "receiver", "admin"],
       title: "Project summary",
-      subtitle: "How MasterFlow solves the intake problem - a judge-facing overview."
+      subtitle: "What MasterFlow does, how it solves Problem #4, and how it transitions off ServiceNow."
     }
   };
 
   const currentPage = document.body.dataset.page || "home";
   const pageDefinition = pages[currentPage] || pages.home;
   const roleLabels = {
-    requester: "Regular user",
-    receiver: "Ticket receiver",
+    requester: "Employee",
+    receiver: "Service Team",
     admin: "Administrator"
+  };
+
+  const roleDescriptions = {
+    requester: "Submit and track requests",
+    receiver: "Work requests and manage queue operations",
+    admin: "Manage enterprise governance and platform controls"
   };
 
   function escapeHtml(value) {
@@ -184,24 +199,28 @@
 
   function counts() {
     const state = Store.getState();
-    const openTickets = state.tickets.filter((ticket) => !["Resolved", "Closed"].includes(ticket.status));
+    const openTickets = state.tickets.filter((ticket) => !["Resolved", "Closed", "Closed — No Action"].includes(ticket.status));
     const requesterTickets = openTickets.filter((ticket) => ticket.requester === Store.CURRENT_USER.name).length;
     const queueTickets = openTickets.length;
-    const freight = state.freightOpportunities.filter((item) => !["Released unchanged"].includes(item.status) && !item.decision).length;
-    return { requesterTickets, queueTickets, freight };
+    return { requesterTickets, queueTickets };
   }
 
   function navMarkup(role) {
     const pageCounts = counts();
     const groupOrder = ["For me", "Operations", "Administration", "About"];
+    const servicePersona = window.localStorage.getItem("masterflowServicePersona") === "member" ? "member" : "manager";
     return groupOrder.map((group) => {
       const links = Object.entries(pages)
-        .filter(([, definition]) => definition.group === group && definition.roles.includes(role))
+        .filter(([id, definition]) => {
+          if (!(definition.group === group && definition.roles.includes(role))) return false;
+          // ServiceNow Transition is only for Enterprise Administrators and Queue Managers.
+          if (id === "admin-migration" && role === "receiver" && servicePersona !== "manager") return false;
+          return true;
+        })
         .map(([id, definition]) => {
           let badge = "";
           if (id === "my-tickets" && pageCounts.requesterTickets) badge = `<span class="nav-badge">${pageCounts.requesterTickets}</span>`;
           if (id === "assigned-work" && pageCounts.queueTickets) badge = `<span class="nav-badge">${pageCounts.queueTickets}</span>`;
-          if (id === "freight" && pageCounts.freight) badge = `<span class="nav-badge">${pageCounts.freight}</span>`;
           return `<a class="nav-link${id === currentPage ? " active" : ""}" href="${definition.href}" data-page-link="${id}"><span class="nav-icon" aria-hidden="true">${definition.icon}</span><span>${definition.label}</span>${badge}</a>`;
         }).join("");
       if (!links) return "";
@@ -223,29 +242,44 @@
     topbar.innerHTML = `
       <div class="topbar-left">
         <button class="menu-button" id="menuButton" aria-label="Open navigation" aria-expanded="false">☰</button>
-<a class="brand-lockup" href="index.html" aria-label="MasterFlow home">
-  <span class="brand-mark">
-    <img src="assets/images/master-logo.png" alt="Master Electronics logo">
-  </span>
-  <span class="brand-copy">
-    <strong>MasterFlow</strong>
-    <small>Powered by Master Electronics</small>
-  </span>
-</a>
+        <a class="brand-logo" href="index.html" aria-label="Master Electronics home">
+          <img src="assets/images/master-logo.png" alt="Master Electronics">
+        </a>
         <div class="page-context">
           <span class="page-context-text"><h1>${escapeHtml(pageDefinition.title)}</h1><p>${escapeHtml(pageDefinition.subtitle)}</p></span>
         </div>
       </div>
+      <a class="topbar-brandname" href="index.html" aria-label="MasterFlow home">
+        <strong>MasterFlow</strong>
+        <small>Powered by Master Electronics</small>
+      </a>
       <div class="topbar-right">
-        <label class="role-control" title="Prototype only. Production access would come from SSO permissions.">
-          <span>Demo view</span>
-          <select id="roleSelect" aria-label="Choose prototype role">
-            <option value="requester"${role === "requester" ? " selected" : ""}>Regular user</option>
-            <option value="receiver"${role === "receiver" ? " selected" : ""}>Ticket receiver</option>
-            <option value="admin"${role === "admin" ? " selected" : ""}>Administrator</option>
-          </select>
-        </label>
-        <button class="icon-button" type="button" title="Notifications" aria-label="Notifications">♢</button>
+        <div class="role-switch">
+          <button class="role-switch-button" id="roleSwitchButton" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Switch workspace. Prototype view; production access comes from SSO." title="Switch workspace (prototype view)">
+            <span class="role-switch-dot role-${role}" aria-hidden="true"></span>
+            <span class="role-switch-text">
+              <span class="role-switch-eyebrow">Viewing as</span>
+              <span class="role-switch-current">${escapeHtml(roleLabels[role])}</span>
+            </span>
+            <svg class="role-switch-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="role-switch-menu" id="roleSwitchMenu" role="menu" aria-label="Switch workspace" hidden>
+            <div class="role-switch-menu-head">Switch workspace <span>prototype view</span></div>
+            ${["requester", "receiver", "admin"].map((r) => `
+              <button class="role-switch-option${r === role ? " is-current" : ""}" type="button" role="menuitemradio" aria-checked="${r === role}" data-role="${r}">
+                <span class="role-switch-dot role-${r}" aria-hidden="true"></span>
+                <span class="role-switch-opt-text"><strong>${escapeHtml(roleLabels[r])}</strong><small>${escapeHtml(roleDescriptions[r])}</small></span>
+                <span class="role-switch-check" aria-hidden="true">${r === role ? "✓" : ""}</span>
+              </button>`).join("")}
+          </div>
+        </div>
+        <div class="notif-wrap">
+          <button class="icon-button notif-button" id="notifButton" type="button" aria-haspopup="true" aria-expanded="false" title="Notifications" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-badge" id="notifBadge" hidden>0</span>
+          </button>
+          <div class="notif-panel" id="notifPanel" role="dialog" aria-label="Notifications" hidden></div>
+        </div>
         <div class="avatar" title="${escapeHtml(Store.CURRENT_USER.name)}">${escapeHtml(Store.CURRENT_USER.initials)}</div>
       </div>`;
 
@@ -284,29 +318,57 @@
     return true;
   }
 
+  function criticalContactDefault() {
+    const user = Store.CURRENT_USER;
+    return `${user.name}${user.phone ? " · " + user.phone : ""}`;
+  }
+
   function criticalDialogMarkup() {
     return `
       <dialog id="criticalDialog" aria-labelledby="criticalTitle">
         <form method="dialog" id="criticalForm">
           <div class="dialog-header">
-            <div><h2 id="criticalTitle">Shipping is stopped</h2><p>Immediate P1 fast lane. No AI classification gate.</p></div>
+            <div><h2 id="criticalTitle">Shipping is stopped — P1 critical</h2><p>Immediate P1 fast lane. No AI classification gate.</p></div>
             <button class="close-button" value="cancel" aria-label="Close">×</button>
           </div>
           <div class="dialog-body">
+            <div class="batphone">
+              <div class="batphone-eyebrow">Do this first</div>
+              <strong class="batphone-title">Call the Bat Phone now</strong>
+              <a class="batphone-number" href="tel:+18005553858">(800) 555-3858</a>
+              <p>Call immediately so the response team can begin coordinating while MasterFlow prepares this request. Do not wait for the form below.</p>
+            </div>
             <div class="notice notice-danger"><span>!</span><div><strong>Use this only when shipping or a critical warehouse process is blocked.</strong><p>Submitting notifies Warehouse Systems on-call and operations leadership.</p></div></div>
             <div class="field-row mt-18">
-              <div class="field"><label for="criticalLocation">Warehouse or location</label><select class="select" id="criticalLocation" required><option value="">Choose location</option><option>PHX Warehouse</option><option>NY Warehouse</option><option>Customer Service</option><option>Other</option></select></div>
-              <div class="field"><label for="criticalProcess">Process stopped</label><select class="select" id="criticalProcess" required><option value="">Choose process</option><option>Order picking</option><option>Packing</option><option>Manifesting</option><option>Receiving</option><option>ERP order entry</option><option>Other</option></select></div>
+              <div class="field"><label for="criticalLocation">Building or warehouse</label><select class="select" id="criticalLocation" required><option value="">Choose location</option><option>PHX Warehouse</option><option>NY Warehouse</option><option>Customer Service</option><option>Other</option></select></div>
+              <div class="field"><label for="criticalArea">Exact area, line, station, or dock</label><input class="input" id="criticalArea" required placeholder="Example: Packaging Line 2 / Dock 4"></div>
+            </div>
+            <div class="field-row mt-12">
+              <div class="field"><label for="criticalProcess">Process stopped</label><select class="select" id="criticalProcess" required><option value="">Choose process</option><option>Order picking</option><option>Packing</option><option>Manifesting</option><option>Shipping</option><option>Receiving</option><option>ERP order entry</option><option>Other</option></select></div>
+              <div class="field"><label for="criticalSystem">Equipment, system, app, or carrier involved</label><input class="input" id="criticalSystem" placeholder="Example: Manifest station 3 / OMS / FedEx"></div>
             </div>
             <div class="field-row mt-12">
               <div class="field"><label for="criticalStarted">When did it start?</label><input class="input" id="criticalStarted" required placeholder="Example: 10 minutes ago"></div>
-              <div class="field"><label for="criticalUsers">People or stations affected</label><input class="input" id="criticalUsers" required placeholder="Example: 8 outbound stations"></div>
+              <div class="field"><label for="criticalDegree">Fully stopped or degraded?</label><select class="select" id="criticalDegree" required><option value="">Choose</option><option>Completely stopped</option><option>Partially degraded</option></select></div>
             </div>
-            <div class="field mt-12"><label for="criticalSymptom">What is happening?</label><textarea class="textarea" id="criticalSymptom" required placeholder="Describe the error or blocked step in one or two sentences."></textarea></div>
+            <div class="field-row mt-12">
+              <div class="field"><label for="criticalScope">How much is affected?</label><select class="select" id="criticalScope" required><option value="">Choose scope</option><option>One station</option><option>One line</option><option>Several areas</option><option>Entire operation</option></select></div>
+              <div class="field"><label for="criticalUsers">People or stations affected</label><input class="input" id="criticalUsers" placeholder="Example: 8 outbound stations"></div>
+            </div>
+            <div class="field mt-12"><label for="criticalSymptom">What is happening? Any error, alarm, or symptom</label><textarea class="textarea" id="criticalSymptom" required placeholder="Describe the error or blocked step in one or two sentences."></textarea></div>
+            <div class="field-row mt-12">
+              <div class="field"><label for="criticalSafety">Safety concern?</label><select class="select" id="criticalSafety" required><option value="">Choose</option><option>No immediate safety concern</option><option>Safety concern present</option></select></div>
+              <div class="field"><label for="criticalWorkaround">Workaround available?</label><select class="select" id="criticalWorkaround"><option value="">Choose</option><option>No workaround available</option><option>Temporary workaround in place</option></select></div>
+            </div>
+            <div class="field mt-12"><label for="criticalAttempted">What has already been attempted? (optional)</label><input class="input" id="criticalAttempted" placeholder="Example: restarted the manifest station"></div>
+            <div class="field mt-12"><label for="criticalContact">Best contact for the response team</label><input class="input" id="criticalContact" required value="${escapeHtml(criticalContactDefault())}"></div>
           </div>
-          <div class="dialog-footer">
-            <button class="btn btn-secondary" value="cancel">Cancel</button>
-            <button class="btn btn-danger" id="submitCritical" value="default">Create P1 and notify on-call</button>
+          <div class="dialog-footer p1-footer">
+            <button class="btn btn-ghost" id="falseAlarmButton" type="button">This was a false alarm</button>
+            <div class="p1-footer-right">
+              <button class="btn btn-secondary" value="cancel">Cancel</button>
+              <button class="btn btn-danger" id="submitCritical" value="default">Create P1 and notify on-call</button>
+            </div>
           </div>
         </form>
       </dialog>`;
@@ -347,6 +409,70 @@
     if (dialog && !dialog.open) dialog.showModal();
   }
 
+  /*
+   * Notifications: surface the current requester's tickets that
+   * need their attention or were recently updated. This gives the
+   * header control a real, useful purpose.
+   */
+  function userNotifications() {
+    const me = Store.CURRENT_USER.name;
+    const list = (Store.getState().tickets || []).filter((ticket) => ticket.requester === me);
+    const needsYou = list.filter((ticket) => /waiting on requester/i.test(ticket.status || ""));
+    const recentlyUpdated = list.filter((ticket) =>
+      !/waiting on requester/i.test(ticket.status || "") &&
+      !["Resolved", "Closed"].includes(ticket.status) &&
+      (Date.now() - new Date(ticket.updatedAt || ticket.createdAt).getTime()) < 48 * 60 * 60 * 1000
+    );
+    return { needsYou, recentlyUpdated };
+  }
+
+  function updateNotifBadge() {
+    const badge = document.getElementById("notifBadge");
+    if (!badge) return;
+    const { needsYou } = userNotifications();
+    if (needsYou.length) {
+      badge.textContent = String(needsYou.length);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+  }
+
+  function renderNotifPanel() {
+    const panel = document.getElementById("notifPanel");
+    if (!panel) return;
+    const { needsYou, recentlyUpdated } = userNotifications();
+    const item = (ticket, cls, label) => `
+      <a class="notif-item" href="my-tickets.html">
+        <span class="notif-item-top"><strong>${escapeHtml(ticket.number)}</strong><span class="notif-tag ${cls}">${label}</span></span>
+        <span class="notif-item-title">${escapeHtml(ticket.title)}</span>
+        <span class="notif-item-meta">${escapeHtml(ticket.queue || "")}</span>
+      </a>`;
+    const body =
+      (!needsYou.length && !recentlyUpdated.length)
+        ? `<div class="notif-empty">You're all caught up. No updates on your requests right now.</div>`
+        : needsYou.map((ticket) => item(ticket, "notif-tag-amber", "Needs your response")).join("") +
+          recentlyUpdated.map((ticket) => item(ticket, "notif-tag-blue", "Updated")).join("");
+    panel.innerHTML = `
+      <div class="notif-head"><strong>Notifications</strong><a href="my-tickets.html">View all requests</a></div>
+      <div class="notif-body">${body}</div>`;
+  }
+
+  function toggleNotifPanel(force) {
+    const panel = document.getElementById("notifPanel");
+    const button = document.getElementById("notifButton");
+    if (!panel || !button) return;
+    const willOpen = typeof force === "boolean" ? force : panel.hidden;
+    if (willOpen) {
+      renderNotifPanel();
+      panel.hidden = false;
+      button.setAttribute("aria-expanded", "true");
+    } else {
+      panel.hidden = true;
+      button.setAttribute("aria-expanded", "false");
+    }
+  }
+
   function bindLayoutEvents() {
     document.getElementById("menuButton").addEventListener("click", () => {
       const sidebar = document.getElementById("sidebar");
@@ -354,16 +480,37 @@
     });
     document.getElementById("sidebarScrim").addEventListener("click", closeSidebar);
 
-    document.getElementById("roleSelect").addEventListener("change", (event) => {
-      const role = Store.setRole(event.target.value);
-      window.sessionStorage.setItem("masterflowFlash", `${roleLabels[role]} view enabled. Production access would come from SSO.`);
-      window.location.href = safeLanding(role);
-    });
+    const roleSwitchButton = document.getElementById("roleSwitchButton");
+    const roleSwitchMenu = document.getElementById("roleSwitchMenu");
+    if (roleSwitchButton && roleSwitchMenu) {
+      const closeRoleMenu = () => {
+        roleSwitchMenu.hidden = true;
+        roleSwitchButton.setAttribute("aria-expanded", "false");
+      };
+      const openRoleMenu = () => {
+        roleSwitchMenu.hidden = false;
+        roleSwitchButton.setAttribute("aria-expanded", "true");
+      };
+      roleSwitchButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (roleSwitchMenu.hidden) openRoleMenu(); else closeRoleMenu();
+      });
+      roleSwitchMenu.querySelectorAll("[data-role]").forEach((option) => {
+        option.addEventListener("click", () => {
+          const role = Store.setRole(option.dataset.role);
+          window.sessionStorage.setItem("masterflowFlash", `${roleLabels[role]} workspace enabled. Production access would come from SSO.`);
+          window.location.href = safeLanding(role);
+        });
+      });
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".role-switch")) closeRoleMenu();
+      });
+    }
 
     document.querySelectorAll("[data-open-critical]").forEach((button) => button.addEventListener("click", openCriticalDialog));
 
     document.querySelectorAll("[data-reset-demo]").forEach((button) => button.addEventListener("click", () => {
-      const accepted = window.confirm("Reset all fictional tickets, freight decisions, and prototype settings?");
+      const accepted = window.confirm("Reset all fictional tickets and prototype settings to the original scenario?");
       if (!accepted) return;
       Store.resetState();
       window.sessionStorage.setItem("masterflowFlash", "Demo data reset to the original fictional scenario.");
@@ -371,46 +518,103 @@
     }));
 
     const criticalForm = document.getElementById("criticalForm");
+
+    const falseAlarmButton = document.getElementById("falseAlarmButton");
+    if (falseAlarmButton) {
+      falseAlarmButton.addEventListener("click", () => {
+        document.getElementById("criticalDialog").close();
+        criticalForm.reset();
+        const contactField = document.getElementById("criticalContact");
+        if (contactField) contactField.value = criticalContactDefault();
+        showToast("Marked as a false alarm. No P1 ticket was created.");
+      });
+    }
+
     criticalForm.addEventListener("submit", (event) => {
       const submitter = event.submitter;
       if (!submitter || submitter.id !== "submitCritical") return;
       event.preventDefault();
       if (!criticalForm.reportValidity()) return;
-      const location = document.getElementById("criticalLocation").value;
-      const process = document.getElementById("criticalProcess").value;
-      const started = document.getElementById("criticalStarted").value.trim();
-      const users = document.getElementById("criticalUsers").value.trim();
-      const symptom = document.getElementById("criticalSymptom").value.trim();
+      const val = (id) => (document.getElementById(id).value || "").trim();
+      const location = val("criticalLocation");
+      const area = val("criticalArea");
+      const process = val("criticalProcess");
+      const system = val("criticalSystem");
+      const started = val("criticalStarted");
+      const degree = val("criticalDegree");
+      const scope = val("criticalScope");
+      const users = val("criticalUsers");
+      const symptom = val("criticalSymptom");
+      const safety = val("criticalSafety");
+      const workaround = val("criticalWorkaround");
+      const attempted = val("criticalAttempted");
+      const contact = val("criticalContact");
       const ticket = Store.addTicket({
-        title: `${process} unavailable at ${location}`,
-        description: symptom,
+        title: `${process || "Critical process"} ${degree === "Partially degraded" ? "degraded" : "stopped"} at ${area || location}`,
+        description: `${symptom} (${degree || "Completely stopped"}; ${scope || "scope not specified"}).`,
         category: "Warehouse operations outage",
         priority: "P1 - Critical",
         queue: "Warehouse Systems / On-call",
         requester: Store.CURRENT_USER.name,
         status: "New",
-        location,
+        location: `${location}${area ? " - " + area : ""}`,
         source: "Shipping is stopped fast lane",
         classificationConfidence: 100,
         routingReason: "Direct P1 fast-lane submission; no AI classification gate.",
-        details: { process, started, affectedUsers: users },
-        historyText: "P1 created. Warehouse Systems on-call and operations leadership notified."
+        details: {
+          process,
+          system: system || "Not specified",
+          started,
+          degree: degree || "Completely stopped",
+          scope: scope || "Not specified",
+          affected: users || "Not specified",
+          safety: safety || "Not specified",
+          workaround: workaround || "Not specified",
+          attempted: attempted || "None reported",
+          contact,
+          batPhoneAcknowledged: "(800) 555-3858 call instruction shown to requester"
+        },
+        historyText: "P1 created via Shipping-stopped fast lane. Bat Phone (800) 555-3858 call instruction shown. Warehouse Systems on-call and operations leadership notified."
       });
       document.getElementById("criticalDialog").close();
       criticalForm.reset();
+      const contactField = document.getElementById("criticalContact");
+      if (contactField) contactField.value = criticalContactDefault();
       showToast(`${ticket.number} created. On-call and operations leadership were notified.`);
       window.dispatchEvent(new CustomEvent("masterflow:critical-created", { detail: ticket }));
     });
+
+    const notifButton = document.getElementById("notifButton");
+    if (notifButton) {
+      notifButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleNotifPanel();
+      });
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".notif-wrap")) toggleNotifPanel(false);
+      });
+    }
+    updateNotifBadge();
 
     window.addEventListener("masterflow:state", () => {
       const sidebar = document.getElementById("sidebar");
       if (!sidebar) return;
       sidebar.querySelectorAll(".nav-group").forEach((node) => node.remove());
       sidebar.insertAdjacentHTML("afterbegin", navMarkup(getRole()));
+      updateNotifBadge();
     });
 
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeSidebar();
+      if (event.key === "Escape") {
+        closeSidebar();
+        toggleNotifPanel(false);
+        const roleMenu = document.getElementById("roleSwitchMenu");
+        const roleBtn = document.getElementById("roleSwitchButton");
+        if (roleMenu && !roleMenu.hidden) {
+          roleMenu.hidden = true;
+          if (roleBtn) roleBtn.setAttribute("aria-expanded", "false");
+        }
+      }
     });
   }
 

@@ -21,6 +21,27 @@
   const roleSelect =
     document.getElementById("adminRoleSelect");
 
+  /*
+   * Service Team / Queue Manager may only use owned-flow personas.
+   * The enterprise-governance persona stays with the Administrator.
+   */
+  (function clampPersonaForRole() {
+    const appRole =
+      window.MasterFlowStore && window.MasterFlowStore.getRole
+        ? window.MasterFlowStore.getRole()
+        : "admin";
+    if (appRole === "admin") return;
+    if (roleSelect) {
+      const enterpriseOption = roleSelect.querySelector('option[value="platform-admin"]');
+      if (enterpriseOption) enterpriseOption.remove();
+    }
+    const stored = window.localStorage.getItem(ROLE_KEY);
+    if (!stored || stored === "platform-admin") {
+      window.localStorage.setItem(ROLE_KEY, "category-owner");
+    }
+    if (roleSelect) roleSelect.value = window.localStorage.getItem(ROLE_KEY) || "category-owner";
+  })();
+
   const templateList =
     document.getElementById("templateList");
 
@@ -37,7 +58,7 @@
     "platform-admin": {
       eyebrow: "Enterprise governance",
 
-      title: "Megan Control Center",
+      title: "Flow Studio",
 
       description:
         "Govern company-wide request flows, ownership, routing, SLA, priority, approval, P1, and safety controls.",
@@ -194,9 +215,23 @@
     const candidate =
       selected || stored;
 
-    return ROLE_WORKSPACES[candidate]
-      ? candidate
-      : "platform-admin";
+    if (ROLE_WORKSPACES[candidate]) {
+      return candidate;
+    }
+
+    /*
+     * Default the Flow Studio persona from the active app role:
+     * Service Team / Queue Manager opens in owned-flow scope,
+     * Administrator opens in enterprise scope.
+     */
+    const appRole =
+      window.MasterFlowStore && window.MasterFlowStore.getRole
+        ? window.MasterFlowStore.getRole()
+        : "admin";
+
+    return appRole === "admin"
+      ? "platform-admin"
+      : "category-owner";
   }
 
   function currentWorkspace() {

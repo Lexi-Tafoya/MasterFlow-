@@ -579,88 +579,72 @@
         </section>
       </div>
 
-      <!-- MASTERFLOW INTELLIGENCE: FREIGHT OUTCOMES -->
-      <section class="card mt-18">
+      <!-- MASTERFLOW INTELLIGENCE: TICKET COST & SPEND -->
+      <section class="card mt-18" id="ticketCostSection">
         <div class="card-header">
           <div>
-            <h2>Freight optimization outcomes</h2>
-
-            <p>
-              Savings identified and recorded decisions from the
-              Freight Optimization workspace.
-            </p>
+            <h2>Ticket Cost &amp; Spend</h2>
+            <p>Operational cost of resolving tickets — separate from the ServiceNow platform baseline. Combines confirmed live costs with modeled prototype history.</p>
           </div>
-
-          <span class="badge badge-teal">Freight</span>
+          <span class="badge badge-gray">Prototype + live data</span>
         </div>
-
         <div class="card-body">
-          <div class="kpi-grid">
-            <article class="kpi">
-              <div class="kpi-label">Opportunities reviewed</div>
-              <div class="kpi-value" id="reportFreightOpportunities">0</div>
-              <div class="kpi-meta">Scanned orders needing a decision</div>
-            </article>
-
-            <article class="kpi">
-              <div class="kpi-label">Savings identified</div>
-              <div class="kpi-value" id="reportFreightIdentified">$0</div>
-              <div class="kpi-meta">Across all open and decided opportunities</div>
-            </article>
-
-            <article class="kpi">
-              <div class="kpi-label">Savings captured by decision</div>
-              <div class="kpi-value" id="reportFreightCaptured">$0</div>
-              <div class="kpi-meta good" id="reportFreightCapturedMeta">From approved time-boxed holds</div>
-            </article>
-
-            <article class="kpi">
-              <div class="kpi-label">Guardrail-blocked auto-actions</div>
-              <div class="kpi-value" id="reportFreightGuardrailBlocked">0</div>
-              <div class="kpi-meta">Required human review before any action</div>
-            </article>
-          </div>
-
-          <div class="metric-list mt-18">
-            <div>
-              <div class="metric-row">
-                <span>Verified savings toward annual target</span>
-
-                <strong id="reportFreightYtd">
-                  $0 of $0
-                </strong>
-              </div>
-
-              <div class="progress">
-                <span
-                  id="reportFreightYtdProgress"
-                  style="width:0%"
-                ></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="table-wrap mt-18">
+          <div class="kpi-grid" id="costKpis"></div>
+          <ul class="mig-note-list" id="costInsights"></ul>
+          <div class="table-wrap mt-12">
             <table>
               <thead>
                 <tr>
-                  <th>Customer / order</th>
-                  <th>Decision</th>
-                  <th>Savings</th>
-                  <th>Decided by</th>
-                  <th>When</th>
+                  <th>Request category</th>
+                  <th>Tickets</th>
+                  <th>Resolved</th>
+                  <th>Closed — No Action</th>
+                  <th>Direct spend</th>
+                  <th>Labor cost</th>
+                  <th>Total cost</th>
+                  <th>Avg / ticket</th>
+                  <th>Highest ticket</th>
+                  <th>This year</th>
+                  <th>Last year</th>
+                  <th>YoY</th>
                 </tr>
               </thead>
+              <tbody id="costCategoryBody"></tbody>
+            </table>
+          </div>
+          <p class="muted mt-12" id="costBaselineNote"></p>
+        </div>
+      </section>
 
-              <tbody id="reportFreightDecisionBody">
+      <!-- MASTERFLOW INTELLIGENCE: OWNED CATEGORY PERFORMANCE -->
+      <section class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>My department performance</h2>
+            <p>Current-year performance for the request categories your queues own, compared with the same period last year.</p>
+          </div>
+          <span class="badge badge-gray">Prototype historical data</span>
+        </div>
+        <div class="card-body">
+          <ul class="mig-note-list" id="ownedCategoryInsights"></ul>
+          <div class="table-wrap mt-12">
+            <table>
+              <thead>
                 <tr>
-                  <td colspan="5">
-                    <div class="empty-state">
-                      Freight decisions are loading.
-                    </div>
-                  </td>
+                  <th>Request category</th>
+                  <th>This year</th>
+                  <th>Last year</th>
+                  <th>YoY</th>
+                  <th>Resolved</th>
+                  <th>Closed&mdash;No Action</th>
+                  <th>Success rate</th>
+                  <th>Avg close</th>
+                  <th>SLA</th>
+                  <th>Backlog</th>
+                  <th>SLA risk</th>
                 </tr>
-              </tbody>
+              </thead>
+              <tbody id="ownedCategoryBody"></tbody>
             </table>
           </div>
         </div>

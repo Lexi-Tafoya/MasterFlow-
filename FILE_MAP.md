@@ -7,7 +7,7 @@ Use this map to keep Claude context small.
 | File | Purpose | Read only when |
 |---|---|---|
 | `assets/css/styles.css` | Shared visual system and responsive behavior | Layout, styling, or mobile behavior changes |
-| `assets/js/store.js` | Fictional seed data, localStorage, ticket/freight state, rules | Persistence or cross-page data changes |
+| `assets/js/store.js` | Fictional seed data, localStorage, ticket state, assignment rules, cost, access, transition data | Persistence or cross-page data changes |
 | `assets/js/templates.js` | Dynamic request definitions, classifier, field extraction | Request matching, fields, queue, SLA, or template behavior changes |
 | `assets/js/layout.js` | Header, navigation, role gating, P1 dialog, shared ticket dialog | Global navigation, roles, P1, or shared UI changes |
 
@@ -27,8 +27,8 @@ Use this map to keep Claude context small.
 |---|---|---|
 | `assigned-work.html` | `assets/js/pages/assigned-work.js` | Personal work inbox |
 | `ticket-queues.html` | `assets/js/pages/receiver-feedback.js` | Queue Manager: approvals, queue health, coverage, and feedback. The page is a thin shell; receiver-feedback.js holds the working logic |
-| `freight-optimization.html` | `assets/js/pages/freight-optimization.js` | Freight opportunities and decisions |
-| `reporting.html` | `assets/js/pages/reporting.js` | Ticket and freight outcomes |
+| `reporting.html` | `assets/js/pages/reporting.js` | Service performance, SLA, owned-category, and ticket cost & spend reporting |
+| `enterprise-triage.html` | `assets/js/pages/enterprise-triage.js` | Enterprise Triage: low-confidence review, rerouting, improvement signals (Admin) |
 
 ## Administrator
 
@@ -36,6 +36,7 @@ Use this map to keep Claude context small.
 |---|---|---|
 | `admin-templates.html` | `assets/js/pages/admin-templates.js` | No-code request-template configuration |
 | `admin-rules-access.html` | `assets/js/pages/admin-rules-access.js` | Thresholds, routing, approvals, roles |
+| `admin-migration.html` | `assets/js/pages/admin-migration.js` | ServiceNow migration: scope, field mapping, dry-run validation, cutover/rollback |
 | `project-summary.html` | `assets/js/pages/project-summary.js` | Judge-facing product summary with live prototype metrics |
 
 ## Context documents

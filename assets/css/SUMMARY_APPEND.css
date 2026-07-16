@@ -1,0 +1,70 @@
+/* ============================================================
+   Project Summary — layout & components
+   ============================================================ */
+.summary-hero { max-width: 900px; }
+
+/* Centered, consistent capability grid */
+.cap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+.cap-card {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--surface, #fff);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cap-card h3 { font-size: 14px; margin: 0; }
+.cap-card p { font-size: 13px; margin: 2px 0 0; color: var(--muted, #475569); }
+.cap-card .cap-why { color: var(--ink, #0f172a); }
+.cap-card .cap-status { margin-top: auto; padding-top: 8px; }
+.cap-status .badge { font-size: 11px; }
+
+/* Requirement matrix */
+.matrix-wrap { overflow-x: auto; }
+.matrix-wrap table { width: 100%; border-collapse: collapse; }
+.matrix-wrap th, .matrix-wrap td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border-soft, #eef2f7); font-size: 13px; vertical-align: top; }
+.matrix-wrap th { color: var(--muted, #64748b); font-weight: 600; }
+
+/* Verified examples */
+.example-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+.example-card {
+  border: 1px solid var(--border, #e2e8f0);
+  border-left: 4px solid var(--teal, #14b8a6);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--surface, #fff);
+}
+.example-card .example-type { display: inline-block; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; font-weight: 700; color: var(--teal-dark, #0f766e); }
+.example-card .example-input { display: block; margin: 6px 0; padding: 8px 12px; border-radius: 8px; background: var(--surface-muted, #f8fafc); font-size: 14px; font-weight: 600; }
+.example-card p { font-size: 13px; margin: 2px 0 0; color: var(--muted, #475569); }
+
+/* Transition strategy layers */
+.layer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+.layer-step {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.layer-step strong { display: block; font-size: 13px; }
+.layer-step span { color: var(--muted, #64748b); font-size: 12px; }
+
+/* Readiness gates */
+.readiness-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.readiness-item { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px 12px; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; font-size: 13px; }
+
+.summary-subhead { font-size: 13px; color: var(--muted, #64748b); margin: 0 0 12px; }

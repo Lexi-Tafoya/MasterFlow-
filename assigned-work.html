@@ -17,7 +17,10 @@
     <main>
       <div class="page-heading">
         <div>
-          <div class="eyebrow">Receiver operations</div>
+          <div class="eyebrow">
+            Service Team operations
+            <span class="workcenter-persona-badge" id="workCenterPersonaBadge" hidden></span>
+          </div>
           <h1>Work Center</h1>
           <p>
             Understand what matters, begin work, communicate, and resolve tickets
@@ -74,7 +77,7 @@
             <h2>Work these next</h2>
             <p>
               Ranked by operational impact, SLA timing, ownership, and whether
-              the receiver can act now.
+              the Service Team can act now.
             </p>
           </div>
           <span class="badge badge-teal">AI prioritized</span>
@@ -171,7 +174,7 @@
       <section class="receiver-brief-hero">
         <div>
           <div class="eyebrow">Receiver Brief</div>
-          <h3 id="receiverBriefHeadline">What the receiver needs to know</h3>
+          <h3 id="receiverBriefHeadline">What the Service Team needs to know</h3>
           <p id="receiverBriefSummary"></p>
         </div>
         <div class="receiver-brief-owner">
@@ -256,8 +259,19 @@
           <button class="btn btn-secondary btn-sm" type="button" id="receiverRequestInfo">Request more information</button>
           <button class="btn btn-secondary btn-sm" type="button" id="receiverAddUpdate">Add update</button>
           <button class="btn btn-primary btn-sm" type="button" id="receiverResolveTicket">Resolve ticket</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="receiverCloseNoAction">Close without action</button>
           <button class="btn btn-secondary btn-sm" type="button" id="receiverReopenTicket" hidden>Reopen ticket</button>
         </div>
+      </section>
+
+      <section class="receiver-cost-summary" id="receiverCostSummary" hidden>
+        <div class="receiver-section-heading">
+          <div>
+            <h3>Cost &amp; outcome</h3>
+            <p>Internal cost detail — visible to the Service Team, Queue Managers, and Administrators only.</p>
+          </div>
+        </div>
+        <div id="receiverCostBody"></div>
       </section>
 
       <section class="receiver-timeline-section">
@@ -277,13 +291,156 @@
     </div>
 
     <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" id="receiverFlowStudio">Flow Studio</button>
       <button class="btn btn-secondary" type="button" data-close-receiver-ticket>Close</button>
     </div>
+  </dialog>
+
+  <dialog id="closeNoActionDialog" aria-labelledby="closeNoActionTitle">
+    <form method="dialog" id="closeNoActionForm">
+      <div class="dialog-header">
+        <div>
+          <h2 id="closeNoActionTitle">Close without action</h2>
+          <p>This does not count as a successful resolution. The requester will see the reason and your explanation.</p>
+        </div>
+        <button class="close-button" type="button" data-close-noaction aria-label="Close">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label for="closeNoActionReason">Closure reason</label>
+          <select class="select" id="closeNoActionReason" required>
+            <option value="">Choose a reason</option>
+            <option>Duplicate request</option>
+            <option>Request withdrawn</option>
+            <option>Already resolved</option>
+            <option>Unable to reproduce</option>
+            <option>Outside this team's scope</option>
+            <option>Insufficient information after follow-up</option>
+            <option>Request is not actionable</option>
+            <option>No action is possible</option>
+            <option>Invalid request</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field mt-12">
+          <label for="closeNoActionExplanation">Explanation for the requester (required)</label>
+          <textarea class="textarea" id="closeNoActionExplanation" required rows="4" placeholder="Explain clearly and respectfully why no action is being taken."></textarea>
+          <small class="muted">A specific, meaningful explanation is required.</small>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn btn-secondary" type="button" data-close-noaction>Cancel</button>
+        <button class="btn btn-danger" id="confirmCloseNoAction" type="button">Close without action</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="costDialog" class="cost-dialog" aria-labelledby="costDialogTitle">
+    <form method="dialog" id="costForm">
+      <div class="dialog-header">
+        <div>
+          <h2 id="costDialogTitle">Cost &amp; outcome</h2>
+          <p>Record the actual cost of resolving this ticket. Confirm a cost outcome before resolving.</p>
+        </div>
+        <button class="close-button" type="button" data-close-cost aria-label="Close">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label for="costResolutionNote">Resolution note (required)</label>
+          <textarea class="textarea" id="costResolutionNote" rows="2" placeholder="What was done to resolve this?"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="costStatus">Cost outcome (required)</label>
+          <select class="select" id="costStatus" required>
+            <option value="">Choose a cost outcome…</option>
+            <option value="none">No direct cost — record an intentional $0 outcome</option>
+            <option value="recorded">Cost recorded — enter the actual spend</option>
+            <option value="pending">Cost pending final invoice</option>
+          </select>
+        </div>
+
+        <div class="cost-estimate-row" id="costEstimateRow" hidden>
+          <span>Approved estimate</span>
+          <strong id="costEstimateValue">$0.00</strong>
+        </div>
+
+        <div id="costDetails" hidden>
+          <div class="cost-items" id="costItems"></div>
+          <button class="btn btn-ghost btn-sm" type="button" id="costAddItem">+ Add cost item</button>
+
+          <div class="assignment-form-grid mt-12">
+            <div class="field">
+              <label for="costLaborHours">Labor hours (optional)</label>
+              <input class="input" id="costLaborHours" type="number" min="0" step="0.25" placeholder="0">
+            </div>
+            <div class="field">
+              <label for="costLaborRate">Internal labor rate $/hr (optional)</label>
+              <input class="input" id="costLaborRate" type="number" min="0" step="1" placeholder="75">
+            </div>
+          </div>
+          <div class="assignment-form-grid">
+            <div class="field">
+              <label for="costVendor">Vendor / supplier (optional)</label>
+              <input class="input" id="costVendor" type="text" placeholder="Example: CDW">
+            </div>
+            <div class="field">
+              <label for="costAsset">Asset action (optional)</label>
+              <select class="select" id="costAsset">
+                <option value="">Not applicable</option>
+                <option>Replaced</option>
+                <option>Repaired</option>
+              </select>
+            </div>
+          </div>
+          <div class="assignment-form-grid">
+            <div class="field">
+              <label for="costPo">PO / reference number (optional)</label>
+              <input class="input" id="costPo" type="text">
+            </div>
+            <div class="field">
+              <label for="costActual">Actual total this ticket ($)</label>
+              <input class="input" id="costActual" type="number" min="0" step="0.01" placeholder="Auto from items + labor">
+            </div>
+          </div>
+          <div class="field">
+            <label for="costNotes">Cost notes (optional)</label>
+            <textarea class="textarea" id="costNotes" rows="2"></textarea>
+          </div>
+
+          <div class="cost-totals" id="costTotals">
+            <div><small>Direct spend</small><strong id="costTotalDirect">$0.00</strong></div>
+            <div><small>Labor cost</small><strong id="costTotalLabor">$0.00</strong></div>
+            <div><small>Total ticket cost</small><strong id="costTotalAll">$0.00</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn btn-secondary" type="button" data-close-cost>Cancel</button>
+        <button class="btn btn-primary" type="button" id="costConfirm">Confirm &amp; resolve</button>
+      </div>
+    </form>
   </dialog>
 
   <script src="assets/js/store.js" defer></script>
   <script src="assets/js/layout.js" defer></script>
   <script src="assets/js/pages/receiver-feedback.js" defer></script>
   <script src="assets/js/pages/assigned-work.js" defer></script>
+  <script>
+    // Read-only Service Team persona indicator, kept in sync with the Queue Manager page.
+    (function () {
+      function paint() {
+        var badge = document.getElementById("workCenterPersonaBadge");
+        if (!badge) return;
+        var isMember = window.localStorage.getItem("masterflowServicePersona") === "member";
+        badge.hidden = false;
+        badge.textContent = isMember ? "Service Team Member" : "Queue Manager";
+        badge.className = "workcenter-persona-badge " + (isMember ? "is-member" : "is-manager");
+      }
+      window.addEventListener("masterflow:persona", paint);
+      document.addEventListener("DOMContentLoaded", paint);
+      paint();
+    })();
+  </script>
 </body>
 </html>

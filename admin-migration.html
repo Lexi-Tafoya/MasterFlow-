@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MasterFlow - ServiceNow Transition</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/ADMIN_APPEND.css">
+  <link rel="stylesheet" href="assets/css/TRANSITION_APPEND.css">
+</head>
+
+<body class="workspace-page" data-page="admin-migration">
+  <div class="content-shell">
+    <main>
+      <div class="page-heading">
+        <div>
+          <div class="eyebrow">ServiceNow transition</div>
+          <h1>ServiceNow Transition Status</h1>
+          <p id="transitionScope">Where the move from ServiceNow to MasterFlow stands — what has moved, what remains, what is blocked, and what happens next.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn btn-secondary" href="project-summary.html">Transition strategy</a>
+          <span class="badge badge-blue" id="transitionRoleBadge">Enterprise view</span>
+        </div>
+      </div>
+
+      <div class="notice notice-info">
+        <span aria-hidden="true">i</span>
+        <div>
+          <strong>Prototype reporting simulation with modeled data.</strong>
+          <p>MasterFlow is not connected to a live ServiceNow instance. The status, counts, mapping, and reconciliation below model exactly how a production transition would report progress. The proposed production execution approach (APIs, waves, delta sync, rollback) is described in the Project Summary. No real Master Electronics records have been migrated.</p>
+        </div>
+      </div>
+
+      <section class="kpi-grid mt-18" id="transitionKpis" aria-label="Transition summary"></section>
+
+      <div class="card mt-18" id="remainsCard">
+        <div class="card-header">
+          <div>
+            <h2>What remains in ServiceNow</h2>
+            <p>Discovered records by object type, and how far each has progressed toward MasterFlow.</p>
+          </div>
+          <span class="badge badge-gray" id="remainsScopeBadge"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Object type</th><th>Discovered</th><th>Mapped</th><th>Migrated</th><th>Validated</th>
+                <th>Remaining</th><th title="Non-blocking issues to review">Warnings</th><th title="Must be resolved before cutover">Blocking</th><th>Next-action owner</th>
+              </tr>
+            </thead>
+            <tbody id="remainsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>Queue-level transition status</h2>
+            <p id="queueScopeNote">Readiness for each queue: ticket counts, mapping completeness, validation, blockers, and the next required action.</p>
+          </div>
+          <select class="control" id="queueFilter" aria-label="Filter queues">
+            <option value="all">All queues</option>
+            <option value="ready">Ready</option>
+            <option value="progress">In progress</option>
+            <option value="mapping">Needs mapping</option>
+            <option value="blocked">Blocked</option>
+            <option value="validation">Validation required</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Queue</th><th>Queue Manager</th><th>SN tickets</th><th>Open</th><th>Historical</th>
+                <th>Mapped</th><th>Remaining</th><th>Category map</th><th>User map</th><th>SLA map</th><th>Validation</th><th>Readiness</th><th>Next action</th>
+              </tr>
+            </thead>
+            <tbody id="queueStatusBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>ServiceNow ticket inventory</h2>
+            <p>Tickets still in ServiceNow, with their proposed MasterFlow destination and migration status.</p>
+          </div>
+          <span class="badge badge-gray" id="snTicketCount">0 shown</span>
+        </div>
+        <div class="card-body">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <input class="control search-control" id="snSearch" type="search" placeholder="Search ticket, requester, department, category, or queue" aria-label="Search ServiceNow tickets">
+            </div>
+            <div class="toolbar-right">
+              <select class="control" id="snStatusFilter" aria-label="Filter by migration status">
+                <option value="all">All statuses</option>
+                <option value="Ready">Ready</option>
+                <option value="Mapping required">Mapping required</option>
+                <option value="Validating">Validating</option>
+                <option value="Migrated">Migrated</option>
+                <option value="Blocked">Blocked</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>SN number</th><th>Short description</th><th>Requester</th><th>Assignment group</th>
+                  <th>Status</th><th>Priority</th><th>Age</th><th>Proposed category</th><th>Proposed queue</th><th>Owner</th><th>Confidence</th><th>Wave</th><th>Migration</th>
+                </tr>
+              </thead>
+              <tbody id="snTicketBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-2 mt-18">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Reconciliation</h2>
+              <p>Source counts compared with imported counts. Failed records are quarantined, never hidden.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="val-bar-track"><div class="val-bar-fill" id="reconBar"></div></div>
+            <div class="val-legend" id="reconLegend"></div>
+            <ul class="mig-note-list" id="reconNotes"></ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Migration waves</h2>
+              <p>The transition runs in controlled waves. The current wave and next milestone are shown below.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="wavesBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>Action center</h2>
+            <p>Exactly what needs attention, who owns it, and what to do next.</p>
+          </div>
+          <span class="badge badge-amber" id="actionCount">0 open</span>
+        </div>
+        <div class="card-body">
+          <div id="actionBody"></div>
+        </div>
+      </div>
+
+      <details class="card mt-18" id="fieldMappingCard">
+        <summary class="transition-summary">
+          <h2>Field mapping (ServiceNow → MasterFlow)</h2>
+          <span class="muted">Expand to review how each ServiceNow field becomes a MasterFlow field.</span>
+        </summary>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>ServiceNow field</th><th>MasterFlow field</th><th>Transform</th><th>Required</th><th>Status</th></tr>
+            </thead>
+            <tbody id="fieldMapBody"></tbody>
+          </table>
+        </div>
+      </details>
+    </main>
+  </div>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/templates.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/pages/admin-migration.js" defer></script>
+</body>
+</html>

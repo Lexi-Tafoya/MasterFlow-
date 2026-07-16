@@ -387,6 +387,8 @@
     document.getElementById("sourceText").textContent = draft.text;
     document.getElementById("interpretationTitle").textContent = activeTemplate.name;
     document.getElementById("interpretationReason").textContent = reason;
+    const workTypeNode = document.getElementById("workTypeValue");
+    if (workTypeNode) workTypeNode.textContent = activeTemplate.workType || "Service request";
     document.getElementById("catalogValue").textContent = activeTemplate.catalog;
     document.getElementById("queueValue").textContent = activeTemplate.queue;
     document.getElementById("priorityValue").textContent = activeTemplate.priority;
@@ -395,7 +397,7 @@
     const isConfident = confidence >= threshold;
     document.getElementById("routingSummary").textContent = isConfident
       ? `Goes to ${activeTemplate.queue} · typically answered within ${activeTemplate.responseSlaHours} business hour${activeTemplate.responseSlaHours === 1 ? "" : "s"}.`
-      : `Going to Megan Delia - Triage so a person can confirm where this belongs.`;
+      : `Going to Business Enablement Triage so a person can confirm where this belongs.`;
     const ring = document.getElementById("confidenceRing");
     ring.style.setProperty("--confidence", `${confidence}%`);
     ring.dataset.value = isConfident ? "✓" : `${confidence}%`;
@@ -405,7 +407,7 @@
     const alert = document.getElementById("confidenceAlert");
     if (activeTemplate.id === "general-triage" || confidence < threshold) {
       alert.hidden = false;
-      alert.innerHTML = `<span>!</span><div><strong>Human triage required</strong><p>The match is below the ${threshold}% safe-routing threshold. This request will go to Megan Delia - Triage without asking you to start over.</p></div>`;
+      alert.innerHTML = `<span>!</span><div><strong>Human triage required</strong><p>The match is below the ${threshold}% safe-routing threshold. This request will go to Business Enablement Triage without asking you to start over.</p></div>`;
     } else {
       alert.hidden = true;
     }
@@ -468,8 +470,22 @@
 
   document.getElementById("startOver").addEventListener("click", () => {
     window.sessionStorage.removeItem(DRAFT_KEY);
+    window.sessionStorage.setItem("masterflowFlash", "Request cleared. Describe a new request when you are ready.");
     window.location.href = "index.html";
   });
+
+  const cancelRequestBtn = document.getElementById("cancelRequest");
+  if (cancelRequestBtn) {
+    cancelRequestBtn.addEventListener("click", () => {
+      const confirmed = window.confirm(
+        "Discard this prepared request? Nothing will be saved and no ticket will be created."
+      );
+      if (!confirmed) return;
+      window.sessionStorage.removeItem(DRAFT_KEY);
+      window.sessionStorage.setItem("masterflowFlash", "Request cancelled. No ticket was created.");
+      window.location.href = "index.html";
+    });
+  }
   document.getElementById("chooseDifferent").addEventListener("click", () => {
     renderPicker("");
     pickerDialog.showModal();
@@ -636,6 +652,16 @@
       routingReason: reason,
       slaDueAt: new Date(now.getTime() + Number(activeTemplate.responseSlaHours) * 60 * 60 * 1000).toISOString(),
       details: {
+        employeeProfile: {
+          name: Store.CURRENT_USER.name,
+          department: Store.CURRENT_USER.department,
+          team: Store.CURRENT_USER.team,
+          site: Store.CURRENT_USER.site,
+          workLocation: Store.CURRENT_USER.workLocation,
+          manager: Store.CURRENT_USER.manager,
+          email: Store.CURRENT_USER.email,
+          phone: Store.CURRENT_USER.phone
+        },
         requestTemplateId: activeTemplate.id,
         requestTemplateName: activeTemplate.name,
         resolutionTargetHours: activeTemplate.resolutionSlaHours,

@@ -26,7 +26,7 @@
             <h1>Review what MasterFlow prepared</h1>
             <p>The selected request controls the queue, SLA, required fields, and recommended guidance. Correct anything before submitting.</p>
           </div>
-          <a class="btn btn-secondary" href="index.html">Cancel</a>
+          <button class="btn btn-secondary" id="cancelRequest" type="button">Cancel</button>
         </div>
 
         <div class="builder-grid">
@@ -60,6 +60,7 @@
                 <details class="routing-details mt-18">
                   <summary>Routing &amp; SLA details</summary>
                   <div class="meta-list mt-12">
+                    <div class="meta-row"><span>Work type</span><strong id="workTypeValue"></strong></div>
                     <div class="meta-row"><span>Catalog</span><strong id="catalogValue"></strong></div>
                     <div class="meta-row"><span>Receiving queue</span><strong id="queueValue"></strong></div>
                     <div class="meta-row"><span>Suggested priority</span><strong id="priorityValue"></strong></div>
@@ -193,10 +194,10 @@
     </div>
   </dialog>
 
-<script src="assets/js/store.js" defer></script>
-<script src="assets/js/templates.js" defer></script>
-<script src="assets/js/layout.js" defer></script>
-<script src="assets/js/troubleshooting-engine.js" defer></script>
-<script src="assets/js/pages/smart-request.js" defer></script>
+<script src="assets/js/store.js?v=rc2" defer></script>
+<script src="assets/js/templates.js?v=rc2" defer></script>
+<script src="assets/js/layout.js?v=rc2" defer></script>
+<script src="assets/js/troubleshooting-engine.js?v=rc2" defer></script>
+<script src="assets/js/pages/smart-request.js?v=rc2" defer></script>
 </body>
 </html>

@@ -1214,7 +1214,7 @@
         Store.CURRENT_USER.name,
 
       proposedByRole:
-        "IT Queue & Category Manager",
+        "Queue Manager",
 
       changeType:
         type,

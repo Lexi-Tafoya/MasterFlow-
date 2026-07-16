@@ -1,0 +1,45 @@
+/* ============================================================
+   ServiceNow Transition
+   ============================================================ */
+.map-from { color: var(--muted, #64748b); font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 11px; }
+.map-to { font-weight: 600; }
+.mig-note-list { margin: 8px 0 0; padding-left: 18px; }
+.mig-note-list li { margin-bottom: 6px; font-size: 13px; }
+
+.val-bar-track { height: 10px; border-radius: 999px; background: #e5e7eb; overflow: hidden; }
+.val-bar-fill { height: 100%; width: 0; background: linear-gradient(90deg, #0f766e, #14b8a6); transition: width .5s ease; }
+.val-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; margin-top: 10px; }
+.val-legend b { font-variant-numeric: tabular-nums; }
+
+td .badge { white-space: nowrap; }
+.small { font-size: 11px; }
+
+/* field mapping as an expandable card */
+details.card > summary.transition-summary { list-style: none; cursor: pointer; padding: 18px 20px; display: flex; flex-direction: column; gap: 2px; }
+details.card > summary.transition-summary::-webkit-details-marker { display: none; }
+details.card > summary.transition-summary h2 { margin: 0; }
+details.card > summary.transition-summary::after { content: "▸ expand"; color: var(--muted, #64748b); font-size: 12px; margin-top: 4px; }
+details.card[open] > summary.transition-summary::after { content: "▾ collapse"; }
+
+/* migration waves */
+.wave-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-soft, #f1f5f9); }
+.wave-dot { flex-shrink: 0; width: 26px; height: 26px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; background: #e5e7eb; color: #64748b; }
+.wave-complete .wave-dot { background: var(--green-soft, #e7f7ef); color: var(--green, #1a7f5a); }
+.wave-current .wave-dot { background: var(--teal, #14b8a6); color: #fff; }
+.wave-row strong { font-size: 13px; }
+.wave-state { display: block; font-size: 11px; color: var(--muted, #64748b); }
+.wave-current .wave-state { color: var(--teal-dark, #0f766e); font-weight: 600; }
+
+/* action center */
+.action-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 12px 16px; border: 1px solid var(--border, #e2e8f0); border-radius: 10px; margin-bottom: 8px; }
+.action-item.action-high { border-left: 4px solid var(--danger, #b91c1c); }
+.action-item.action-medium { border-left: 4px solid var(--amber, #d97706); }
+.action-item.action-low { border-left: 4px solid var(--border, #e2e8f0); }
+.action-item p { margin: 3px 0; font-size: 12px; }
+.action-rec { color: var(--ink, #0f172a) !important; font-size: 13px !important; }
+.action-tags { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+
+@media (max-width: 760px) {
+  .action-item { flex-direction: column; }
+  .action-tags { flex-direction: row; }
+}

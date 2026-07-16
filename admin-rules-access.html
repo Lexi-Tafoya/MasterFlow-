@@ -19,6 +19,7 @@
     rel="stylesheet"
     href="assets/css/styles.css"
   >
+  <link rel="stylesheet" href="assets/css/PEOPLE_APPEND.css">
 </head>
 
 <body
@@ -33,7 +34,7 @@
             Enterprise administration
           </div>
 
-          <h1>Megan Platform Governance</h1>
+          <h1>Platform Governance</h1>
 
           <p>
             Set the boundaries managers can operate within, protect
@@ -45,20 +46,20 @@
         <div class="page-actions">
           <a
             class="btn btn-secondary"
-            href="admin-templates.html"
+            href="enterprise-triage.html"
           >
-            Open Flow Studio
+            Enterprise Triage
           </a>
 
           <a
             class="btn btn-secondary"
             href="reporting.html"
           >
-            View Intelligence
+            Enterprise Reporting
           </a>
 
           <span class="badge badge-purple">
-            Megan only
+            Administrator only
           </span>
         </div>
       </div>
@@ -68,17 +69,29 @@
 
         <div>
           <strong>
-            Managers improve their owned flows while Megan protects
-            enterprise controls.
+            Queue Managers improve their owned flows while the Enterprise
+            Administrator protects company-wide controls.
           </strong>
 
           <p>
-            Low-risk wording and recognition changes can stay with the
-            category manager. Queue, priority, major SLA, approval,
-            P1, and safety changes require governed review.
+            Low-risk wording and recognition changes stay with the Queue
+            Manager. Queue, priority, major SLA, approval, P1, and safety
+            changes require governed review.
           </p>
         </div>
       </div>
+
+      <section class="card mt-18" id="attentionSection">
+        <div class="card-header">
+          <div>
+            <h2>What needs your attention</h2>
+            <p>The exceptions, risk, access, and cost the Enterprise Administrator should act on today.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="attention-grid" id="attentionGrid"></div>
+        </div>
+      </section>
 
       <section
         class="kpi-grid mt-18"
@@ -97,7 +110,7 @@
           </div>
 
           <div class="kpi-meta warn">
-            Awaiting Megan’s decision
+            Awaiting Administrator decision
           </div>
         </article>
 
@@ -429,117 +442,136 @@
         </div>
       </section>
 
+      <section class="card mt-18" id="accessRequestsCard">
+        <div class="card-header">
+          <div>
+            <h2>Access requests</h2>
+            <p>Requests awaiting your review. Approve, reject, or modify — every decision is audited.</p>
+          </div>
+          <span class="badge badge-amber" id="paRequestCount">0 pending</span>
+        </div>
+        <div class="card-body">
+          <div id="paRequests"></div>
+        </div>
+      </section>
+
+      <section class="card mt-18" id="peopleAccessSection">
+        <div class="card-header">
+          <div>
+            <h2>People &amp; Access</h2>
+            <p>Search the employee directory, review effective access, and manage queue, category, Flow Studio, reporting, and assignment-rule permissions.</p>
+          </div>
+          <span class="badge badge-blue">Directory &amp; permissions</span>
+        </div>
+        <div class="card-body">
+          <input class="input" id="paSearch" type="search"
+            placeholder="Search by name, email, employee ID, department, team, location, role, queue, or category"
+            aria-label="Search employees">
+          <div class="pa-directory" id="paDirectory"></div>
+        </div>
+      </section>
+
       <section class="card mt-18">
         <div class="card-header">
           <div>
-            <h2>Roles and authority</h2>
-
-            <p>
-              Prototype role scope; production permissions would be mapped
-              from company SSO and audited groups.
-            </p>
+            <h2>Recent access changes</h2>
+            <p>Every access change is recorded for audit.</p>
           </div>
         </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Role</th>
-                <th>Primary purpose</th>
-                <th>Can change</th>
-                <th>Cannot override</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <td>
-                  <strong>Regular user</strong>
-                </td>
-
-                <td>
-                  Submit and monitor personal requests
-                </td>
-
-                <td>
-                  Own request information and replies
-                </td>
-
-                <td>
-                  Routing, SLA, assignment, and governance
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <strong>Ticket receiver</strong>
-                </td>
-
-                <td>
-                  Complete work in authorized queues
-                </td>
-
-                <td>
-                  Assignment, status, updates, and resolution
-                </td>
-
-                <td>
-                  Own approval decisions and flow governance
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <strong>IT Queue &amp; Category Manager</strong>
-                </td>
-
-                <td>
-                  Manage queue operations and improve owned flows
-                </td>
-
-                <td>
-                  Low-risk content and allowed SLA changes
-                </td>
-
-                <td>
-                  Enterprise routing, P1, safety, and protected thresholds
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <strong>Megan Delia — Enterprise Administrator</strong>
-                </td>
-
-                <td>
-                  Protect company-wide controls and resolve governed changes
-                </td>
-
-                <td>
-                  All flows, thresholds, routing, priority, approvals, and P1
-                </td>
-
-                <td>
-                  Production controls still require audited authorization
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="card-body">
+          <div id="paAudit"></div>
         </div>
-
         <div class="card-footer">
-          <button
-            class="btn btn-secondary"
-            id="resetSettingsButton"
-            type="button"
-          >
-            Reset all demo data
-          </button>
+          <button class="btn btn-secondary" id="resetSettingsButton" type="button">Reset all demo data</button>
         </div>
       </section>
     </main>
   </div>
+
+  <dialog id="accessProfileDialog" class="access-profile-dialog" aria-labelledby="paProfileTitle">
+    <div class="dialog-header">
+      <div>
+        <div class="eyebrow">Employee access profile</div>
+        <h2 id="paProfileTitle">Employee</h2>
+        <p id="paProfileMeta"></p>
+      </div>
+      <button class="close-button" type="button" data-close-profile aria-label="Close">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <div class="pa-profile-grid" id="paProfileFacts"></div>
+
+      <div class="field mt-12">
+        <label for="paRolePreset">Global role (preset)</label>
+        <select class="select" id="paRolePreset">
+          <option>Service Team Member</option>
+          <option>Queue Manager</option>
+          <option>Enterprise Administrator</option>
+        </select>
+        <small class="muted">Presets keep access simple; adjust scoped access below when an exception is needed.</small>
+      </div>
+
+      <div class="pa-access-cards">
+        <div class="pa-access-card">
+          <h3>Queue access</h3>
+          <div class="pa-checks" id="paQueues"></div>
+        </div>
+        <div class="pa-access-card">
+          <h3>Owned request categories</h3>
+          <div class="pa-checks" id="paCategories"></div>
+        </div>
+        <div class="pa-access-card">
+          <h3>Manager authority (per queue)</h3>
+          <div class="pa-checks" id="paManagerQueues"></div>
+        </div>
+        <div class="pa-access-card">
+          <h3>Additional authority</h3>
+          <label class="pa-toggle"><input type="checkbox" id="paFlowStudio"> Edit &amp; publish owned request flows (Flow Studio)</label>
+          <label class="pa-toggle"><input type="checkbox" id="paAssignmentRules"> Manage assignment rules</label>
+          <label class="pa-toggle"><input type="checkbox" id="paReporting"> View queue reporting</label>
+          <label class="pa-toggle"><input type="checkbox" id="paAdmin"> Enterprise Administrator (company-wide)</label>
+        </div>
+      </div>
+
+      <div class="pa-effective" id="paEffective">
+        <h3>Effective access preview</h3>
+        <div id="paEffectiveBody"></div>
+      </div>
+
+      <div class="pa-warn" id="paWarn" hidden></div>
+
+      <div class="field mt-12">
+        <label for="paReason">Reason for this change (required)</label>
+        <textarea class="textarea" id="paReason" rows="2" placeholder="Why is this access changing? Recorded in the audit trail."></textarea>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" data-close-profile>Cancel</button>
+      <button class="btn btn-primary" type="button" id="paSave">Save access</button>
+    </div>
+  </dialog>
+
+  <dialog id="accessRequestDialog" class="access-request-dialog" aria-labelledby="paReqTitle">
+    <div class="dialog-header">
+      <div>
+        <div class="eyebrow">Access request</div>
+        <h2 id="paReqTitle">Request</h2>
+        <p id="paReqMeta"></p>
+      </div>
+      <button class="close-button" type="button" data-close-req aria-label="Close">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <div class="pa-profile-grid" id="paReqFacts"></div>
+      <div class="field mt-12">
+        <label for="paReqNote">Administrator note (required to reject or modify)</label>
+        <textarea class="textarea" id="paReqNote" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-ghost" type="button" id="paReqReject">Reject</button>
+      <button class="btn btn-secondary" type="button" id="paReqModify">Modify &amp; approve</button>
+      <button class="btn btn-primary" type="button" id="paReqApprove">Approve</button>
+    </div>
+  </dialog>
 
   <script
     src="assets/js/store.js"
@@ -558,6 +590,11 @@
 
   <script
     src="assets/js/pages/admin-rules-access.js"
+    defer
+  ></script>
+
+  <script
+    src="assets/js/pages/people-access.js"
     defer
   ></script>
 </body>

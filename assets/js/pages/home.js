@@ -595,6 +595,58 @@
     setStatus("● Ready for review");
   }
 
+  /*
+   * Duplicate awareness: if a teammate already has an open request
+   * for the same station/line, surface it so the requester can add
+   * to it instead of opening a duplicate. Never blocks a new ticket.
+   */
+  function findPossibleDuplicate(text) {
+    const me = Store.CURRENT_USER;
+    const lowerText = String(text || "").toLowerCase();
+    const tickets = Store.getState().tickets.filter(
+      (ticket) =>
+        (ticket.department || "") === (me.department || "___none___") &&
+        ticket.requester !== me.name &&
+        !["Resolved", "Closed"].includes(ticket.status)
+    );
+    return (
+      tickets.find((ticket) => {
+        const spot = String(ticket.location || "")
+          .toLowerCase()
+          .match(/(?:station|line|door|dock|aisle)\s*\d+/);
+        return spot && lowerText.includes(spot[0]);
+      }) || null
+    );
+  }
+
+  function renderDuplicateHint(ticket) {
+    appendBubble(
+      "ai",
+      `<strong>A similar request may already be open.</strong>
+
+       <div>
+         ${escape(ticket.number)} — ${escape(ticket.title)}
+         (${escape(ticket.requester)}, ${escape(ticket.status)}).
+         You can add to it instead of opening a duplicate, or continue
+         with a separate request.
+       </div>
+
+       <div class="chat-actions">
+         <button
+           class="btn btn-secondary btn-sm"
+           type="button"
+           data-view-duplicate="${escape(ticket.id)}"
+         >View that request</button>
+
+         <button
+           class="btn btn-secondary btn-sm"
+           type="button"
+           data-continue-separate
+         >Continue with a separate request</button>
+       </div>`
+    );
+  }
+
   function startAnalysis(text) {
     closeSuggestions();
     setStatus("● Analyzing request");
@@ -655,6 +707,12 @@ updateUnderstanding(result);
     renderKnowledgeRecommendation(
       result
     );
+
+    const possibleDuplicate =
+      findPossibleDuplicate(text);
+    if (possibleDuplicate) {
+      renderDuplicateHint(possibleDuplicate);
+    }
 
     if (
       result.clarificationQuestions.length
@@ -744,19 +802,30 @@ updateUnderstanding(result);
       return;
     }
 
+    const moreToGo =
+      result.clarificationQuestions.length > 0;
+
+    const captureLabel =
+      escape(
+        String(question.label || "that detail").toLowerCase()
+      );
+
     appendBubble(
       "ai",
-      `<strong>Got it.</strong>
+      `<strong>Captured.</strong>
 
        <div>
-         I added ${escape(answer)}
-         for ${escape(question.label)}.
+         I recorded <b>${escape(answer)}</b>
+         as the ${captureLabel}.
+         ${
+           moreToGo
+             ? "One more detail and the receiving team will have everything they need."
+             : "That completes what the receiving team needs to begin work."
+         }
        </div>`
     );
 
-    if (
-      result.clarificationQuestions.length
-    ) {
+    if (moreToGo) {
       askClarification(result);
     } else {
       showReadyForReview(result);
@@ -777,6 +846,34 @@ updateUnderstanding(result);
     setStatus("● Ready");
 
     askInput.focus();
+  }
+
+  function hasMeaningfulProgress() {
+    return Boolean(activeAnalysis) ||
+      (chatPanel.classList.contains("open") &&
+        askInput.value.trim().length > 0);
+  }
+
+  function cancelRequest() {
+    if (!chatPanel.classList.contains("open")) return;
+
+    if (hasMeaningfulProgress()) {
+      const confirmed = window.confirm(
+        "Discard this request? Nothing you entered will be saved and no ticket will be created."
+      );
+      if (!confirmed) return;
+    }
+
+    resetConversation();
+    UI.showToast("Request cancelled. No ticket was created.");
+  }
+
+  function solvedRequest() {
+    if (!chatPanel.classList.contains("open")) return;
+    resetConversation();
+    UI.showToast(
+      "Glad it is resolved. Recorded as self-service — no ticket was created."
+    );
   }
 
   function continueRequest() {
@@ -934,6 +1031,32 @@ updateUnderstanding(result);
   chatBody.addEventListener(
     "click",
     (event) => {
+      const dupView =
+        event.target.closest(
+          "[data-view-duplicate]"
+        );
+
+      if (dupView) {
+        window.sessionStorage.setItem(
+          "masterflowFocusTicket",
+          dupView.dataset.viewDuplicate
+        );
+        window.location.href =
+          "my-tickets.html";
+        return;
+      }
+
+      if (
+        event.target.closest(
+          "[data-continue-separate]"
+        )
+      ) {
+        const bubble =
+          event.target.closest(".bubble");
+        if (bubble) bubble.remove();
+        return;
+      }
+
       const optionButton =
         event.target.closest(
           "[data-clarification-answer]"
@@ -970,6 +1093,26 @@ updateUnderstanding(result);
     }
   );
 
+  chatPanel.addEventListener(
+    "click",
+    (event) => {
+      if (
+        event.target.closest(
+          "[data-cancel-request]"
+        )
+      ) {
+        cancelRequest();
+        return;
+      }
+
+      if (
+        event.target.closest("[data-solved]")
+      ) {
+        solvedRequest();
+      }
+    }
+  );
+
   document.addEventListener(
     "click",
     (event) => {
@@ -989,11 +1132,23 @@ updateUnderstanding(result);
       button.addEventListener(
         "click",
         () => {
-          askInput.value =
+          const example =
             button.dataset.example;
 
-          askInput.focus();
-          renderSuggestions();
+          /*
+           * Start a clean run so an example always
+           * demonstrates the full interpretation flow.
+           */
+          if (
+            activeAnalysis ||
+            pendingQuestion
+          ) {
+            resetConversation();
+          }
+
+          askInput.value = example;
+          closeSuggestions();
+          startAnalysis(example);
         }
       );
     });

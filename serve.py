@@ -15,6 +15,22 @@ class ReusableThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServe
     daemon_threads = True
 
 
+class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
+    """Serve files with caching disabled.
+
+    A live demo must always reflect the latest HTML, CSS, and JavaScript.
+    Without this, a browser can hold an older cached script between reloads
+    and show stale behavior during a walkthrough. Disabling the cache keeps
+    every reload honest at the small cost of re-downloading local files.
+    """
+
+    def end_headers(self) -> None:  # noqa: D401 - stdlib hook
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Serve the MasterFlow prototype locally.")
     parser.add_argument("--host", default="127.0.0.1", help="Host address. Default: 127.0.0.1")
@@ -23,7 +39,7 @@ def main() -> None:
 
     root = Path(__file__).resolve().parent
     os.chdir(root)
-    handler = http.server.SimpleHTTPRequestHandler
+    handler = NoCacheHandler
 
     try:
         with ReusableThreadingServer((args.host, args.port), handler) as server:

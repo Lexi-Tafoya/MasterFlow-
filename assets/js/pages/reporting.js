@@ -245,30 +245,10 @@
    * consolidation remains scheduled for Claude.
    */
   function currentScope() {
-    const adminRole =
-      window.localStorage.getItem(
-        ADMIN_ROLE_KEY
-      ) || "";
-
-    if (
-      [
-        "category-owner",
-        "category-manager",
-        "queue-manager"
-      ].includes(adminRole)
-    ) {
-      return "manager";
-    }
-
-    if (
-      adminRole ===
-        "platform-admin" ||
-      Store.getRole() === "admin"
-    ) {
-      return "enterprise";
-    }
-
-    return "manager";
+    // The Administrator always sees enterprise-wide reporting; the Service Team
+    // (Queue Manager / member) sees manager-scoped reporting. Reporting scope is
+    // driven by the app role, not the Flow Studio persona.
+    return Store.getRole() === "admin" ? "enterprise" : "manager";
   }
 
   function allTemplates() {
@@ -1062,7 +1042,7 @@
 
     setText(
       "reportingScopeDescription",
-      "The IT Queue & Category Manager sees intake quality, recognition health, feedback, and performance for owned IT flows."
+      "The Queue Manager sees intake quality, recognition health, feedback, and performance for owned IT flows."
     );
 
     if (governance) {
@@ -1707,7 +1687,7 @@
       scope ===
       "enterprise"
         ? "Megan Delia"
-        : "IT Queue & Category Manager";
+        : "Queue Manager";
 
     if (gaps.length) {
       const [
@@ -1744,7 +1724,7 @@
         }`;
 
       owner =
-        "IT Queue & Category Manager";
+        "Queue Manager";
     } else if (
       lowConfidence.length
     ) {
@@ -1772,7 +1752,7 @@
         }`;
 
       owner =
-        "IT Queue & Category Manager";
+        "Queue Manager";
     } else if (
       feedback.length
     ) {
@@ -2002,7 +1982,7 @@
               }.`,
 
             owner:
-              "IT Queue & Category Manager"
+              "Queue Manager"
           });
         }
       );
@@ -2025,7 +2005,7 @@
           "Review employee wording and add approved aliases or clearer guidance.",
 
         owner:
-          "IT Queue & Category Manager"
+          "Queue Manager"
       });
     }
 
@@ -2065,7 +2045,7 @@
           "Compare the missing facts with work-readiness questions and receiver feedback.",
 
         owner:
-          "Queue Manager + Category Manager"
+          "Queue Manager"
       });
     }
 
@@ -2120,8 +2100,8 @@
           owner:
             scope ===
             "enterprise"
-              ? "Megan Delia / Category Manager"
-              : "IT Queue & Category Manager"
+              ? "Megan Delia (Administrator)"
+              : "Queue Manager"
         });
       }
     }
@@ -2205,138 +2185,155 @@
           `;
   }
 
-  function renderFreightOutcomes(
-    freightOpportunities,
-    settings
-  ) {
-    const opportunities =
-      freightOpportunities || [];
+  /*
+   * Owned request-category performance (Queue Manager scope).
+   * Seeded prototype history so year-over-year comparisons are clear;
+   * production reporting would use governed historical records.
+   */
+  const OWNED_CATEGORY_PERF = [
+    { category: "Report an issue to Help Desk", queue: "IT Help Desk", currentYear: 38, priorYear: 46, resolved: 34, closedNoAction: 3, avgCloseHours: 6.1, sla: 91, backlog: 5, slaRisk: 2 },
+    { category: "Printer Ink Request", queue: "IT Information", currentYear: 22, priorYear: 27, resolved: 21, closedNoAction: 1, avgCloseHours: 3.4, sla: 97, backlog: 1, slaRisk: 0 },
+    { category: "New IT Hardware Request", queue: "IT Information", currentYear: 17, priorYear: 12, resolved: 14, closedNoAction: 1, avgCloseHours: 30, sla: 88, backlog: 3, slaRisk: 1 },
+    { category: "Systems Intake", queue: "Business Enablement - Systems Intake", currentYear: 26, priorYear: 24, resolved: 24, closedNoAction: 2, avgCloseHours: 40, sla: 92, backlog: 2, slaRisk: 1 }
+  ];
 
-    const identified =
-      opportunities.reduce(
-        (total, item) =>
-          total +
-          Number(
-            item.internalSavings || 0
-          ),
-        0
-      );
+  function renderOwnedCategories() {
+    const body = byId("ownedCategoryBody");
+    if (!body) return;
+    const fmtHours = (h) => (h < 48 ? `${h} hr` : `${Math.round((h / 24) * 10) / 10} days`);
+    const yoyOf = (c) => (c.priorYear ? Math.round(((c.currentYear - c.priorYear) / c.priorYear) * 100) : 0);
+    body.innerHTML = OWNED_CATEGORY_PERF.map((c) => {
+      const yoy = yoyOf(c);
+      const trend = yoy > 0 ? `▲ +${yoy}%` : yoy < 0 ? `▼ ${yoy}%` : "– 0%";
+      const trendClass = yoy > 0 ? "badge-blue" : yoy < 0 ? "badge-amber" : "badge-gray";
+      const successRate = Math.round((c.resolved / c.currentYear) * 100);
+      return `<tr>
+        <td><strong>${UI.escapeHtml(c.category)}</strong><span class="subtext">${UI.escapeHtml(c.queue)}</span></td>
+        <td>${c.currentYear}</td>
+        <td>${c.priorYear}</td>
+        <td><span class="badge ${trendClass}">${trend}</span></td>
+        <td>${c.resolved}</td>
+        <td>${c.closedNoAction}</td>
+        <td>${successRate}%</td>
+        <td>${fmtHours(c.avgCloseHours)}</td>
+        <td>${c.sla}%</td>
+        <td>${c.backlog}</td>
+        <td>${c.slaRisk}</td>
+      </tr>`;
+    }).join("");
 
-    const captured =
-      opportunities
-        .filter(
-          (item) =>
-            item.decision === "hold"
-        )
-        .reduce(
-          (total, item) =>
-            total +
-            Number(
-              item.internalSavings || 0
-            ),
-          0
-        );
+    const insights = byId("ownedCategoryInsights");
+    if (insights) {
+      const withYoy = OWNED_CATEGORY_PERF.map((c) => ({ ...c, yoy: yoyOf(c) }));
+      const drop = withYoy.slice().sort((a, b) => a.yoy - b.yoy)[0];
+      const rise = withYoy.slice().sort((a, b) => b.yoy - a.yoy)[0];
+      const best = OWNED_CATEGORY_PERF.slice().sort((a, b) => b.resolved / b.currentYear - a.resolved / a.currentYear)[0];
+      const totalNoAction = OWNED_CATEGORY_PERF.reduce((s, c) => s + c.closedNoAction, 0);
+      const items = [];
+      if (drop.yoy < 0) items.push(`${drop.category} requests are down ${Math.abs(drop.yoy)}% compared with the same period last year.`);
+      if (rise.yoy > 0) items.push(`${rise.category} requests increased ${rise.yoy}%.`);
+      items.push(`${Math.round((best.resolved / best.currentYear) * 100)}% of ${best.category} requests were successfully completed.`);
+      items.push(`${totalNoAction} owned requests were closed without action this period.`);
+      insights.innerHTML = items.map((t) => `<li>${UI.escapeHtml(t)}</li>`).join("");
+    }
+  }
 
-    const guardrailBlocked =
-      opportunities.filter(
-        (item) =>
-          (item.guardrails || []).some(
-            (guardrail) =>
-              guardrail.result === "fail"
-          )
-      ).length;
+  /*
+   * Ticket cost & spend. Seeded prototype history (labeled) combined with any
+   * confirmed live costs recorded at resolution. Kept separate from the
+   * ServiceNow platform baseline.
+   */
+  const COST_BY_CATEGORY = [
+    { category: "Report an issue to Help Desk", queue: "IT Help Desk", tickets: 38, resolved: 34, closedNoAction: 3, directSpend: 4120, laborCost: 2280, highestTicket: 690, currentYear: 6400, priorYear: 5200 },
+    { category: "Printer Ink Request", queue: "IT Information", tickets: 22, resolved: 21, closedNoAction: 1, directSpend: 1840, laborCost: 420, highestTicket: 180, currentYear: 2260, priorYear: 2600 },
+    { category: "New IT Hardware Request", queue: "IT Information", tickets: 17, resolved: 14, closedNoAction: 1, directSpend: 9350, laborCost: 900, highestTicket: 1450, currentYear: 10250, priorYear: 7100 },
+    { category: "Scanner / Equipment Out of Service", queue: "Facilities", tickets: 12, resolved: 10, closedNoAction: 1, directSpend: 3160, laborCost: 780, highestTicket: 470, currentYear: 3940, priorYear: 3450 },
+    { category: "Systems Intake", queue: "Business Enablement - Systems Intake", tickets: 26, resolved: 24, closedNoAction: 2, directSpend: 1200, laborCost: 3300, highestTicket: 300, currentYear: 4500, priorYear: 4200 },
+    { category: "HVAC / Facilities", queue: "Facilities", tickets: 9, resolved: 8, closedNoAction: 0, directSpend: 2600, laborCost: 1100, highestTicket: 900, currentYear: 3700, priorYear: 4100 }
+  ];
+  const COST_SEED = { replacementSpend: 11200, repairSpend: 3850, vendorSpend: 2600, pending: 0, closedNoActionCost: 420 };
 
-    setText(
-      "reportFreightOpportunities",
-      opportunities.length
-    );
+  function renderTicketCost(tickets, scope) {
+    const kpis = byId("costKpis");
+    if (!kpis) return;
+    const fmt = (n) => "$" + Math.round(Number(n) || 0).toLocaleString();
 
-    setText(
-      "reportFreightIdentified",
-      UI.formatMoney(identified, 0)
-    );
+    // Live confirmed costs recorded at resolution this session.
+    const live = (tickets || []).filter((t) => t.cost && (t.cost.status === "recorded" || t.cost.status === "pending"));
+    const liveDirect = live.reduce((s, t) => s + (Number(t.cost.directCost) || 0), 0);
+    const liveLabor = live.reduce((s, t) => s + (Number(t.cost.laborCost) || 0), 0);
+    const livePending = live.filter((t) => t.cost.status === "pending").reduce((s, t) => s + (Number(t.cost.totalCost) || 0), 0);
+    const liveReplacement = live.reduce((s, t) => s + (t.cost.items || []).filter((i) => /replacement/i.test(i.type)).reduce((a, i) => a + (Number(i.total) || 0), 0), 0);
+    const liveRepair = live.reduce((s, t) => s + (t.cost.items || []).filter((i) => /repair/i.test(i.type)).reduce((a, i) => a + (Number(i.total) || 0), 0), 0);
+    const liveVendor = live.reduce((s, t) => s + (t.cost.items || []).filter((i) => /vendor|service fee|shipping/i.test(i.type)).reduce((a, i) => a + (Number(i.total) || 0), 0), 0);
 
-    setText(
-      "reportFreightCaptured",
-      UI.formatMoney(captured, 0)
-    );
+    const seededDirect = COST_BY_CATEGORY.reduce((s, c) => s + c.directSpend, 0);
+    const seededLabor = COST_BY_CATEGORY.reduce((s, c) => s + c.laborCost, 0);
+    const seededTickets = COST_BY_CATEGORY.reduce((s, c) => s + c.resolved + c.closedNoAction, 0);
 
-    setText(
-      "reportFreightGuardrailBlocked",
-      guardrailBlocked
-    );
+    const totalDirect = seededDirect + liveDirect;
+    const totalLabor = seededLabor + liveLabor;
+    const combined = totalDirect + totalLabor;
+    const completed = seededTickets + live.length;
+    const avg = completed ? combined / completed : 0;
+    const topCat = COST_BY_CATEGORY.slice().sort((a, b) => (b.directSpend + b.laborCost) - (a.directSpend + a.laborCost))[0];
 
-    const target =
-      Number(
-        settings.freightSavingsTarget || 0
-      );
+    const cards = [
+      ["Total direct ticket spend", fmt(totalDirect), "Current year"],
+      ["Estimated internal labor cost", fmt(totalLabor), "Current year"],
+      ["Combined ticket cost", fmt(combined), "Direct + labor"],
+      ["Average cost per completed ticket", fmt(avg), `${completed} completed`],
+      ["Highest-cost category", topCat.category, fmt(topCat.directSpend + topCat.laborCost)],
+      ["Hardware replacement spend", fmt(COST_SEED.replacementSpend + liveReplacement), "Replacements"],
+      ["Repair spend", fmt(COST_SEED.repairSpend + liveRepair), "Repairs"],
+      ["Vendor-service spend", fmt(COST_SEED.vendorSpend + liveVendor), "External vendors"],
+      ["Cost pending final invoice", fmt(COST_SEED.pending + livePending), "Awaiting invoices"]
+    ];
+    kpis.innerHTML = cards.map((c) => `<div class="kpi"><div class="kpi-label">${UI.escapeHtml(c[0])}</div><div class="kpi-value">${UI.escapeHtml(c[1])}</div><div class="kpi-meta">${UI.escapeHtml(c[2])}</div></div>`).join("");
 
-    const ytd =
-      Number(
-        settings.verifiedSavingsYtd || 0
-      );
-
-    setText(
-      "reportFreightYtd",
-      `${UI.formatMoney(ytd, 0)} of ${UI.formatMoney(target, 0)}`
-    );
-
-    setWidth(
-      "reportFreightYtdProgress",
-      target > 0
-        ? percentage(ytd, target)
-        : 0
-    );
-
-    const body =
-      byId("reportFreightDecisionBody");
-
-    if (!body) {
-      return;
+    // Category table (blend live into matching categories).
+    const body = byId("costCategoryBody");
+    if (body) {
+      const rows = COST_BY_CATEGORY.map((c) => {
+        const matched = live.filter((t) => (t.category || "").indexOf(c.category) !== -1);
+        const dLive = matched.reduce((s, t) => s + (Number(t.cost.directCost) || 0), 0);
+        const lLive = matched.reduce((s, t) => s + (Number(t.cost.laborCost) || 0), 0);
+        const direct = c.directSpend + dLive;
+        const labor = c.laborCost + lLive;
+        const total = direct + labor;
+        const tickets = c.tickets + matched.length;
+        const avgT = tickets ? total / tickets : 0;
+        const yoy = c.priorYear ? Math.round(((c.currentYear - c.priorYear) / c.priorYear) * 100) : 0;
+        const yoyTag = yoy === 0 ? '<span class="badge badge-gray">0%</span>' : yoy > 0 ? `<span class="badge badge-amber">▲ ${yoy}%</span>` : `<span class="badge badge-green">▼ ${Math.abs(yoy)}%</span>`;
+        return `<tr>
+          <td><strong>${UI.escapeHtml(c.category)}</strong><div class="muted small">${UI.escapeHtml(c.queue)}</div></td>
+          <td>${tickets}</td><td>${c.resolved + matched.length}</td><td>${c.closedNoAction}</td>
+          <td>${fmt(direct)}</td><td>${fmt(labor)}</td><td><strong>${fmt(total)}</strong></td>
+          <td>${fmt(avgT)}</td><td>${fmt(c.highestTicket)}</td>
+          <td>${fmt(c.currentYear)}</td><td>${fmt(c.priorYear)}</td><td>${yoyTag}</td>
+        </tr>`;
+      });
+      body.innerHTML = rows.join("");
     }
 
-    const decided =
-      opportunities.filter(
-        (item) => item.decision
-      );
+    const insights = byId("costInsights");
+    if (insights) {
+      const printer = COST_BY_CATEGORY.filter((c) => /printer|help desk/i.test(c.category)).reduce((s, c) => s + c.directSpend + c.laborCost, 0);
+      const items = [
+        `Printer-related tickets generated ${fmt(printer)} in direct and labor cost this year.`,
+        `New IT Hardware requests increased ${Math.round(((10250 - 7100) / 7100) * 100)}% in cost compared with the same period last year.`,
+        `Hardware replacement spend (${fmt(COST_SEED.replacementSpend + liveReplacement)}) exceeds repair spend (${fmt(COST_SEED.repairSpend + liveRepair)}).`,
+        `${COST_BY_CATEGORY.reduce((s, c) => s + c.closedNoAction, 0)} tickets were closed without action, at ${fmt(COST_SEED.closedNoActionCost)} in combined vendor and labor cost.`
+      ];
+      if (live.length) items.unshift(`${live.length} ticket${live.length === 1 ? "" : "s"} recorded ${fmt(liveDirect + liveLabor)} in confirmed live cost this session.`);
+      insights.innerHTML = items.map((t) => `<li>${UI.escapeHtml(t)}</li>`).join("");
+    }
 
-    const decisionLabels = {
-      hold: "Time-boxed hold approved",
-      release: "Released unchanged",
-      sales: "Sent to Sales for review"
-    };
-
-    body.innerHTML =
-      decided.length
-        ? decided
-            .map(
-              (item) => `
-                <tr>
-                  <td>
-                    <strong>${escapeHtml(item.customerName)}</strong>
-                    <div class="muted small">${escapeHtml(item.customerNumber)} &middot; ${escapeHtml(item.orderNumber)}</div>
-                  </td>
-
-                  <td>${escapeHtml(decisionLabels[item.decision] || item.decision)}</td>
-
-                  <td>${UI.formatMoney(Number(item.internalSavings || 0), 0)}</td>
-
-                  <td>${escapeHtml(item.decisionBy || "Not recorded")}</td>
-
-                  <td>${escapeHtml(UI.formatDate(item.decisionAt))}</td>
-                </tr>
-              `
-            )
-            .join("")
-        : `
-            <tr>
-              <td colspan="5">
-                <div class="empty-state">
-                  No freight decisions have been recorded yet.
-                </div>
-              </td>
-            </tr>
-          `;
+    const note = byId("costBaselineNote");
+    if (note) {
+      const settings = Store.getState().settings || {};
+      note.textContent = `Shown separately: the ServiceNow platform cost baseline is ${fmt(settings.annualServiceNowCost || 300000)}/year (fixed licensing), which is not part of the ${fmt(combined)} operational ticket spend above.`;
+    }
   }
 
   function renderGovernance(
@@ -2897,9 +2894,11 @@
       scope
     );
 
-    renderFreightOutcomes(
-      state.freightOpportunities,
-      state.settings
+    renderOwnedCategories();
+
+    renderTicketCost(
+      tickets,
+      scope
     );
 
     renderGovernance(

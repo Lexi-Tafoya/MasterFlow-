@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MasterFlow Enterprise Triage — review, clarify, and reroute requests MasterFlow could not confidently route.">
+  <title>MasterFlow - Enterprise Triage</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/WORK_CENTER_APPEND.css">
+  <link rel="stylesheet" href="assets/css/TRIAGE_APPEND.css">
+</head>
+
+<body class="workspace-page" data-page="enterprise-triage">
+  <div class="content-shell">
+    <main>
+      <div class="page-heading">
+        <div>
+          <div class="eyebrow">Enterprise administration</div>
+          <h1>Enterprise Triage</h1>
+          <p>
+            Requests MasterFlow could not confidently route. Review what MasterFlow
+            understood, clarify with the requester if needed, then reroute to the
+            correct queue — routing rules, SLA, and history are preserved.
+          </p>
+        </div>
+        <div class="page-actions">
+          <a class="btn btn-secondary" href="admin-rules-access.html">Enterprise Governance</a>
+          <button class="btn btn-danger" type="button" data-open-critical>+ Create P1 incident</button>
+        </div>
+      </div>
+
+      <section class="kpi-grid" aria-label="Triage summary">
+        <div class="kpi">
+          <div class="kpi-label">In Enterprise Triage</div>
+          <div class="kpi-value" id="triageTotal">0</div>
+          <div class="kpi-meta">Awaiting a routing decision</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Response-target risk</div>
+          <div class="kpi-value" id="triageRisk">0</div>
+          <div class="kpi-meta warn">Due or overdue within one hour</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Oldest waiting</div>
+          <div class="kpi-value" id="triageOldest">—</div>
+          <div class="kpi-meta">Longest time in triage</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Conflicting routes</div>
+          <div class="kpi-value" id="triageConflicts">0</div>
+          <div class="kpi-meta">Two or more possible owners</div>
+        </div>
+      </section>
+
+      <section class="card mt-18">
+        <div class="card-header">
+          <div>
+            <h2>Routing review queue</h2>
+            <p>Role-based queue. Megan Delia is the current triage owner in this prototype; work is not tied to a specific person.</p>
+          </div>
+          <span class="badge badge-gray" id="triageVisibleCount">0 shown</span>
+        </div>
+        <div class="card-body">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <input class="control search-control" id="triageSearch" type="search"
+                placeholder="Search ticket, requester, department, request text, category, or queue"
+                aria-label="Search Enterprise Triage">
+            </div>
+            <div class="toolbar-right">
+              <select class="control" id="triageFilter" aria-label="Filter triage">
+                <option value="all">All in triage</option>
+                <option value="new">New</option>
+                <option value="unassigned">Unassigned</option>
+                <option value="mine">Assigned to me</option>
+                <option value="waiting">Waiting for requester</option>
+                <option value="ready">Ready to reroute</option>
+                <option value="low-confidence">Low confidence</option>
+                <option value="conflict">Conflicting routes</option>
+                <option value="risk">SLA risk</option>
+              </select>
+              <select class="control" id="triageSort" aria-label="Sort triage">
+                <option value="oldest">Oldest first</option>
+                <option value="impact">Highest impact first</option>
+                <option value="confidence">Lowest confidence first</option>
+              </select>
+            </div>
+          </div>
+          <div class="work-list" id="triageList" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="card mt-18" id="triageImprovementSection">
+        <div class="card-header">
+          <div>
+            <h2>Routing corrections &amp; improvement signals</h2>
+            <p>Every manual reroute becomes a classification signal. When a pattern repeats, send it to the owning Queue Manager's Flow Studio — you never edit their template directly.</p>
+          </div>
+          <span class="badge badge-teal">Continuous improvement</span>
+        </div>
+        <div class="card-body">
+          <div id="triageRecommendation"></div>
+          <div class="improvement-signal-list" id="triageSignalList" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Triage ticket detail -->
+  <dialog id="triageDetailDialog" class="receiver-ticket-dialog" aria-labelledby="triageDetailTitle">
+    <div class="dialog-header receiver-dialog-header">
+      <div>
+        <div class="receiver-dialog-badges">
+          <span class="badge badge-gray" id="triageStatusBadge">Status</span>
+          <span class="badge badge-amber" id="triageReasonBadge">Reason</span>
+          <span class="badge badge-gray" id="triageConfidenceBadge">Confidence</span>
+        </div>
+        <h2 id="triageDetailTitle">Request</h2>
+        <p id="triageDetailSubtitle"></p>
+      </div>
+      <button class="close-button" type="button" data-close-triage aria-label="Close">&times;</button>
+    </div>
+
+    <div class="dialog-body receiver-dialog-body">
+      <section class="triage-why">
+        <div>
+          <div class="eyebrow">Why this is in triage</div>
+          <p id="triageWhy"></p>
+        </div>
+        <div class="triage-why-owner">
+          <small>Current triage owner</small>
+          <strong id="triageOwner">Unassigned</strong>
+          <span id="triageSla">No SLA set</span>
+        </div>
+      </section>
+
+      <div class="receiver-brief-grid">
+        <section class="receiver-brief-section receiver-brief-wide">
+          <h3>Original request (requester's words)</h3>
+          <p id="triageOriginal"></p>
+        </section>
+        <section class="receiver-brief-section">
+          <h3>Requester &amp; context</h3>
+          <div id="triageProfile"></div>
+        </section>
+        <section class="receiver-brief-section">
+          <h3>What MasterFlow understood</h3>
+          <div id="triageCandidates"></div>
+        </section>
+        <section class="receiver-brief-section">
+          <h3>Clarification answers</h3>
+          <div id="triageClarifications"></div>
+        </section>
+        <section class="receiver-brief-section">
+          <h3>Still uncertain / missing</h3>
+          <div id="triageMissing"></div>
+        </section>
+      </div>
+
+      <section class="receiver-action-panel">
+        <div class="receiver-action-header">
+          <div>
+            <h3>Take action</h3>
+            <p>Reroute when the destination is clear, or clarify with the requester first.</p>
+          </div>
+        </div>
+        <div class="triage-action-row">
+          <button class="btn btn-primary btn-sm" type="button" id="triageReroute">Reroute request</button>
+          <button class="btn btn-secondary btn-sm" type="button" id="triageAssignMe">Assign to me</button>
+          <button class="btn btn-secondary btn-sm" type="button" id="triageRequestInfo">Request more information</button>
+          <button class="btn btn-secondary btn-sm" type="button" id="triageEscalate">Escalate priority</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="triageAddNote">Add internal note</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="triageCloseNoAction">Close without action</button>
+        </div>
+        <div class="field mt-12" id="triageNoteField" hidden>
+          <label for="triageNoteText" id="triageNoteLabel">Internal triage note</label>
+          <textarea class="textarea" id="triageNoteText" placeholder="Add context for the record."></textarea>
+          <div class="triage-note-actions">
+            <button class="btn btn-primary btn-sm" type="button" id="triageNoteSave">Save</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="triageNoteCancel">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="receiver-timeline-section">
+        <div class="receiver-section-heading">
+          <div>
+            <h3>Shared timeline</h3>
+            <p>Communication, clarification, and routing history stay in one record.</p>
+          </div>
+        </div>
+        <div class="receiver-timeline" id="triageTimeline"></div>
+      </section>
+    </div>
+
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" data-close-triage>Close</button>
+    </div>
+  </dialog>
+
+  <!-- Reroute dialog -->
+  <dialog id="rerouteDialog" class="assignment-rule-dialog" aria-labelledby="rerouteTitle">
+    <form method="dialog" id="rerouteForm">
+      <div class="dialog-header">
+        <div>
+          <h2 id="rerouteTitle">Reroute request</h2>
+          <p>Send this request to the correct queue. The ticket number, submission time, and history are preserved.</p>
+        </div>
+        <button class="close-button" type="button" data-close-reroute aria-label="Close">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label for="rerouteDestination">Correct request category &amp; destination queue</label>
+          <select class="select" id="rerouteDestination" required></select>
+          <small class="muted">Choosing a request type sets the category, destination queue, and SLA.</small>
+        </div>
+        <div class="assignment-form-grid">
+          <div class="field">
+            <label for="reroutePriority">Priority</label>
+            <select class="select" id="reroutePriority">
+              <option value="">Keep current priority</option>
+              <option>P1 - Critical</option>
+              <option>P2 - High</option>
+              <option>P3 - Normal</option>
+              <option>P4 - Low</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="rerouteReasonPreset">Rerouting reason</label>
+            <select class="select" id="rerouteReasonPreset">
+              <option value="">Choose a reason…</option>
+              <option>Printer issue confirmed from requester clarification</option>
+              <option>Request belongs to Facilities rather than IT</option>
+              <option>Category was unavailable during initial classification</option>
+              <option>Original description was too ambiguous</option>
+              <option>Routing rule conflict resolved</option>
+              <option>Requester provided the missing asset or location</option>
+              <option>Other (add detail below)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="rerouteReason">Reason detail (required)</label>
+          <textarea class="textarea" id="rerouteReason" required rows="2" placeholder="A meaningful reason is required for the audit trail."></textarea>
+        </div>
+        <div class="assignment-form-grid">
+          <div class="field">
+            <label for="rerouteTeamNote">Note for the receiving team (optional)</label>
+            <textarea class="textarea" id="rerouteTeamNote" rows="2"></textarea>
+          </div>
+          <div class="field">
+            <label for="rerouteRequesterNote">Update for the requester (optional)</label>
+            <textarea class="textarea" id="rerouteRequesterNote" rows="2"></textarea>
+          </div>
+        </div>
+
+        <div class="reroute-preview" id="reroutePreview" hidden>
+          <h3>Preview</h3>
+          <div class="reroute-diff" id="rerouteDiff"></div>
+          <div class="reroute-unchanged">
+            <strong>Unchanged:</strong> original submission time, ticket number, requester, shared timeline, attachments, clarification and troubleshooting history, P1 and approval history.
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn btn-secondary" type="button" data-close-reroute>Cancel</button>
+        <button class="btn btn-primary" type="button" id="rerouteConfirm">Reroute request</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/js/store.js" defer></script>
+  <script src="assets/js/templates.js" defer></script>
+  <script src="assets/js/layout.js" defer></script>
+  <script src="assets/js/pages/enterprise-triage.js" defer></script>
+</body>
+</html>

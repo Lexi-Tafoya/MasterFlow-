@@ -110,8 +110,31 @@
       return false;
     }
 
+    /*
+     * A location is specific enough when it contains a number or an
+     * asset identifier (Pack Station 14, Line 2, Door 5, PRN-204,
+     * "the printer beside Station 8").
+     */
+    const hasSpecificId =
+      /\d/.test(answer) ||
+      /\b[a-z]{2,4}-\d/i.test(answer);
+
+    if (hasSpecificId) {
+      return false;
+    }
+
+    /*
+     * Reject broad areas and generic "area / line / station /
+     * department" answers that name a zone but not the exact device
+     * or spot, so the receiver never has to hunt for the equipment.
+     */
+    const genericArea =
+      /\b(?:packaging|packing|receiving|shipping|warehouse|production|operations|quality|returns|dock|line|station|aisle|area|department|dept|floor|zone|phoenix|chicago|wisconsin|toronto)\b/i
+        .test(answer);
+
     return (
       BROAD_LOCATION.test(answer) ||
+      genericArea ||
       /\b(?:cannot|can't|won't|not working|issue|problem)\b/i.test(
         answer
       )

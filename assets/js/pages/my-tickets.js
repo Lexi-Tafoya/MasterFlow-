@@ -52,6 +52,7 @@
     new Set([
       "Resolved",
       "Closed",
+      "Closed — No Action",
       "Cancelled",
       "Rejected"
     ]);
@@ -207,6 +208,8 @@
     }).length;
   }
 
+  let currentView = "mine";
+
   function requesterTickets() {
     return Store
       .getState()
@@ -225,6 +228,40 @@
             a.updatedAt
           ).getTime()
       );
+  }
+
+  /*
+   * Team visibility: everyone on the same department/team can see
+   * requests already submitted by teammates. This supports duplicate
+   * prevention, shared awareness, and status follow-up. Prototype
+   * scope is the requester's department rather than company-wide.
+   */
+  function teamTickets() {
+    const dept = Store.CURRENT_USER.department || "___none___";
+    return Store
+      .getState()
+      .tickets
+      .filter((ticket) => (ticket.department || "") === dept)
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() -
+          new Date(a.updatedAt).getTime()
+      );
+  }
+
+  function activeTickets() {
+    return currentView === "team"
+      ? teamTickets()
+      : requesterTickets();
+  }
+
+  function userContribution(ticket) {
+    const me = Store.CURRENT_USER.name;
+    if (ticket.requester === me) return "own";
+    const contributed = (ticket.history || []).some(
+      (item) => (item.author || "") === me
+    );
+    return contributed ? "contributed" : "";
   }
 
   function renderKpis(tickets) {
@@ -306,10 +343,25 @@
   }
 
   function render() {
-    const all =
-      requesterTickets();
+    renderKpis(requesterTickets());
 
-    renderKpis(all);
+    const heading =
+      document.getElementById("requestsHeading");
+    const subhead =
+      document.getElementById("requestsSubhead");
+    if (heading) {
+      heading.textContent = currentView === "team"
+        ? "My team's requests"
+        : "My recent requests";
+    }
+    if (subhead) {
+      subhead.textContent = currentView === "team"
+        ? "See what your team has already reported so you can add context or an update instead of opening a duplicate."
+        : "Open a request to review its shared timeline and reply without creating a duplicate ticket.";
+    }
+
+    const all =
+      activeTickets();
 
     const query =
       searchInput.value
@@ -434,7 +486,17 @@
                   ${UI.escapeHtml(
                     ticket.location ||
                     "Location not provided"
-                  )}
+                  )}${
+                    currentView === "team"
+                      ? " · " +
+                        UI.escapeHtml(ticket.requester || "") +
+                        (userContribution(ticket) === "own"
+                          ? ' · <span class="badge badge-teal">You</span>'
+                          : userContribution(ticket) === "contributed"
+                            ? ' · <span class="badge badge-blue">You contributed</span>'
+                            : "")
+                      : ""
+                  }
                 </span>
               </td>
 
@@ -1175,6 +1237,22 @@
     render
   );
 
+  document.querySelectorAll(".view-seg-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      currentView = button.dataset.view === "team" ? "team" : "mine";
+      document.querySelectorAll(".view-seg-btn").forEach((btn) => {
+        const active = btn === button;
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      searchInput.value = "";
+      searchInput.placeholder = currentView === "team"
+        ? "Search team requests"
+        : "Search my requests";
+      render();
+    });
+  });
+
   window.addEventListener(
     "masterflow:state",
     () => {
@@ -1190,6 +1268,29 @@
       refreshOpenTicket();
     }
   );
+
+  const focusTicketId =
+    window.sessionStorage.getItem("masterflowFocusTicket");
+  if (focusTicketId) {
+    window.sessionStorage.removeItem("masterflowFocusTicket");
+    const focusTicket = Store.getState().tickets.find(
+      (item) => item.id === focusTicketId
+    );
+    if (
+      focusTicket &&
+      focusTicket.requester !== Store.CURRENT_USER.name
+    ) {
+      currentView = "team";
+      document.querySelectorAll(".view-seg-btn").forEach((btn) => {
+        const active = btn.dataset.view === "team";
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-selected", active ? "true" : "false");
+      });
+    }
+    if (focusTicket) {
+      searchInput.value = focusTicket.number;
+    }
+  }
 
   render();
 })();
