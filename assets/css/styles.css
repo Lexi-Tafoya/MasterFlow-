@@ -1130,23 +1130,92 @@ dialog::backdrop { background: rgba(5, 17, 31, 0.52); backdrop-filter: blur(2px)
 .ai-summary-view { padding: 10px 12px; border: 1px dashed var(--line); border-radius: var(--radius-sm); background: var(--surface-2); font-size: 13px; color: var(--ink); }
 .ai-summary-tag { display: inline-block; margin-left: 6px; font-weight: 400; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; }
 .ai-summary-edit { margin-top: 6px; font-size: 11px; }
-.attachment-drop {
-  min-height: 106px;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 4px;
-  padding: 16px;
-  border: 1px dashed var(--line-strong);
-  border-radius: 12px;
-  background: #fbfcfd;
-  color: var(--ink) !important;
-  text-align: center;
+/*
+ * Shared MasterFlow attachment control. The native <input type="file"> stays
+ * in the DOM (visually hidden, not display:none) so keyboard focus, screen
+ * readers, and the browser file dialog keep working; every visible affordance
+ * is the styled markup around it. Used by requester replies, Service Team
+ * updates, request-more-information, internal notes, and triage communication.
+ */
+.attachment-field { display: grid; gap: 8px; }
+.attachment-field-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.attachment-field-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  min-height: 34px;
+  padding: 7px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
   cursor: pointer;
 }
-.attachment-drop:hover { border-color: var(--teal); background: var(--teal-soft); }
-.attachment-drop input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
-.attachment-drop small { display: block; }
+.attachment-field-trigger svg { flex: none; }
+.attachment-field-trigger:hover { border-color: var(--teal); background: var(--teal-soft); }
+.attachment-field-trigger:focus-visible,
+.attachment-field-input:focus-visible ~ .attachment-field-trigger,
+.attachment-field.is-focused .attachment-field-trigger {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+.attachment-field.is-dragover .attachment-field-trigger { border-color: var(--teal); background: var(--teal-soft); }
+.attachment-field-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.attachment-field-count { flex-basis: 100%; font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.attachment-field-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+.attachment-field-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.attachment-field-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.attachment-field-chip-remove:hover { background: rgba(0, 0, 0, 0.08); color: var(--ink); }
+.attachment-field-chip-remove:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+.attachment-field-help { color: var(--muted); font-size: 11px; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .ai-heading { align-items: center; }
 .confidence-ring {
   --confidence: 0%;
@@ -1211,9 +1280,10 @@ dialog::backdrop { background: rgba(5, 17, 31, 0.52); backdrop-filter: blur(2px)
 .confirmation-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .confirmation-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 9px; }
 
-.template-manager { display: grid; grid-template-columns: minmax(260px, 0.65fr) minmax(0, 1.7fr); gap: 18px; align-items: start; }
+.template-manager { display: grid; grid-template-columns: minmax(280px, 0.6fr) minmax(0, 1.8fr); gap: 28px; align-items: start; }
 .template-list-card { position: sticky; top: calc(var(--topbar-height) + 20px); max-height: calc(100vh - var(--topbar-height) - 40px); }
 .template-list-card .card-body { overflow-y: auto; max-height: calc(100vh - var(--topbar-height) - 155px); }
+#templateSearch { margin-bottom: 12px; }
 .template-list { display: grid; gap: 7px; }
 .template-list-item {
   display: grid;

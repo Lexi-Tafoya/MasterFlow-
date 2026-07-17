@@ -48,6 +48,19 @@
     return;
   }
 
+  const attachmentFieldHost = document.getElementById(
+    "requesterAttachmentField"
+  );
+  if (attachmentFieldHost) {
+    attachmentFieldHost.innerHTML = UI.attachmentFieldMarkup({
+      inputId: "requesterReplyAttachments",
+      triggerLabel: "Add files",
+      helpText:
+        "Prototype records selected file names in the shared timeline."
+    });
+    UI.initAttachmentField(attachmentFieldHost);
+  }
+
   const CLOSED_STATUSES =
     new Set([
       "Resolved",
@@ -1121,43 +1134,6 @@
 
   document
     .getElementById(
-      "requesterReplyAttachments"
-    )
-    .addEventListener(
-      "change",
-      (event) => {
-        const files =
-          Array.from(
-            event.target.files ||
-            []
-          ).slice(0, 5);
-
-        document.getElementById(
-          "requesterAttachmentSummary"
-        ).textContent =
-          files.length
-            ? (
-                `${files.length} file${
-                  files.length === 1
-                    ? ""
-                    : "s"
-                }: ` +
-                files
-                  .map(
-                    (file) =>
-                      file.name
-                  )
-                  .join(", ")
-              )
-            : (
-                "Prototype stores file names " +
-                "in the shared timeline."
-              );
-      }
-    );
-
-  document
-    .getElementById(
       "requesterReplyForm"
     )
     .addEventListener(
@@ -1199,11 +1175,9 @@
 
         replyInput.value = "";
         attachmentInput.value = "";
-
-        document.getElementById(
-          "requesterAttachmentSummary"
-        ).textContent =
-          "Prototype stores file names in the shared timeline.";
+        attachmentInput.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
 
         UI.showToast(
           (

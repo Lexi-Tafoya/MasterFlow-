@@ -254,6 +254,8 @@
           ></textarea>
         </div>
 
+        <div class="field mt-12" id="receiverAttachmentField"></div>
+
         <div class="receiver-action-buttons">
           <button class="btn btn-primary btn-sm" type="button" id="receiverSendApproval" hidden>Send for approval</button>
           <button class="btn btn-secondary btn-sm" type="button" id="receiverRequestInfo">Request more information</button>
@@ -291,7 +293,7 @@
     </div>
 
     <div class="dialog-footer">
-      <button class="btn btn-secondary" type="button" id="receiverFlowStudio">Flow Studio</button>
+      <button class="btn btn-secondary" type="button" id="receiverFlowStudio">Open in Flow Studio</button>
       <button class="btn btn-secondary" type="button" data-close-receiver-ticket>Close</button>
     </div>
   </dialog>
@@ -340,13 +342,13 @@
       <div class="dialog-header">
         <div>
           <h2 id="costDialogTitle">Cost &amp; outcome</h2>
-          <p>Record the actual cost of resolving this ticket. Confirm a cost outcome before resolving.</p>
+          <p id="costDialogSubtitle">Record the actual cost of resolving this ticket. Confirm a cost outcome before resolving.</p>
         </div>
         <button class="close-button" type="button" data-close-cost aria-label="Close">&times;</button>
       </div>
       <div class="dialog-body">
         <div class="field">
-          <label for="costResolutionNote">Resolution note (required)</label>
+          <label for="costResolutionNote" id="costResolutionNoteLabel">Resolution note (required)</label>
           <textarea class="textarea" id="costResolutionNote" rows="2" placeholder="What was done to resolve this?"></textarea>
         </div>
 

@@ -18,6 +18,33 @@
   const viewButtons = Array.from(document.querySelectorAll("[data-work-view]"));
   const ticketDialog = document.getElementById("receiverTicketDialog");
 
+  const receiverAttachmentHost = document.getElementById("receiverAttachmentField");
+  if (receiverAttachmentHost) {
+    receiverAttachmentHost.innerHTML = UI.attachmentFieldMarkup({
+      inputId: "receiverActionAttachments",
+      triggerLabel: "Add files",
+      helpText: "Prototype records selected file names in the shared timeline."
+    });
+    UI.initAttachmentField(receiverAttachmentHost);
+  }
+
+  function selectedWorkCenterAttachments() {
+    const input = document.getElementById("receiverActionAttachments");
+    if (!input) return [];
+    return Array.from(input.files || []).slice(0, 5).map((file) => ({
+      name: file.name,
+      size: file.size,
+      type: file.type || "application/octet-stream"
+    }));
+  }
+
+  function clearWorkCenterAttachments() {
+    const input = document.getElementById("receiverActionAttachments");
+    if (!input) return;
+    input.value = "";
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
   let currentView = "recommended";
   let currentTicketId = "";
 
@@ -508,7 +535,7 @@
     window.dispatchEvent(new CustomEvent("masterflow:state", { detail: clone(state) }));
   }
 
-  function createComment(text, visibility) {
+  function createComment(text, visibility, attachments) {
     const now = new Date();
     return {
       id: `comment-${now.getTime()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -517,6 +544,7 @@
       visibility: visibility === "requester" ? "requester" : "internal",
       text: String(text || "").trim(),
       originalText: String(text || "").trim(),
+      attachments: Array.isArray(attachments) ? attachments : [],
       revisions: [],
       at: now.toISOString(),
       editedAt: null,
@@ -524,7 +552,7 @@
     };
   }
 
-  function updateTicketWithComment(ticketId, patch, systemText, commentText, visibility) {
+  function updateTicketWithComment(ticketId, patch, systemText, commentText, visibility, attachments) {
     const state = Store.getState();
     const ticket = state.tickets.find((item) => item.id === ticketId);
     if (!ticket) return null;
@@ -538,8 +566,8 @@
     }
 
     const cleanComment = String(commentText || "").trim();
-    if (cleanComment) {
-      ticket.history.push(createComment(cleanComment, visibility));
+    if (cleanComment || (Array.isArray(attachments) && attachments.length)) {
+      ticket.history.push(createComment(cleanComment, visibility, attachments));
     }
 
     writeState(state);
@@ -633,6 +661,9 @@
                     <small>${UI.escapeHtml(UI.formatDate(item.at))}${editedLabel}</small>
                   </div>
                   <p class="receiver-comment-text">${UI.escapeHtml(item.text || "")}</p>
+                  ${Array.isArray(item.attachments) && item.attachments.length
+                    ? `<div class="attachment-field-list">${item.attachments.map((file) => `<span class="badge badge-gray">${UI.escapeHtml(file && file.name ? file.name : "Attachment")}</span>`).join("")}</div>`
+                    : ""}
                   <div class="receiver-comment-actions">
                     ${editControls}
                     ${commentAuditMarkup(item)}
@@ -655,14 +686,28 @@
       : '<div class="empty-state">No timeline activity has been recorded.</div>';
   }
 
+  // Cost & Outcome is always visible in the Work Center, even before a cost
+  // has ever been recorded — a blank field reads as "forgotten"; an explicit
+  // $0.00 / "No direct cost" default reads as "confirmed, nothing owed yet".
   function renderCostSummary(ticket) {
     const section = document.getElementById("receiverCostSummary");
     const body = document.getElementById("receiverCostBody");
     if (!section || !body) return;
-    const c = ticket.cost;
-    if (!c) { section.hidden = true; body.innerHTML = ""; return; }
     section.hidden = false;
+    const c = ticket.cost;
     const money = (n) => "$" + (Number(n) || 0).toFixed(2);
+    const editButton = `<button class="btn btn-secondary btn-sm" type="button" id="receiverCostEdit">${c ? "Edit" : "Add cost details"}</button>`;
+
+    if (!c) {
+      body.innerHTML = `
+        <div class="cost-summary-grid">
+          <div class="cost-kv"><small>Ticket cost</small><span><strong>$0.00</strong></span></div>
+          <div class="cost-kv"><small>Cost outcome</small><span>No direct cost has been recorded yet</span></div>
+        </div>
+        <div class="cost-lines">${editButton}</div>`;
+      return;
+    }
+
     const statusLabel = c.status === "none" ? "No direct cost" : c.status === "pending" ? "Cost pending final invoice" : "Cost recorded";
     const items = (c.items || []).map((it) => `<div class="cost-line"><span>${UI.escapeHtml(it.type)}${it.desc ? " — " + UI.escapeHtml(it.desc) : ""} ${it.qty > 1 ? "×" + it.qty : ""}</span><strong>${money(it.total)}</strong></div>`).join("");
     const estRow = c.estimate ? `<div class="cost-line"><span>Approved estimate</span><strong>${money(c.estimate)}</strong></div><div class="cost-line"><span>Actual (confirmed)</span><strong>${money(c.totalCost)}</strong></div>` : "";
@@ -680,7 +725,8 @@
       </div>
       ${items ? `<div class="cost-lines">${items}</div>` : ""}
       ${estRow ? `<div class="cost-lines">${estRow}</div>` : ""}
-      ${c.notes ? `<p class="muted">${UI.escapeHtml(c.notes)}</p>` : ""}`;
+      ${c.notes ? `<p class="muted">${UI.escapeHtml(c.notes)}</p>` : ""}
+      <div class="cost-lines">${editButton}</div>`;
   }
 
   function renderReceiverTicket(ticket) {
@@ -785,6 +831,11 @@
     reopenButton.hidden = !canReopen;
     actionPanel.hidden = closed && !canReopen;
     document.getElementById("receiverActionNote").value = "";
+
+    // A Service Team Member cannot open Flow Studio directly from a ticket —
+    // only Queue Managers can. Members use "Suggest a flow improvement" instead.
+    const isMemberPersona = window.localStorage.getItem("masterflowServicePersona") === "member";
+    document.getElementById("receiverFlowStudio").hidden = isMemberPersona;
 
     renderTimeline(ticket);
 
@@ -959,14 +1010,17 @@
     const note = requireNote("request more information");
     if (!note) return;
     const existingTicket = Store.getTicket(currentTicketId);
+    const attachments = selectedWorkCenterAttachments();
     const updatedTicket = updateTicketWithComment(
       currentTicketId,
       { status: "Waiting on requester" },
       `Status changed to Waiting on requester by ${Store.CURRENT_USER.name}.`,
       note,
-      "requester"
+      "requester",
+      attachments
     );
     if (updatedTicket) {
+      clearWorkCenterAttachments();
       UI.showToast(`Information request sent to ${existingTicket ? existingTicket.requester : "the requester"}.`);
       renderReceiverTicket(updatedTicket);
     }
@@ -975,22 +1029,26 @@
   document.getElementById("receiverAddUpdate").addEventListener("click", () => {
     const note = requireNote("add an update");
     if (!note) return;
+    const attachments = selectedWorkCenterAttachments();
     const updatedTicket = updateTicketWithComment(
       currentTicketId,
       {},
       "",
       note,
-      "internal"
+      "internal",
+      attachments
     );
     if (updatedTicket) {
+      clearWorkCenterAttachments();
       UI.showToast("Update added. You can edit it for five minutes.");
       renderReceiverTicket(updatedTicket);
     }
   });
 
-  /* ---------- Cost & outcome capture at resolution ---------- */
+  /* ---------- Cost & outcome capture at resolution, and stand-alone edit ---------- */
   const COST_TYPES = ["Hardware replacement", "Hardware repair", "Parts or supplies", "Software or license", "Vendor service", "Shipping or service fee", "Internal labor", "Other"];
   let costItems = [];
+  let costDialogMode = "resolve";
   const money = (n) => "$" + (Number(n) || 0).toFixed(2);
 
   function currentTicketObj() {
@@ -1002,7 +1060,12 @@
     if (!note) return;
     const t = currentTicketObj();
     if (!t) return;
+    costDialogMode = "resolve";
     costItems = [];
+    document.getElementById("costDialogTitle").textContent = "Cost & outcome";
+    document.getElementById("costDialogSubtitle").textContent = "Record the actual cost of resolving this ticket. Confirm a cost outcome before resolving.";
+    document.getElementById("costResolutionNoteLabel").textContent = "Resolution note (required)";
+    document.getElementById("costConfirm").textContent = "Confirm & resolve";
     document.getElementById("costResolutionNote").value = note;
     document.getElementById("costStatus").value = "";
     document.getElementById("costLaborHours").value = "";
@@ -1027,6 +1090,49 @@
     const d = document.getElementById("costDialog");
     if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
   }
+
+  // Lets a Service Team Member record or update cost while a ticket is still
+  // active — resolving is not required to know the cost of a part or vendor
+  // call. Does not change ticket status or outcome.
+  function openCostEditDialog() {
+    const t = currentTicketObj();
+    if (!t) return;
+    costDialogMode = "edit";
+    const c = t.cost || {};
+    costItems = Array.isArray(c.items)
+      ? c.items.map((it) => ({ type: it.type, desc: it.desc, qty: it.qty, unit: it.unit }))
+      : [];
+    document.getElementById("costDialogTitle").textContent = "Update cost & outcome";
+    document.getElementById("costDialogSubtitle").textContent = "Record or update the cost of this ticket. This does not change its status.";
+    document.getElementById("costResolutionNoteLabel").textContent = "Note (optional)";
+    document.getElementById("costConfirm").textContent = "Save cost details";
+    document.getElementById("costResolutionNote").value = "";
+    document.getElementById("costStatus").value = c.status || "";
+    document.getElementById("costLaborHours").value = c.laborHours || "";
+    document.getElementById("costLaborRate").value = c.laborRate || "";
+    document.getElementById("costVendor").value = c.vendor || "";
+    document.getElementById("costAsset").value = c.assetAction || "";
+    document.getElementById("costPo").value = c.poNumber || "";
+    document.getElementById("costActual").value = c.status === "recorded" && c.totalCost ? c.totalCost : "";
+    document.getElementById("costNotes").value = c.notes || "";
+    document.getElementById("costDetails").hidden = !(c.status === "recorded" || c.status === "pending");
+    const est = t.details && t.details.approval && Number(t.details.approval.amount);
+    const estRow = document.getElementById("costEstimateRow");
+    if (est) {
+      estRow.hidden = false;
+      document.getElementById("costEstimateValue").textContent = money(est);
+    } else {
+      estRow.hidden = true;
+    }
+    renderCostItems();
+    recalcCost();
+    const d = document.getElementById("costDialog");
+    if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
+  }
+
+  document.getElementById("receiverCostSummary").addEventListener("click", (event) => {
+    if (event.target.closest("#receiverCostEdit")) openCostEditDialog();
+  });
 
   function renderCostItems() {
     const c = document.getElementById("costItems");
@@ -1080,7 +1186,8 @@
   document.getElementById("costConfirm").addEventListener("click", () => {
     const note = document.getElementById("costResolutionNote").value.trim();
     const status = document.getElementById("costStatus").value;
-    if (!note) { UI.showToast("Add a resolution note."); document.getElementById("costResolutionNote").focus(); return; }
+    const isResolving = costDialogMode === "resolve";
+    if (isResolving && !note) { UI.showToast("Add a resolution note."); document.getElementById("costResolutionNote").focus(); return; }
     if (!status) { UI.showToast("Choose a cost outcome."); document.getElementById("costStatus").focus(); return; }
     const totals = recalcCost();
     if (status === "recorded" && totals.total <= 0) { UI.showToast("Enter the actual cost, or choose No direct cost."); return; }
@@ -1103,11 +1210,20 @@
     };
     const label = status === "none" ? "no direct cost" : status === "pending" ? "cost pending final invoice" : `${money(cost.totalCost)} total`;
     const d = document.getElementById("costDialog"); if (d.open) d.close(); else d.removeAttribute("open");
-    updateCurrentTicket(
-      { status: "Resolved", outcome: "resolved", cost },
-      `Resolved by ${Store.CURRENT_USER.name} (${label}): ${note}`,
-      "Ticket resolved."
-    );
+
+    if (isResolving) {
+      updateCurrentTicket(
+        { status: "Resolved", outcome: "resolved", cost },
+        `Resolved by ${Store.CURRENT_USER.name} (${label}): ${note}`,
+        "Ticket resolved."
+      );
+    } else {
+      updateCurrentTicket(
+        { cost },
+        `${Store.CURRENT_USER.name} updated cost & outcome (${label})${note ? `: ${note}` : "."}`,
+        "Cost & outcome updated."
+      );
+    }
   });
 
   document.getElementById("receiverResolveTicket").addEventListener("click", openCostDialog);
@@ -1253,6 +1369,7 @@
     render();
     refreshOpenTicket();
   });
+  window.addEventListener("masterflow:persona", refreshOpenTicket);
 
   render();
 

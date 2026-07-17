@@ -65,6 +65,8 @@
       title: cleanText(input && input.title),
       description: cleanText(input && input.description),
       suggestedChange: cleanText(input && input.suggestedChange),
+      expectedBenefit: cleanText(input && input.expectedBenefit),
+      internalNote: cleanText(input && input.internalNote),
       evidence: {
         missingFields: Array.isArray(evidence.missingFields)
           ? evidence.missingFields.map(cleanText).filter(Boolean)
@@ -78,6 +80,56 @@
     const items = readFeedback();
     items.unshift(item);
     writeFeedback(items);
+    return item;
+  }
+
+  const FEEDBACK_STATUS_LABELS = {
+    new: "Pending Queue Manager Review",
+    published: "Approved & published",
+    rejected: "Rejected",
+    "needs-info": "More information requested",
+    escalated: "Escalated to Enterprise Governance"
+  };
+
+  function feedbackStatusLabel(status) {
+    return FEEDBACK_STATUS_LABELS[status] || FEEDBACK_STATUS_LABELS.new;
+  }
+
+  function feedbackStatusClass(status) {
+    if (status === "published") return "badge-green";
+    if (status === "rejected") return "badge-red";
+    if (status === "needs-info") return "badge-amber";
+    if (status === "escalated") return "badge-blue";
+    return "badge-gray";
+  }
+
+  // Routine queue-owned decisions on a Service Team Member's ticket-linked
+  // suggestion. This never edits template JSON directly (that remains Flow
+  // Studio's job) — it records a governance decision the submitter can see,
+  // and (when linked to a ticket) posts a note to that ticket's timeline.
+  function decideFeedback(id, action, note) {
+    const items = readFeedback();
+    const item = items.find((entry) => entry.id === id);
+    if (!item) return null;
+
+    const nextStatus = { publish: "published", reject: "rejected", "needs-info": "needs-info", escalate: "escalated" }[action];
+    if (!nextStatus) return null;
+
+    const cleanNote = cleanText(note);
+    const decisionText = {
+      published: `approved and published by ${Store.CURRENT_USER.name}`,
+      rejected: `rejected by ${Store.CURRENT_USER.name}${cleanNote ? `: ${cleanNote}` : "."}`,
+      "needs-info": `sent back for more information by ${Store.CURRENT_USER.name}${cleanNote ? `: ${cleanNote}` : "."}`,
+      escalated: `escalated to Enterprise Governance by ${Store.CURRENT_USER.name}${cleanNote ? `: ${cleanNote}` : "."}`
+    }[nextStatus];
+
+    item.status = nextStatus;
+    item.decision = { action: nextStatus, by: Store.CURRENT_USER.name, at: new Date().toISOString(), note: cleanNote };
+    writeFeedback(items);
+
+    if (item.ticketId && Store.getTicket(item.ticketId)) {
+      Store.updateTicket(item.ticketId, {}, `Flow suggestion "${item.title}" was ${decisionText}.`);
+    }
     return item;
   }
 
@@ -502,6 +554,10 @@
               <label for="receiverFeedbackSuggestedChange">Suggested change</label>
               <textarea class="textarea" id="receiverFeedbackSuggestedChange"></textarea>
             </div>
+            <div class="field mt-12">
+              <label for="receiverFeedbackExpectedBenefit">Expected benefit</label>
+              <textarea class="textarea" id="receiverFeedbackExpectedBenefit" placeholder="What improves for requesters or the Service Team if this ships?"></textarea>
+            </div>
             <div class="field-row mt-12">
               <div class="field">
                 <label for="receiverFeedbackMissingFields">Missing fields</label>
@@ -515,6 +571,10 @@
             <div class="field mt-12">
               <label for="receiverFeedbackPhrase">Evidence phrase</label>
               <input class="input" id="receiverFeedbackPhrase" placeholder="Original wording or recurring phrase">
+            </div>
+            <div class="field mt-12">
+              <label for="receiverFeedbackInternalNote">Internal note (optional)</label>
+              <textarea class="textarea" id="receiverFeedbackInternalNote" placeholder="Anything else the Queue Manager should know."></textarea>
             </div>
           </div>
           <div class="dialog-footer">
@@ -551,6 +611,8 @@
         title: document.getElementById("receiverFeedbackTitleInput").value,
         description: document.getElementById("receiverFeedbackDescription").value,
         suggestedChange: document.getElementById("receiverFeedbackSuggestedChange").value,
+        expectedBenefit: document.getElementById("receiverFeedbackExpectedBenefit").value,
+        internalNote: document.getElementById("receiverFeedbackInternalNote").value,
         evidence: {
           missingFields,
           phrase: document.getElementById("receiverFeedbackPhrase").value,
@@ -582,6 +644,8 @@
     document.getElementById("receiverFeedbackTitleInput").value = cleanText(context && context.title);
     document.getElementById("receiverFeedbackDescription").value = cleanText(context && context.description);
     document.getElementById("receiverFeedbackSuggestedChange").value = cleanText(context && context.suggestedChange);
+    document.getElementById("receiverFeedbackExpectedBenefit").value = cleanText(context && context.expectedBenefit);
+    document.getElementById("receiverFeedbackInternalNote").value = cleanText(context && context.internalNote);
     document.getElementById("receiverFeedbackMissingFields").value = Array.isArray(context && context.missingFields)
       ? context.missingFields.join(", ")
       : "";
@@ -634,6 +698,286 @@
       queue,
       count
     };
+  }
+
+  /*
+   * My Team's Requests: requester-team visibility for a Queue Manager or
+   * people manager, separate from the Service Team roster used for queue
+   * coverage/workload/assignment. Scope is direct reports (via the
+   * requester's employeeProfile.manager, when captured) or the current
+   * user's own department/team — never company-wide, never the Service
+   * Team's own membership list.
+   */
+  function requesterProfile(ticket) {
+    const details = (ticket && ticket.details) || {};
+    const profile = (details.employeeProfile && typeof details.employeeProfile === "object") ? details.employeeProfile : {};
+    return {
+      department: cleanText(ticket && ticket.department) || cleanText(profile.department),
+      team: cleanText(profile.team),
+      manager: cleanText(profile.manager)
+    };
+  }
+
+  function isMyTeamRequest(ticket) {
+    if (!ticket || ticket.requester === Store.CURRENT_USER.name) return false;
+    const profile = requesterProfile(ticket);
+    const managerMatch = profile.manager && profile.manager === Store.CURRENT_USER.name;
+    const deptMatch = profile.department && profile.department === Store.CURRENT_USER.department;
+    return Boolean(managerMatch || deptMatch);
+  }
+
+  function teamRequestTickets() {
+    return Store.getState().tickets.filter(isMyTeamRequest);
+  }
+
+  function hasUserContributed(ticket) {
+    const me = Store.CURRENT_USER.name;
+    return (ticket.history || []).some((item) => cleanText(item.text).includes(me) || item.author === me);
+  }
+
+  // Prototype duplicate heuristic: same category, and either the same
+  // location or the same department, submitted within a 30-day window.
+  // This surfaces candidates for a human to judge — it never blocks a
+  // new request or merges tickets automatically.
+  function possibleDuplicatesFor(ticket, pool) {
+    const category = cleanText(ticket.category).toLowerCase();
+    if (!category) return [];
+    const created = new Date(ticket.createdAt).getTime();
+    const windowMs = 30 * 24 * 60 * 60 * 1000;
+    const loc = cleanText(ticket.location).toLowerCase();
+    const dept = cleanText(ticket.department).toLowerCase();
+    return pool.filter((other) => {
+      if (other.id === ticket.id) return false;
+      if (cleanText(other.category).toLowerCase() !== category) return false;
+      const otherCreated = new Date(other.createdAt).getTime();
+      if (!Number.isFinite(otherCreated) || !Number.isFinite(created)) return false;
+      if (Math.abs(otherCreated - created) > windowMs) return false;
+      const otherLoc = cleanText(other.location).toLowerCase();
+      const otherDept = cleanText(other.department).toLowerCase();
+      return (loc && otherLoc === loc) || (dept && otherDept === dept);
+    });
+  }
+
+  function initTeamRequests() {
+    const section = document.getElementById("qmTeamRequestsSection");
+    if (!section) return;
+
+    const body = document.getElementById("teamRequestsBody");
+    const empty = document.getElementById("teamRequestsEmpty");
+    const countBadge = document.getElementById("teamRequestsCount");
+    const search = document.getElementById("teamRequestsSearch");
+    const statusFilter = document.getElementById("teamRequestsStatusFilter");
+    const queueFilter = document.getElementById("teamRequestsQueueFilter");
+    const flagFilter = document.getElementById("teamRequestsFlagFilter");
+    const dialog = document.getElementById("teamRequestDialog");
+    let currentTicketId = "";
+    let lastDuplicateMatch = null;
+
+    function statusBucket(ticket) {
+      if (isClosed(ticket)) return "closed";
+      if (isWaiting(ticket)) return "waiting";
+      return "open";
+    }
+
+    function matchesFilters(ticket, allTeam) {
+      const term = cleanText(search.value).toLowerCase();
+      if (term) {
+        const haystack = `${ticket.number} ${ticket.title} ${ticket.requester} ${ticket.description || ""}`.toLowerCase();
+        if (!haystack.includes(term)) return false;
+      }
+      if (statusFilter.value !== "all" && statusBucket(ticket) !== statusFilter.value) return false;
+      if (queueFilter.value !== "all" && ticket.queue !== queueFilter.value) return false;
+      if (flagFilter.value === "duplicate" && !possibleDuplicatesFor(ticket, allTeam).length) return false;
+      if (flagFilter.value === "escalated" && !ticket.escalation) return false;
+      return true;
+    }
+
+    function renderQueueOptions(allTeam) {
+      const current = queueFilter.value;
+      const queues = [...new Set(allTeam.map((ticket) => ticket.queue).filter(Boolean))].sort();
+      queueFilter.innerHTML = '<option value="all">All queues</option>' +
+        queues.map((queue) => `<option value="${UI.escapeHtml(queue)}">${UI.escapeHtml(queue)}</option>`).join("");
+      if (queues.includes(current)) queueFilter.value = current;
+    }
+
+    function flagsMarkup(ticket, allTeam) {
+      const flags = [];
+      if (possibleDuplicatesFor(ticket, allTeam).length) flags.push('<span class="badge badge-amber">Possible duplicate</span>');
+      if (ticket.escalation) flags.push('<span class="badge badge-red">Escalated</span>');
+      if (hasUserContributed(ticket)) flags.push('<span class="badge badge-gray">You contributed</span>');
+      return flags.join(" ") || '<span class="muted small">—</span>';
+    }
+
+    function render() {
+      const allTeam = teamRequestTickets();
+      renderQueueOptions(allTeam);
+      countBadge.textContent = `${allTeam.length} request${allTeam.length === 1 ? "" : "s"}`;
+
+      const visible = allTeam
+        .filter((ticket) => matchesFilters(ticket, allTeam))
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+      empty.hidden = allTeam.length !== 0;
+      body.innerHTML = visible.map((ticket) => {
+        const profile = requesterProfile(ticket);
+        const deptTeam = [profile.department, profile.team].filter(Boolean).join(" / ") || "Not on file";
+        return `
+          <tr data-team-ticket="${UI.escapeHtml(ticket.id)}">
+            <td><strong>${UI.escapeHtml(ticket.number)}</strong><br><span class="muted small">${UI.escapeHtml(ticket.title)}</span></td>
+            <td>${UI.escapeHtml(ticket.requester)}</td>
+            <td>${UI.escapeHtml(deptTeam)}</td>
+            <td>${UI.escapeHtml(formatExactDate(ticket.createdAt))}</td>
+            <td><span class="badge ${statusClassForTeam(ticket)}">${UI.escapeHtml(ticket.status)}</span></td>
+            <td>${UI.escapeHtml(priorityLabel(ticket.priority))}</td>
+            <td>${UI.escapeHtml(ticket.queue || "Unrouted")}</td>
+            <td>${UI.escapeHtml(ticket.assignee || "Unassigned")}</td>
+            <td>${UI.escapeHtml(dueLabel(ticket))}</td>
+            <td>${flagsMarkup(ticket, allTeam)}</td>
+            <td><button class="btn btn-secondary btn-sm" type="button" data-open-team-ticket="${UI.escapeHtml(ticket.id)}">Open</button></td>
+          </tr>
+        `;
+      }).join("");
+
+      if (!visible.length && allTeam.length) {
+        body.innerHTML = `<tr><td colspan="11" class="muted">No requests match the current search or filters.</td></tr>`;
+      }
+    }
+
+    function statusClassForTeam(ticket) {
+      if (isClosed(ticket)) return "badge-green";
+      if (isWaiting(ticket)) return "badge-amber";
+      if (String(ticket.priority).startsWith("P1")) return "badge-red";
+      return "badge-blue";
+    }
+
+    function openTeamRequest(ticketId) {
+      const ticket = Store.getTicket(ticketId);
+      if (!ticket) return;
+      currentTicketId = ticketId;
+      const allTeam = teamRequestTickets();
+      const duplicates = possibleDuplicatesFor(ticket, Store.getState().tickets);
+      lastDuplicateMatch = duplicates[0] || null;
+
+      document.getElementById("teamRequestTitle").textContent = `${ticket.number} - ${ticket.title}`;
+      document.getElementById("teamRequestSubtitle").textContent = `${ticket.requester} · ${ticket.queue || "Unrouted"}`;
+      const statusBadge = document.getElementById("teamRequestStatusBadge");
+      statusBadge.textContent = ticket.status;
+      statusBadge.className = `badge ${statusClassForTeam(ticket)}`;
+      document.getElementById("teamRequestDuplicateBadge").hidden = !duplicates.length;
+      document.getElementById("teamRequestEscalatedBadge").hidden = !ticket.escalation;
+
+      const profile = requesterProfile(ticket);
+      document.getElementById("teamRequestMeta").innerHTML = `
+        <div class="detail-cell"><small>Requester</small><strong>${UI.escapeHtml(ticket.requester)}</strong></div>
+        <div class="detail-cell"><small>Department / team</small><strong>${UI.escapeHtml([profile.department, profile.team].filter(Boolean).join(" / ") || "Not on file")}</strong></div>
+        <div class="detail-cell"><small>Owning queue</small><strong>${UI.escapeHtml(ticket.queue || "Unrouted")}</strong></div>
+        <div class="detail-cell"><small>Assigned Service Team Member</small><strong>${UI.escapeHtml(ticket.assignee || "Unassigned")}</strong></div>
+        <div class="detail-cell"><small>SLA condition</small><strong>${UI.escapeHtml(dueLabel(ticket))}</strong></div>
+        <div class="detail-cell"><small>Last update</small><strong>${UI.escapeHtml(formatExactDate(ticket.updatedAt))}</strong></div>
+      `;
+
+      const dupNotice = document.getElementById("teamRequestDuplicateNotice");
+      if (duplicates.length) {
+        dupNotice.hidden = false;
+        document.getElementById("teamRequestDuplicateText").textContent =
+          `${duplicates[0].number} (${duplicates[0].requester}) looks similar — same category and location or department, submitted within 30 days.`;
+      } else {
+        dupNotice.hidden = true;
+      }
+
+      document.getElementById("teamRequestTimeline").innerHTML = (ticket.history || []).length
+        ? (ticket.history || []).slice().reverse().map((item) => `
+            <article class="receiver-timeline-item receiver-system-item">
+              <div class="receiver-timeline-dot"></div>
+              <div>
+                <strong>${UI.escapeHtml(item.text)}</strong>
+                <small>${UI.escapeHtml(formatExactDate(item.at))}</small>
+              </div>
+            </article>
+          `).join("")
+        : '<div class="empty-state">No timeline activity has been recorded.</div>';
+
+      document.getElementById("teamRequestNote").value = "";
+      document.getElementById("teamRequestEscalateField").hidden = true;
+      document.getElementById("teamRequestEscalateReason").value = "";
+
+      if (!dialog.open) dialog.showModal();
+    }
+
+    body.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-open-team-ticket]");
+      if (!button) return;
+      openTeamRequest(button.dataset.openTeamTicket);
+    });
+
+    document.querySelectorAll("[data-close-team-request]").forEach((button) => {
+      button.addEventListener("click", () => dialog.close());
+    });
+
+    document.getElementById("teamRequestViewDuplicate").addEventListener("click", () => {
+      if (lastDuplicateMatch) openTeamRequest(lastDuplicateMatch.id);
+    });
+
+    function noteValue() {
+      return cleanText(document.getElementById("teamRequestNote").value);
+    }
+
+    document.getElementById("teamRequestAddContext").addEventListener("click", () => {
+      const note = noteValue();
+      if (!note) { UI.showToast("Add a note before sending it to the timeline."); return; }
+      Store.updateTicket(currentTicketId, {}, `${Store.CURRENT_USER.name} (manager) added context: ${note}`);
+      UI.showToast("Context added to the shared timeline.");
+      openTeamRequest(currentTicketId);
+    });
+
+    document.getElementById("teamRequestManagerNote").addEventListener("click", () => {
+      const note = noteValue();
+      if (!note) { UI.showToast("Add a note before saving it."); return; }
+      Store.updateTicket(currentTicketId, {}, `${Store.CURRENT_USER.name} (manager note): ${note}`);
+      UI.showToast("Manager note saved to the shared timeline.");
+      openTeamRequest(currentTicketId);
+    });
+
+    document.getElementById("teamRequestAskUpdate").addEventListener("click", () => {
+      const ticket = Store.getTicket(currentTicketId);
+      const note = noteValue();
+      const owner = (ticket && ticket.assignee && ticket.assignee !== "Unassigned") ? ticket.assignee : (ticket && ticket.queue) || "the owning queue";
+      Store.updateTicket(
+        currentTicketId,
+        {},
+        `${Store.CURRENT_USER.name} (manager) asked ${owner} for an update.${note ? ` ${note}` : ""}`
+      );
+      UI.showToast(`Update requested from ${owner}.`);
+      openTeamRequest(currentTicketId);
+    });
+
+    document.getElementById("teamRequestEscalate").addEventListener("click", () => {
+      document.getElementById("teamRequestEscalateField").hidden = false;
+    });
+    document.getElementById("teamRequestEscalateCancel").addEventListener("click", () => {
+      document.getElementById("teamRequestEscalateField").hidden = true;
+    });
+    document.getElementById("teamRequestEscalateConfirm").addEventListener("click", () => {
+      const reason = document.getElementById("teamRequestEscalateReason").value;
+      if (!reason) { UI.showToast("Choose an escalation reason."); return; }
+      const note = noteValue();
+      const now = new Date().toISOString();
+      Store.updateTicket(
+        currentTicketId,
+        { escalation: { requestedBy: Store.CURRENT_USER.name, requestedAt: now, reason } },
+        `${Store.CURRENT_USER.name} (manager) requested escalation — ${reason}.${note ? ` ${note}` : ""}`
+      );
+      UI.showToast("Escalation requested. This does not change priority or SLA automatically.");
+      document.getElementById("teamRequestEscalateField").hidden = true;
+      openTeamRequest(currentTicketId);
+    });
+
+    search.addEventListener("input", render);
+    statusFilter.addEventListener("change", render);
+    queueFilter.addEventListener("change", render);
+    flagFilter.addEventListener("change", render);
+    window.addEventListener("masterflow:state", render);
+    render();
   }
 
   function initQueueManager() {
@@ -940,17 +1284,38 @@
       }
 
       const feedback = readFeedback();
+      const canDecide = servicePersona() === "manager";
       feedbackList.innerHTML = feedback.length
-        ? feedback.slice(0, 10).map((item) => `
-            <article class="feedback-item">
+        ? feedback.slice(0, 10).map((item) => {
+            const linkedTicket = item.ticketId ? Store.getTicket(item.ticketId) : null;
+            const pending = item.status === "new" || !item.status;
+            const decisionNote = item.decision && item.decision.note
+              ? ` — ${UI.escapeHtml(item.decision.note)}`
+              : "";
+            return `
+            <article class="feedback-item" data-feedback-id="${UI.escapeHtml(item.id)}">
               <div>
                 <span class="badge badge-gray">${UI.escapeHtml(item.issueType)}</span>
+                <span class="badge ${feedbackStatusClass(item.status)}">${UI.escapeHtml(feedbackStatusLabel(item.status))}</span>
                 <strong>${UI.escapeHtml(item.title)}</strong>
                 <p>${UI.escapeHtml(item.description)}</p>
+                ${item.suggestedChange ? `<p><strong>Suggested change:</strong> ${UI.escapeHtml(item.suggestedChange)}</p>` : ""}
+                ${item.expectedBenefit ? `<p><strong>Expected benefit:</strong> ${UI.escapeHtml(item.expectedBenefit)}</p>` : ""}
+                ${linkedTicket ? `<p class="muted small">Related ticket: ${UI.escapeHtml(linkedTicket.number)} · ${UI.escapeHtml(linkedTicket.queue || "Unrouted")}</p>` : ""}
+                ${!pending ? `<p class="muted small">${UI.escapeHtml(feedbackStatusLabel(item.status))}${decisionNote}</p>` : ""}
               </div>
-              <small>${UI.escapeHtml(item.sourceRole)} · ${UI.escapeHtml(formatExactDate(item.createdAt))}</small>
+              <small>${UI.escapeHtml(item.submittedBy || item.sourceRole)} · ${UI.escapeHtml(formatExactDate(item.createdAt))}</small>
+              ${pending && canDecide ? `
+                <div class="feedback-item-actions">
+                  <button class="btn btn-primary btn-sm" type="button" data-feedback-action="publish" data-feedback-id="${UI.escapeHtml(item.id)}">Approve &amp; publish</button>
+                  <button class="btn btn-secondary btn-sm" type="button" data-feedback-action="needs-info" data-feedback-id="${UI.escapeHtml(item.id)}">Return for more info</button>
+                  <button class="btn btn-danger btn-sm" type="button" data-feedback-action="reject" data-feedback-id="${UI.escapeHtml(item.id)}">Reject</button>
+                  <button class="btn btn-ghost btn-sm" type="button" data-feedback-action="escalate" data-feedback-id="${UI.escapeHtml(item.id)}">Escalate to governance</button>
+                </div>
+              ` : ""}
             </article>
-          `).join("")
+          `;
+          }).join("")
         : '<div class="empty-state">No receiver or manager feedback has been submitted yet.</div>';
     }
 
@@ -967,6 +1332,32 @@
       if (!button) return;
       window.localStorage.setItem("masterflowReceiverOpenTicket", button.dataset.qmTicket);
       window.location.href = "assigned-work.html";
+    });
+
+    const FEEDBACK_ACTION_PROMPTS = {
+      reject: "Reason for rejecting this suggestion:",
+      "needs-info": "What additional information is needed?",
+      escalate: "Why does this need Enterprise Governance review?"
+    };
+
+    feedbackList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-feedback-action]");
+      if (!button) return;
+      const action = button.dataset.feedbackAction;
+      const promptText = FEEDBACK_ACTION_PROMPTS[action];
+      let note = "";
+      if (promptText) {
+        note = window.prompt(promptText) || "";
+        if (!note.trim()) {
+          UI.showToast("A reason is required for this decision.");
+          return;
+        }
+      }
+      const updated = decideFeedback(button.dataset.feedbackId, action, note);
+      if (updated) {
+        UI.showToast(`Suggestion "${updated.title}" — ${feedbackStatusLabel(updated.status).toLowerCase()}.`);
+        renderQueueManager();
+      }
     });
 
     document.getElementById("qmSubmitRecommendation").addEventListener("click", () => {
@@ -1399,4 +1790,5 @@
   };
 
   initQueueManager();
+  initTeamRequests();
 })();

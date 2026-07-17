@@ -82,6 +82,68 @@
         </div>
       </section>
 
+      <section class="card mt-18" id="qmTeamRequestsSection">
+        <div class="card-header">
+          <div>
+            <h2>My Team's Requests</h2>
+            <p>Requests submitted by employees in your reporting team or department.</p>
+          </div>
+          <span class="badge badge-blue" id="teamRequestsCount">0 requests</span>
+        </div>
+        <div class="card-body">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <input
+                class="control search-control"
+                id="teamRequestsSearch"
+                type="search"
+                placeholder="Search by requester, ticket number, or description"
+                aria-label="Search My Team's Requests"
+              >
+            </div>
+            <div class="toolbar-right">
+              <select class="control" id="teamRequestsStatusFilter" aria-label="Filter by status">
+                <option value="all">All statuses</option>
+                <option value="open">Open</option>
+                <option value="waiting">Waiting on requester</option>
+                <option value="closed">Resolved or closed</option>
+              </select>
+              <select class="control" id="teamRequestsQueueFilter" aria-label="Filter by queue">
+                <option value="all">All queues</option>
+              </select>
+              <select class="control" id="teamRequestsFlagFilter" aria-label="Filter by flag">
+                <option value="all">All requests</option>
+                <option value="duplicate">Possible duplicate</option>
+                <option value="escalated">Escalated</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticket</th>
+                  <th>Requester</th>
+                  <th>Department / team</th>
+                  <th>Submitted</th>
+                  <th>Status</th>
+                  <th>Priority</th>
+                  <th>Queue</th>
+                  <th>Owner</th>
+                  <th>Last update</th>
+                  <th>Flags</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="teamRequestsBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="teamRequestsEmpty" hidden>
+            No requests from your reporting team or department right now.
+          </div>
+        </div>
+      </section>
+
       <section class="grid grid-2 mt-18">
         <article class="card">
           <div class="card-header">
@@ -354,6 +416,80 @@
       <button class="btn btn-secondary" type="button" id="improvementOpenStudio">Open in Flow Studio</button>
       <button class="btn btn-secondary" type="button" data-close-improvement>Cancel</button>
       <button class="btn btn-primary" type="button" id="improvementConfirmPublish">Publish now</button>
+    </div>
+  </dialog>
+
+  <dialog id="teamRequestDialog" class="team-request-dialog" aria-labelledby="teamRequestTitle">
+    <div class="dialog-header">
+      <div>
+        <div class="receiver-dialog-badges">
+          <span class="badge badge-gray" id="teamRequestStatusBadge">Status</span>
+          <span class="badge badge-amber" id="teamRequestDuplicateBadge" hidden>Possible duplicate</span>
+          <span class="badge badge-red" id="teamRequestEscalatedBadge" hidden>Escalated</span>
+        </div>
+        <h2 id="teamRequestTitle">Ticket</h2>
+        <p id="teamRequestSubtitle"></p>
+      </div>
+      <button class="close-button" type="button" data-close-team-request aria-label="Close">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <div class="detail-grid" id="teamRequestMeta"></div>
+
+      <div class="notice notice-warning mt-12" id="teamRequestDuplicateNotice" hidden>
+        <div>
+          <strong>A similar request may already be open</strong>
+          <p id="teamRequestDuplicateText"></p>
+          <button class="btn btn-secondary btn-sm mt-8" type="button" id="teamRequestViewDuplicate">View existing request</button>
+        </div>
+      </div>
+
+      <section class="receiver-timeline-section mt-18">
+        <div class="receiver-section-heading">
+          <div>
+            <h3>Shared timeline</h3>
+            <p>Communication, ownership, and status changes stay in one record.</p>
+          </div>
+        </div>
+        <div class="receiver-timeline" id="teamRequestTimeline"></div>
+      </section>
+
+      <section class="receiver-action-panel mt-18">
+        <div class="receiver-action-header">
+          <div>
+            <h3>Add context or ask for an update</h3>
+            <p>Your note is added to the shared timeline. This does not reassign or resolve the ticket.</p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="teamRequestNote">Note</label>
+          <textarea class="textarea" id="teamRequestNote" placeholder="Add relevant business context, a manager note, or a request for an update."></textarea>
+        </div>
+        <div class="receiver-action-buttons">
+          <button class="btn btn-secondary btn-sm" type="button" id="teamRequestAddContext">Add context</button>
+          <button class="btn btn-secondary btn-sm" type="button" id="teamRequestManagerNote">Manager note</button>
+          <button class="btn btn-secondary btn-sm" type="button" id="teamRequestAskUpdate">Ask for an update</button>
+          <button class="btn btn-danger btn-sm" type="button" id="teamRequestEscalate">Request escalation</button>
+        </div>
+        <div class="field mt-12" id="teamRequestEscalateField" hidden>
+          <label for="teamRequestEscalateReason">Escalation reason (required)</label>
+          <select class="select" id="teamRequestEscalateReason">
+            <option value="">Choose a reason</option>
+            <option>Business impact has increased</option>
+            <option>Request is blocking multiple employees</option>
+            <option>Customer commitment is at risk</option>
+            <option>Request has had no update</option>
+            <option>SLA risk requires attention</option>
+            <option>Additional operational context is available</option>
+          </select>
+          <div class="receiver-action-buttons mt-12">
+            <button class="btn btn-danger btn-sm" type="button" id="teamRequestEscalateConfirm">Submit escalation</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="teamRequestEscalateCancel">Cancel</button>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" data-close-team-request>Close</button>
     </div>
   </dialog>
 

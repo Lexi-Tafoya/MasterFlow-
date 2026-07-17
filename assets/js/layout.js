@@ -187,8 +187,24 @@
     return Store.getRole();
   }
 
+  // MasterFlow Intelligence (reporting.html) is limited to Queue Managers and
+  // Enterprise Administrators. A Service Team Member is a receiver-role
+  // persona, so role alone cannot gate this — the active persona must also
+  // be checked, both for nav visibility and for direct-URL access.
+  const PERSONA_RESTRICTED_PAGES = new Set(["reporting"]);
+
+  function activeServicePersona() {
+    return window.localStorage.getItem("masterflowServicePersona") === "member" ? "member" : "manager";
+  }
+
+  function isPersonaAllowed(pageId, role) {
+    if (!PERSONA_RESTRICTED_PAGES.has(pageId)) return true;
+    if (role !== "receiver") return true;
+    return activeServicePersona() === "manager";
+  }
+
   function isAllowed(pageId, role) {
-    return Boolean(pages[pageId] && pages[pageId].roles.includes(role));
+    return Boolean(pages[pageId] && pages[pageId].roles.includes(role)) && isPersonaAllowed(pageId, role);
   }
 
   function safeLanding(role) {
@@ -215,6 +231,8 @@
           if (!(definition.group === group && definition.roles.includes(role))) return false;
           // ServiceNow Transition is only for Enterprise Administrators and Queue Managers.
           if (id === "admin-migration" && role === "receiver" && servicePersona !== "manager") return false;
+          // MasterFlow Intelligence (Reporting) is only for Queue Managers and Enterprise Administrators.
+          if (!isPersonaAllowed(id, role)) return false;
           return true;
         })
         .map(([id, definition]) => {
@@ -402,6 +420,105 @@
     toast.textContent = message;
     region.appendChild(toast);
     window.setTimeout(() => toast.remove(), timeout || 4200);
+  }
+
+  const ATTACHMENT_ICON = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`;
+
+  /*
+   * Shared attachment control markup. The native file input stays in the DOM
+   * (visually hidden, not display:none) so keyboard/focus/screen-reader
+   * behavior and the browser's file dialog keep working — only the visible
+   * chrome around it is custom. Prototype only stores selected file names;
+   * nothing is uploaded.
+   */
+  function attachmentFieldMarkup(options) {
+    const opts = options || {};
+    const inputId = escapeHtml(opts.inputId || "attachmentInput");
+    const labelId = `${inputId}Label`;
+    const triggerLabel = escapeHtml(opts.triggerLabel || "Add files");
+    const helpText = escapeHtml(opts.helpText || "Prototype records selected file names in the shared timeline.");
+    const multiple = opts.multiple === false ? "" : "multiple";
+    return `
+      <div class="attachment-field" data-attachment-field>
+        <span id="${labelId}" class="sr-only">${triggerLabel}</span>
+        <input
+          class="attachment-field-input"
+          type="file"
+          id="${inputId}"
+          ${multiple}
+          aria-labelledby="${labelId}"
+        >
+        <button type="button" class="attachment-field-trigger" data-attachment-trigger aria-controls="${inputId}">
+          ${ATTACHMENT_ICON}
+          <span>${triggerLabel}</span>
+        </button>
+        <div class="attachment-field-list" data-attachment-list aria-live="polite"></div>
+        <small class="attachment-field-help muted">${helpText}</small>
+      </div>
+    `;
+  }
+
+  function initAttachmentField(root) {
+    if (!root) return null;
+    const field = root.hasAttribute && root.hasAttribute("data-attachment-field") ? root : root.querySelector("[data-attachment-field]");
+    if (!field || field.dataset.attachmentReady) return field;
+    field.dataset.attachmentReady = "true";
+
+    const input = field.querySelector(".attachment-field-input");
+    const trigger = field.querySelector("[data-attachment-trigger]");
+    const list = field.querySelector("[data-attachment-list]");
+    if (!input || !trigger || !list) return field;
+
+    function renderList() {
+      const files = Array.from(input.files || []);
+      if (!files.length) {
+        list.innerHTML = "";
+        return;
+      }
+      list.innerHTML = `<span class="attachment-field-count">${files.length} file${files.length === 1 ? "" : "s"} selected</span>` +
+        files.map((file, index) => `
+          <span class="attachment-field-chip">
+            <span class="attachment-field-chip-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+            <button type="button" class="attachment-field-chip-remove" data-attachment-remove="${index}" aria-label="Remove ${escapeHtml(file.name)}">&times;</button>
+          </span>
+        `).join("");
+    }
+
+    function replaceFiles(nextFiles) {
+      if (typeof DataTransfer === "undefined") return;
+      const transfer = new DataTransfer();
+      nextFiles.forEach((file) => transfer.items.add(file));
+      input.files = transfer.files;
+      renderList();
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    trigger.addEventListener("click", () => input.click());
+    input.addEventListener("focus", () => field.classList.add("is-focused"));
+    input.addEventListener("blur", () => field.classList.remove("is-focused"));
+    input.addEventListener("change", renderList);
+
+    list.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-attachment-remove]");
+      if (!button) return;
+      const index = Number(button.dataset.attachmentRemove);
+      replaceFiles(Array.from(input.files || []).filter((_, i) => i !== index));
+    });
+
+    if (input.hasAttribute("multiple") && typeof DataTransfer !== "undefined") {
+      field.addEventListener("dragover", (event) => { event.preventDefault(); field.classList.add("is-dragover"); });
+      field.addEventListener("dragleave", () => field.classList.remove("is-dragover"));
+      field.addEventListener("drop", (event) => {
+        event.preventDefault();
+        field.classList.remove("is-dragover");
+        const dropped = Array.from((event.dataTransfer && event.dataTransfer.files) || []);
+        if (!dropped.length) return;
+        replaceFiles(Array.from(input.files || []).concat(dropped));
+      });
+    }
+
+    renderList();
+    return field;
   }
 
   function openCriticalDialog() {
@@ -1283,6 +1400,8 @@ function openTicketDialog(ticket) {
     formatMoney,
     priorityClass,
     statusClass,
+    attachmentFieldMarkup,
+    initAttachmentField,
     layoutReady
   };
 })();

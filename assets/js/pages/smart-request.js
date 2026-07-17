@@ -271,21 +271,11 @@
             ${escape(field.label)}
           </label>
 
-          <label class="attachment-drop">
-            <input
-              type="file"
-              id="${escape(field.id)}"
-              multiple
-            >
-
-            <strong>
-              Choose files or drag them here
-            </strong>
-
-            <small>
-              Prototype only: file names are recorded locally; no upload occurs.
-            </small>
-          </label>
+          ${UI.attachmentFieldMarkup({
+            inputId: field.id,
+            triggerLabel: "Add files",
+            helpText: "Prototype only: file names are recorded locally; no upload occurs."
+          })}
         </div>
       `;
     }
@@ -421,6 +411,7 @@
         if (input) input.focus();
       });
     });
+    dynamicFields.querySelectorAll("[data-attachment-field]").forEach((field) => UI.initAttachmentField(field));
     renderTroubleshootingPanel();
   }
 

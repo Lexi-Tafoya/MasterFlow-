@@ -188,17 +188,6 @@
       margin-top: 10px;
     }
 
-    .requester-file-control {
-      display: grid;
-      gap: 4px;
-      color: var(--muted);
-      font-size: 10px;
-    }
-
-    .requester-file-control input {
-      max-width: 360px;
-    }
-
     .requester-unread-badge {
       margin-left: 6px;
       vertical-align: middle;
@@ -565,22 +554,7 @@
           </div>
 
           <div class="requester-reply-actions">
-            <label
-              class="requester-file-control"
-              for="requesterReplyAttachments"
-            >
-              <span>Add supporting files</span>
-
-              <input
-                id="requesterReplyAttachments"
-                type="file"
-                multiple
-              >
-
-              <small id="requesterAttachmentSummary">
-                Prototype stores file names in the shared timeline.
-              </small>
-            </label>
+            <div id="requesterAttachmentField"></div>
 
             <button
               class="btn btn-primary"
