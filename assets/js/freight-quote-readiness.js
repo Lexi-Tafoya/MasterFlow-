@@ -687,7 +687,7 @@ function approveDraft(candidateId, reviewer, note, confirmations) {
     export_compliance_confirmed: draft.comparison.rate_card_type === "EXPORT" ? true : null,
     override_reason_code: reasonCode,
     customer_agreement_confirmed: risk && risk.misses_due_date ? true : null,
-    approver_initials: risk && risk.misses_due_date ? approverInitials : null
+    approver_initials: approverInitials || null
   };
 
   const history = Array.isArray(draft.approval_history)
@@ -705,11 +705,12 @@ function approveDraft(candidateId, reviewer, note, confirmations) {
   return JSON.parse(JSON.stringify(draft));
 }
 
-function denyDraft(candidateId, reviewer, reasonCode, note) {
+function denyDraft(candidateId, reviewer, reasonCode, note, approverInitials) {
   const id = trimmed(candidateId);
   const by = trimmed(reviewer);
   const code = trimmed(reasonCode);
   const reason = trimmed(note);
+  const initials = trimmed(approverInitials);
 
   if (!id) throw new Error("A candidate ID is required.");
   if (!by) throw new Error("A named reviewer is required.");
@@ -728,7 +729,8 @@ function denyDraft(candidateId, reviewer, reasonCode, note) {
     at: new Date().toISOString(),
     by,
     reason_code: code,
-    note: reason
+    note: reason,
+    approver_initials: initials || null
   };
 
   const history = Array.isArray(draft.denial_history) ? draft.denial_history.slice() : [];

@@ -141,8 +141,10 @@
         <select class="select" data-role="reason-select">${reasonOptionsHtml(QuoteReadiness)}</select>`
       : "";
     const customerAgreementHtml = requiresCustomerAgreement
-      ? `<label class="mt-12" style="display:flex;align-items:center;gap:8px"><input type="checkbox" data-role="agreement-checkbox"><span>Customer agrees to the revised delivery date</span></label>
-        <div class="field mt-12"><label data-role="initials-label"><strong>Approver initials</strong></label><input class="input" data-role="initials-input" type="text" maxlength="8" placeholder="e.g. AT" style="max-width:120px"></div>`
+      ? `<label class="mt-12" style="display:flex;align-items:center;gap:8px"><input type="checkbox" data-role="agreement-checkbox"><span>Customer agrees to the revised delivery date</span></label>`
+      : "";
+    const initialsHtml = isPending
+      ? `<div class="field mt-12"><label data-role="initials-label"><strong>Your initials (required to approve or deny)</strong></label><input class="input" data-role="initials-input" type="text" maxlength="8" placeholder="e.g. AT" style="max-width:120px"></div>`
       : "";
     const verificationHtml = verification
       ? `<div class="notice notice-success mt-12"><span>&#10003;</span><div><strong>Verified savings recorded</strong><p class="muted small">${escapeHtml(formatMoney(verification.verified_savings_usd))} verified by ${escapeHtml(verification.by)} on ${escapeHtml(new Date(verification.at).toLocaleString())}. Evidence: ${escapeHtml(verification.evidence_reference)}. Note: ${escapeHtml(verification.note)}</p></div></div>`
@@ -192,6 +194,7 @@
             ${whichPlanHtml}
             ${reasonDropdownHtml}
             ${customerAgreementHtml}
+            ${initialsHtml}
             <label class="mt-12" data-role="note-label"><strong>Decision note</strong></label>
             <textarea class="textarea" data-role="note-input" rows="3" placeholder="Document why this published base-rate reduction is approved or denied for operational follow-up."></textarea>
             <div class="dialog-actions mt-12">
@@ -222,9 +225,10 @@
       const exportOk = !requiresExportConfirmation || (exportCheckbox && exportCheckbox.checked);
       const reasonOk = Boolean(reasonSelect && reasonSelect.value);
       const agreementOk = !requiresCustomerAgreement || (agreementCheckbox && agreementCheckbox.checked && initialsInput && initialsInput.value.trim());
+      const initialsOk = Boolean(initialsInput && initialsInput.value.trim());
       const noteOk = Boolean(noteInput && noteInput.value.trim());
-      if (approveButton) approveButton.disabled = !(exportOk && reasonOk && agreementOk && noteOk);
-      if (denyButton) denyButton.disabled = !reasonOk;
+      if (approveButton) approveButton.disabled = !(exportOk && reasonOk && agreementOk && noteOk && initialsOk);
+      if (denyButton) denyButton.disabled = !(reasonOk && initialsOk);
     }
 
     if (exportCheckbox) exportCheckbox.addEventListener("change", updateDecisionButtonsState);
@@ -267,7 +271,8 @@
             candidateId,
             settings.reviewerName,
             reasonSelect ? reasonSelect.value : "",
-            noteInput ? noteInput.value : ""
+            noteInput ? noteInput.value : "",
+            initialsInput ? initialsInput.value : ""
           );
           notifyUpdated(updatedDraft);
           rerender();
