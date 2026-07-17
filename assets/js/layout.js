@@ -81,7 +81,7 @@
       href: "freight-optimization.html",
       label: "Freight Optimization",
       icon: "⇄",
-      group: "Operations",
+      group: "Administration",
       roles: ["receiver"],
       title: "Freight Optimization",
       subtitle: "Review modeled freight savings, guardrails, and time-boxed shipping decisions."

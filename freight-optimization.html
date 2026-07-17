@@ -213,42 +213,6 @@
         </div>
       </section>
 
-      <section class="card mt-18" id="freightSavingsReport" aria-labelledby="freightSavingsReportTitle">
-        <div class="card-header">
-          <div><h2 id="freightSavingsReportTitle">Freight savings &amp; decisions</h2><p>Modeled savings for Master and customers, completed actions, and savings by zone and carrier.</p></div>
-        </div>
-        <div class="card-body">
-          <div class="notice notice-info"><span aria-hidden="true">i</span><div><strong>Modeled, not verified.</strong><p>Seeded-scenario savings come from the opportunities below. Approved, verified, and denied figures come from decisions recorded on quoted CSV candidates in this browser tab. No amount here is a booked freight invoice.</p></div></div>
-
-          <h3 class="small mt-12">Seeded scenario — modeled savings split</h3>
-          <section class="kpi-grid mt-12" aria-label="Seeded scenario savings">
-            <div class="kpi"><div class="kpi-label">Master internal savings</div><div class="kpi-value good" id="fsrSeedMasterSavings">$0</div><div class="kpi-meta">Sum of open opportunities</div></div>
-            <div class="kpi"><div class="kpi-label">Customer savings</div><div class="kpi-value" id="fsrSeedCustomerSavings">$0</div><div class="kpi-meta">Modeled pass-through</div></div>
-            <div class="kpi"><div class="kpi-label">Opportunities held</div><div class="kpi-value" id="fsrSeedHeldCount">0</div><div class="kpi-meta">Time-boxed for action</div></div>
-            <div class="kpi"><div class="kpi-label">Released unchanged</div><div class="kpi-value" id="fsrSeedReleasedCount">0</div><div class="kpi-meta">Original method retained</div></div>
-          </section>
-
-          <h3 class="small mt-18">Quoted CSV candidates — recorded decisions</h3>
-          <p class="small muted mt-12" id="fsrCandidateSummary">Quote and decide candidates above to populate approved, verified, and denied savings.</p>
-          <section class="kpi-grid mt-12" id="fsrCandidateKpis" aria-label="Candidate decision savings" hidden>
-            <div class="kpi"><div class="kpi-label">Approved savings (Master)</div><div class="kpi-value good" id="fsrApprovedSavings">$0</div><div class="kpi-meta">Modeled, not yet verified</div></div>
-            <div class="kpi"><div class="kpi-label">Verified savings</div><div class="kpi-value good" id="fsrVerifiedSavings">$0</div><div class="kpi-meta">Confirmed after action</div></div>
-            <div class="kpi"><div class="kpi-label">Approved actions</div><div class="kpi-value" id="fsrApprovedCount">0</div><div class="kpi-meta">Consolidations approved</div></div>
-            <div class="kpi"><div class="kpi-label">Denied actions</div><div class="kpi-value" id="fsrDeniedCount">0</div><div class="kpi-meta">Kept as-is</div></div>
-          </section>
-          <div class="grid grid-2 mt-18" id="fsrBreakdownGrid" hidden>
-            <div><h3 class="small">Approved savings by zone</h3><div class="chart-bars" id="fsrByZone"></div></div>
-            <div><h3 class="small">Approved savings by carrier</h3><div class="chart-bars" id="fsrByCarrier"></div></div>
-          </div>
-          <div class="table-wrap mt-18" id="fsrDecisionHistoryWrap" hidden>
-            <table>
-              <thead><tr><th scope="col">Decided</th><th scope="col">Customer / destination</th><th scope="col">Decision</th><th scope="col">Amount</th><th scope="col">By</th></tr></thead>
-              <tbody id="fsrDecisionHistoryBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
       <div class="page-heading mt-18">
         <div><h2>ABI173 scenario workspace</h2><p>A self-contained walkthrough using seeded fictional opportunities (ABI173, NORT41, METRO9). It is not connected to the Lines Pulled CSV pipeline above — kept as its own required demo flow.</p></div>
         <div class="page-actions"><span class="badge badge-gray">Seeded demo data</span></div>
@@ -289,6 +253,42 @@
           </div>
         </aside>
       </div>
+
+      <section class="card mt-18" id="freightSavingsReport" aria-labelledby="freightSavingsReportTitle">
+        <div class="card-header">
+          <div><h2 id="freightSavingsReportTitle">Freight savings &amp; decisions</h2><p>Modeled savings for Master and customers, completed actions, and savings by zone and carrier.</p></div>
+        </div>
+        <div class="card-body">
+          <div class="notice notice-info"><span aria-hidden="true">i</span><div><strong>Modeled, not verified.</strong><p>Seeded-scenario savings come from the ABI173 opportunities above. Approved, verified, and denied figures come from decisions recorded on quoted CSV candidates in this browser tab. No amount here is a booked freight invoice.</p></div></div>
+
+          <h3 class="small mt-12">Seeded scenario — modeled savings split</h3>
+          <section class="kpi-grid mt-12" aria-label="Seeded scenario savings">
+            <div class="kpi"><div class="kpi-label">Master internal savings</div><div class="kpi-value good" id="fsrSeedMasterSavings">$0</div><div class="kpi-meta">Sum of open opportunities</div></div>
+            <div class="kpi"><div class="kpi-label">Customer savings</div><div class="kpi-value" id="fsrSeedCustomerSavings">$0</div><div class="kpi-meta">Modeled pass-through</div></div>
+            <div class="kpi"><div class="kpi-label">Opportunities held</div><div class="kpi-value" id="fsrSeedHeldCount">0</div><div class="kpi-meta">Time-boxed for action</div></div>
+            <div class="kpi"><div class="kpi-label">Released unchanged</div><div class="kpi-value" id="fsrSeedReleasedCount">0</div><div class="kpi-meta">Original method retained</div></div>
+          </section>
+
+          <h3 class="small mt-18">Quoted CSV candidates — recorded decisions</h3>
+          <p class="small muted mt-12" id="fsrCandidateSummary">Quote and decide candidates above to populate approved, verified, and denied savings.</p>
+          <section class="kpi-grid mt-12" id="fsrCandidateKpis" aria-label="Candidate decision savings" hidden>
+            <div class="kpi"><div class="kpi-label">Approved savings (Master)</div><div class="kpi-value good" id="fsrApprovedSavings">$0</div><div class="kpi-meta">Modeled, not yet verified</div></div>
+            <div class="kpi"><div class="kpi-label">Verified savings</div><div class="kpi-value good" id="fsrVerifiedSavings">$0</div><div class="kpi-meta">Confirmed after action</div></div>
+            <div class="kpi"><div class="kpi-label">Approved actions</div><div class="kpi-value" id="fsrApprovedCount">0</div><div class="kpi-meta">Consolidations approved</div></div>
+            <div class="kpi"><div class="kpi-label">Denied actions</div><div class="kpi-value" id="fsrDeniedCount">0</div><div class="kpi-meta">Kept as-is</div></div>
+          </section>
+          <div class="grid grid-2 mt-18" id="fsrBreakdownGrid" hidden>
+            <div><h3 class="small">Approved savings by zone</h3><div class="chart-bars" id="fsrByZone"></div></div>
+            <div><h3 class="small">Approved savings by carrier</h3><div class="chart-bars" id="fsrByCarrier"></div></div>
+          </div>
+          <div class="table-wrap mt-18" id="fsrDecisionHistoryWrap" hidden>
+            <table>
+              <thead><tr><th scope="col">Decided</th><th scope="col">Customer / destination</th><th scope="col">Decision</th><th scope="col">Amount</th><th scope="col">By</th></tr></thead>
+              <tbody id="fsrDecisionHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
