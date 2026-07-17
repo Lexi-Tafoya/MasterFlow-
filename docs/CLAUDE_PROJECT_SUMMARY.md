@@ -27,7 +27,7 @@ They share role control, assignment, approvals, notifications, SLA/deadline moni
 - Project Summary is visible to every role (an "About" page); it is not Administrator-only.
 - Prototype role selector is for judging only; production access comes from SSO and server-enforced permissions.
 
-Megan Delia and Business Enablement own triage for requests that cannot be safely classified.
+Morgan Ellis and Business Enablement own triage for requests that cannot be safely classified.
 
 ## Ticketing workflow
 
@@ -37,7 +37,7 @@ Megan Delia and Business Enablement own triage for requests that cannot be safel
 4. The system pre-fills values from the message and employee profile.
 5. The employee provides only missing required information and can choose a different request type.
 6. A numbered ticket is created in the existing receiving queue and becomes visible to requester and receiver.
-7. Low-confidence/unknown requests route to `Megan Delia - Triage`.
+7. Low-confidence/unknown requests route to `Morgan Ellis - Triage`.
 
 AI assists and explains; it does not hide or override human confirmation.
 

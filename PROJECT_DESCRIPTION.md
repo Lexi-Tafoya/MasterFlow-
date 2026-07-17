@@ -41,7 +41,7 @@ authority the business already relies on.
 Classification, field extraction, and the diagnostic question flow are
 **deterministic, local, and inspectable** — no external model or API. Every
 suggestion is visible and editable; requests that cannot be safely classified
-route to `Megan Delia — Triage` rather than guessing.
+route to `Morgan Ellis — Triage` rather than guessing.
 
 ## Run it
 

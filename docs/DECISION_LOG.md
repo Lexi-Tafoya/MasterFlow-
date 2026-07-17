@@ -100,7 +100,7 @@ The system proposes, rather than hides:
 - routing explanation
 - self-service guidance
 
-The requester can correct category and priority. The system asks only contextual missing questions. Low confidence routes safely to Megan Delia - Triage.
+The requester can correct category and priority. The system asks only contextual missing questions. Low confidence routes safely to Morgan Ellis - Triage.
 
 AI is assistance, not an invisible authority. Authorized receivers can correct routing and severity.
 

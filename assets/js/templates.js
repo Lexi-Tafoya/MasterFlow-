@@ -5,6 +5,9 @@
   if (!Store) throw new Error("MasterFlowStore must load before templates.js");
 
   const STORAGE_KEY = "masterflowTemplateOverridesV1";
+  // Queue-Manager-authored request flows (created from scratch in Flow Studio),
+  // kept separate from STORAGE_KEY overrides, which only edit built-in flows.
+  const CREATED_KEY = "masterflowCreatedFlowsV1";
 
   const baseTemplates = [
     {
@@ -1680,6 +1683,54 @@
     }
   }
 
+  function readCreated() {
+    try {
+      const value = JSON.parse(window.localStorage.getItem(CREATED_KEY) || "[]");
+      return Array.isArray(value) ? value : [];
+    } catch (error) {
+      console.warn("Created request flows were reset because they could not be read.", error);
+      window.localStorage.removeItem(CREATED_KEY);
+      return [];
+    }
+  }
+
+  function writeCreated(flows) {
+    window.localStorage.setItem(CREATED_KEY, JSON.stringify(flows));
+  }
+
+  function slugify(value) {
+    return (
+      String(value || "flow")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40) || "flow"
+    );
+  }
+
+  /*
+   * A created flow is persisted fully-formed, but we normalize defensively so
+   * a hand-edited or partial record still returns the same shape getAll()
+   * produces for built-in flows (diagnostics object, workType, arrays).
+   */
+  function normalizeCreatedFlow(flow) {
+    const copy = clone(flow || {});
+    copy.custom = true;
+    copy.keywords = Array.isArray(copy.keywords) ? copy.keywords : [];
+    copy.fields = Array.isArray(copy.fields) ? copy.fields : [];
+    copy.workType = copy.workType || "Service request";
+    copy.article = copy.article || null;
+    copy.diagnostics =
+      copy.diagnostics && typeof copy.diagnostics === "object"
+        ? {
+            requiredForWork: Array.isArray(copy.diagnostics.requiredForWork) ? copy.diagnostics.requiredForWork : [],
+            suggestedFirstAction: copy.diagnostics.suggestedFirstAction || "",
+            questions: Array.isArray(copy.diagnostics.questions) ? copy.diagnostics.questions : []
+          }
+        : { requiredForWork: [], suggestedFirstAction: "", questions: [] };
+    return copy;
+  }
+
   /*
    * Work-type classification so incidents, service requests, and
    * change requests are visibly distinguished on the request, the
@@ -1704,7 +1755,7 @@
  function getAll() {
     const overrides = readOverrides();
 
-    return baseTemplates.map(
+    const baseList = baseTemplates.map(
       (template) => {
         const override =
           overrides[template.id] || {};
@@ -1740,19 +1791,144 @@
         };
       }
     );
+
+    const created = readCreated().map(normalizeCreatedFlow);
+    return [...baseList, ...created];
   }
   function get(id) {
     return getAll().find((template) => template.id === id) || getAll().find((template) => template.id === "general-triage");
   }
 
   function save(template) {
-    const overrides = readOverrides();
     const base = baseTemplates.find((item) => item.id === template.id);
-    if (!base) throw new Error("Unknown template");
-    overrides[template.id] = clone(template);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+    if (base) {
+      const overrides = readOverrides();
+      overrides[template.id] = clone(template);
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+      window.dispatchEvent(new CustomEvent("masterflow:templates", { detail: getAll() }));
+      return get(template.id);
+    }
+
+    // Editing a Queue-Manager-created flow writes back to the created store.
+    const created = readCreated();
+    const index = created.findIndex((item) => item.id === template.id);
+    if (index === -1) throw new Error("Unknown template");
+    created[index] = { ...clone(template), custom: true };
+    writeCreated(created);
     window.dispatchEvent(new CustomEvent("masterflow:templates", { detail: getAll() }));
     return get(template.id);
+  }
+
+  /*
+   * Create a brand-new request flow from a Queue Manager definition.
+   * Governed controls (priority, SLA) receive sensible defaults here and are
+   * not caller-editable; the caller chooses only a queue it already manages,
+   * recognition phrases, and optional diagnostic questions.
+   */
+  function createFlow(def) {
+    const definition = def || {};
+    const name = String(definition.name || "").trim();
+    if (!name) throw new Error("A request name is required.");
+
+    const queue = String(definition.queue || "").trim();
+    if (!queue) throw new Error("A receiving queue is required.");
+
+    const keywords = (Array.isArray(definition.keywords)
+      ? definition.keywords
+      : String(definition.keywords || "").split(/\n|,/))
+      .map((phrase) => String(phrase || "").trim())
+      .filter(Boolean);
+    if (!keywords.length) throw new Error("Add at least one recognition phrase.");
+
+    const created = readCreated();
+    const exists = (candidate) =>
+      baseTemplates.some((item) => item.id === candidate) ||
+      created.some((item) => item.id === candidate);
+    const baseId = "qm-" + slugify(name);
+    let id = baseId;
+    let suffix = 2;
+    while (exists(id)) {
+      id = `${baseId}-${suffix}`;
+      suffix += 1;
+    }
+
+    const catalog =
+      String(definition.catalog || "").trim() ||
+      (queue.includes(" - ") ? queue.split(" - ")[0].trim() : queue) ||
+      "Service Team";
+
+    const questions = (Array.isArray(definition.questions) ? definition.questions : [])
+      .map((raw, position) => {
+        const questionText = String((raw && raw.question) || "").trim();
+        if (!questionText) return null;
+        const isText = raw.type === "text" || raw.type === "textarea";
+        const options = isText
+          ? []
+          : (Array.isArray(raw.options)
+              ? raw.options
+              : String(raw.options || "").split(/\||,/))
+              .map((option) => String(option || "").trim())
+              .filter(Boolean);
+        if (!isText && !options.length) return null; // a choice question needs choices
+        const label = String((raw && raw.label) || questionText).trim();
+        return {
+          id: "q" + (position + 1),
+          label: label.slice(0, 40),
+          reportLabel: label.slice(0, 60),
+          question: questionText,
+          why: String((raw && raw.why) || "").trim() || "This helps the receiving team act on your request.",
+          type: isText ? "textarea" : "select",
+          options
+        };
+      })
+      .filter(Boolean);
+
+    const flow = normalizeCreatedFlow({
+      id,
+      name,
+      description:
+        String(definition.description || "").trim() ||
+        `Request handled by the ${queue} team.`,
+      catalog,
+      queue,
+      priority: "P3 - Normal",
+      responseSlaHours: 8,
+      resolutionSlaHours: 48,
+      keywords,
+      article: null,
+      workType: "Service request",
+      fields: [
+        { id: "shortDescription", label: "Short Description", type: "text", required: true, extractor: "shortDescription" },
+        { id: "description", label: "Describe the Request", type: "textarea", required: true, extractor: "description" },
+        { id: "requestedFor", label: "Requested For", type: "user", required: true, profileValue: "name", locked: true },
+        { id: "attachments", label: "Attachments", type: "attachment", required: false }
+      ],
+      diagnostics: {
+        requiredForWork: questions.map((question) => question.id),
+        suggestedFirstAction:
+          String(definition.suggestedFirstAction || "").trim() ||
+          `Review the request and complete it through the ${queue} queue.`,
+        questions
+      },
+      custom: true,
+      createdBy: (Store.CURRENT_USER && Store.CURRENT_USER.name) || "Queue Manager",
+      createdInQueue: queue,
+      createdAt: new Date().toISOString()
+    });
+
+    created.push(flow);
+    writeCreated(created);
+    window.dispatchEvent(new CustomEvent("masterflow:templates", { detail: getAll() }));
+    return get(id);
+  }
+
+  function deleteFlow(id) {
+    const created = readCreated();
+    const next = created.filter((item) => item.id !== id);
+    if (next.length === created.length) return getAll(); // not a created flow; ignore
+    writeCreated(next);
+    window.dispatchEvent(new CustomEvent("masterflow:templates", { detail: getAll() }));
+    return getAll();
   }
 
   function applyGovernedProposal(proposal) {
@@ -1851,6 +2027,7 @@
 
   function reset() {
     window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(CREATED_KEY);
     return getAll();
   }
 
@@ -2227,9 +2404,12 @@
 
   window.MasterFlowTemplates = {
     STORAGE_KEY,
+    CREATED_KEY,
     getAll,
     get,
     save,
+    createFlow,
+    deleteFlow,
     applyGovernedProposal,
     reset,
     classify,

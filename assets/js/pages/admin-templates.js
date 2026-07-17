@@ -12,6 +12,7 @@
   const title = document.getElementById("editorTitle");
   let activeId = "printer-ink";
   let workingTemplate = null;
+  let createMode = false;
   const ROLE_STORAGE_KEY =
     "masterflowAdminRoleV1";
 
@@ -173,6 +174,13 @@
       return true;
     }
 
+    // A flow created in Flow Studio is owned by the persona that can create
+    // flows (Queue Manager / Administrator). Read-only Members still see it
+    // only when its queue is one they manage (the queue check below).
+    if (template.custom && role.canEditTemplates) {
+      return true;
+    }
+
     return (
       role.ownedTemplateIds.includes(
         template.id
@@ -193,12 +201,37 @@
       return false;
     }
 
+    // Created flows are editable by any persona that can create them.
+    if (template.custom) {
+      return true;
+    }
+
     return (
       role.ownedTemplateIds.includes("*") ||
       role.ownedTemplateIds.includes(
         template.id
       )
     );
+  }
+
+  // Persona can author brand-new flows (Queue Manager / Administrator).
+  function canCreateFlows() {
+    return Boolean(roleContext().canEditTemplates);
+  }
+
+  // Queues a creator may route a new flow to: everything for the enterprise
+  // admin; otherwise the distinct queues of the flows this persona owns plus
+  // any explicitly managed queues. Keeps flow creation governed to queues the
+  // Queue Manager already manages.
+  function managedQueuesForCreate() {
+    const role = roleContext();
+    if (role.managedQueues.includes("*")) {
+      return [...new Set(Templates.getAll().map((template) => template.queue).filter(Boolean))].sort();
+    }
+    const fromOwned = Templates.getAll()
+      .filter((template) => role.ownedTemplateIds.includes(template.id))
+      .map((template) => template.queue);
+    return [...new Set([...(role.managedQueues || []), ...fromOwned].filter(Boolean))].sort();
   }
 
   function getVisibleTemplates() {
@@ -277,6 +310,9 @@
     );
 
     if (resetButton) resetButton.hidden = false;
+
+    const newFlowButton = document.getElementById("newFlowButton");
+    if (newFlowButton) newFlowButton.hidden = !canCreateFlows();
   }
 
   function renderList() {
@@ -304,6 +340,7 @@
       </button>`).join("") || '<div class="empty-state">No templates match that search.</div>';
 
     list.querySelectorAll("[data-template-id]").forEach((button) => button.addEventListener("click", () => {
+      createMode = false;
       activeId = button.dataset.templateId;
       workingTemplate = clone(Templates.get(activeId));
       renderList();
@@ -440,6 +477,186 @@
       renderEditor();
     }));
     applyRolePermissions();
+
+    // A created flow can be removed by the persona that owns it.
+    if (workingTemplate.custom && canEditTemplate(workingTemplate)) {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "btn btn-ghost btn-sm mt-18";
+      remove.textContent = "Delete this flow";
+      remove.addEventListener("click", () => {
+        if (!window.confirm(`Delete "${workingTemplate.name}"? This removes the request flow.`)) return;
+        Templates.deleteFlow(workingTemplate.id);
+        const firstVisible = getVisibleTemplates()[0];
+        activeId = firstVisible ? firstVisible.id : "";
+        workingTemplate = activeId ? clone(Templates.get(activeId)) : null;
+        createMode = false;
+        renderRoleSummary();
+        renderList();
+        renderEditor();
+        UI.showToast("Request flow deleted.");
+      });
+      body.appendChild(remove);
+    }
+  }
+
+  /* ---------------------------------------------------------------------
+   * Create a new request flow (Queue Manager / Administrator).
+   * ------------------------------------------------------------------- */
+  function flowQuestionRow(index) {
+    return `
+      <div class="template-field-row" data-flow-question="${index}">
+        <div class="template-field-main">
+          <div class="field"><label>Question to ask</label><input class="input" data-q-prop="question" placeholder="Example: Where should this be installed?"></div>
+          <div class="field"><label>Answer type</label><select class="select" data-q-prop="type">
+            <option value="select">Single choice</option>
+            <option value="text">Short text</option>
+          </select></div>
+          <div class="field"><label>Choices (single choice only)</label><input class="input" data-q-prop="options" placeholder="Option one | Option two"></div>
+        </div>
+        <div class="field mt-12"><label>Why you ask (optional)</label><input class="input" data-q-prop="why" placeholder="Helps the receiving team prepare"></div>
+        <div class="template-field-controls">
+          <button class="btn btn-ghost btn-sm" type="button" data-remove-question="${index}">Remove</button>
+        </div>
+      </div>`;
+  }
+
+  function bindFlowQuestionControls() {
+    const container = document.getElementById("newFlowQuestions");
+    if (!container) return;
+    container.querySelectorAll("[data-remove-question]").forEach((button) =>
+      button.addEventListener("click", () => {
+        const row = button.closest("[data-flow-question]");
+        if (row) row.remove();
+      })
+    );
+  }
+
+  function collectFlowQuestions() {
+    return Array.from(document.querySelectorAll("#newFlowQuestions [data-flow-question]"))
+      .map((row) => {
+        const value = (prop) => {
+          const control = row.querySelector(`[data-q-prop="${prop}"]`);
+          return control ? control.value.trim() : "";
+        };
+        return { question: value("question"), why: value("why"), type: value("type") || "select", options: value("options") };
+      })
+      .filter((question) => question.question);
+  }
+
+  function renderCreateForm() {
+    const queues = managedQueuesForCreate();
+    title.textContent = "New request flow";
+    setText("editorTitle", "New request flow");
+    body.classList.remove("flow-readonly");
+    body.innerHTML = `
+      <div class="field-row">
+        <div class="field"><label for="newFlowName">Request name</label><input class="input" id="newFlowName" placeholder="Example: Monitor Mount Request" required></div>
+        <div class="field"><label for="newFlowQueue">Receiving queue</label><select class="select" id="newFlowQueue" required>
+          ${queues.map((queue) => `<option value="${UI.escapeHtml(queue)}">${UI.escapeHtml(queue)}</option>`).join("")}
+        </select><small>Choose one of the queues you manage. The destination queue is governed.</small></div>
+      </div>
+      <div class="field mt-12"><label for="newFlowDescription">Employee-facing description</label><textarea class="textarea" id="newFlowDescription" placeholder="What is this request for?"></textarea></div>
+      <div class="field mt-12"><label for="newFlowKeywords">What employees might say</label><textarea class="textarea" id="newFlowKeywords" placeholder="One phrase per line, for example:&#10;need a monitor mount&#10;monitor arm request" required></textarea><small>One phrase per line. MasterFlow uses these to recognize the request.</small></div>
+      <div class="field mt-12"><label for="newFlowAction">Suggested first action for the receiving team (optional)</label><textarea class="textarea" id="newFlowAction" placeholder="How should the team start this work?"></textarea></div>
+
+      <div class="template-fields-header mt-24"><div><h3>Questions to ask the employee</h3><p>MasterFlow asks these one at a time until the request is work-ready. Optional.</p></div><button class="btn btn-secondary btn-sm" id="addFlowQuestion" type="button">+ Add question</button></div>
+      <div class="template-fields" id="newFlowQuestions">${flowQuestionRow(0)}</div>
+
+      <div class="notice notice-info mt-18"><span aria-hidden="true">i</span><div><strong>Governed defaults</strong><p>New flows start at priority P3 - Normal with an 8-hour response / 48-hour resolution target. Priority, SLA, and approvals stay governed by the Administrator.</p></div></div>
+
+      <div class="flow-studio-title-actions mt-18">
+        <button type="button" class="btn btn-secondary" id="cancelCreateFlow">Cancel</button>
+      </div>`;
+
+    document.getElementById("addFlowQuestion").addEventListener("click", () => {
+      const container = document.getElementById("newFlowQuestions");
+      const index = container.querySelectorAll("[data-flow-question]").length;
+      container.insertAdjacentHTML("beforeend", flowQuestionRow(index));
+      bindFlowQuestionControls();
+    });
+    document.getElementById("cancelCreateFlow").addEventListener("click", exitCreateMode);
+    bindFlowQuestionControls();
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = "Create request flow";
+    }
+  }
+
+  function enterCreateMode() {
+    if (!canCreateFlows()) {
+      UI.showToast("This role can review flows, but cannot create them.");
+      return;
+    }
+    if (!managedQueuesForCreate().length) {
+      UI.showToast("You have no managed queue to route a new flow to.");
+      return;
+    }
+    createMode = true;
+    workingTemplate = null;
+    renderCreateForm();
+  }
+
+  function exitCreateMode() {
+    createMode = false;
+    workingTemplate = activeId ? clone(Templates.get(activeId)) : null;
+    renderList();
+    renderEditor();
+  }
+
+  function handleCreateSubmit() {
+    const value = (id) => {
+      const control = document.getElementById(id);
+      return control ? control.value.trim() : "";
+    };
+    const name = value("newFlowName");
+    const queue = value("newFlowQueue");
+    const keywords = value("newFlowKeywords").split(/\n|,/).map((phrase) => phrase.trim()).filter(Boolean);
+    if (!name || !queue) {
+      form.reportValidity();
+      return;
+    }
+    if (!keywords.length) {
+      UI.showToast("Add at least one phrase an employee might say.");
+      return;
+    }
+    try {
+      const flow = Templates.createFlow({
+        name,
+        queue,
+        description: value("newFlowDescription"),
+        keywords,
+        suggestedFirstAction: value("newFlowAction"),
+        questions: collectFlowQuestions()
+      });
+      createMode = false;
+      activeId = flow.id;
+      workingTemplate = clone(flow);
+      renderRoleSummary();
+      renderList();
+      renderEditor();
+      UI.showToast(`${flow.name} created. The Smart Request Builder now recognizes it.`);
+    } catch (error) {
+      UI.showToast(error.message || "Could not create the request flow.");
+    }
+  }
+
+  function setupCreateButton() {
+    const header = document.querySelector(".template-list-card .card-header");
+    if (!header || document.getElementById("newFlowButton")) return;
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "flex-start";
+    header.style.gap = "12px";
+    const button = document.createElement("button");
+    button.id = "newFlowButton";
+    button.type = "button";
+    button.className = "btn btn-primary btn-sm";
+    button.textContent = "+ New flow";
+    button.addEventListener("click", enterCreateMode);
+    header.appendChild(button);
   }
 
   function collectFields() {
@@ -466,6 +683,11 @@
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
+
+    if (createMode) {
+      handleCreateSubmit();
+      return;
+    }
 
     if (
       !workingTemplate ||
@@ -508,6 +730,7 @@
   if (roleSelect) roleSelect.addEventListener(
     "change",
     () => {
+      createMode = false;
       activeRoleId =
         roleSelect.value;
 
@@ -544,8 +767,9 @@
 
   if (resetButton) {
     resetButton.addEventListener("click", () => {
-      if (!window.confirm("Reset all request-template changes in this browser?")) return;
+      if (!window.confirm("Reset all request-flow changes in this browser? This also removes flows created here.")) return;
       Templates.reset();
+      createMode = false;
       const firstVisibleTemplate = getVisibleTemplates()[0];
       activeId = firstVisibleTemplate ? firstVisibleTemplate.id : "";
       workingTemplate = activeId ? clone(Templates.get(activeId)) : null;
@@ -562,6 +786,7 @@
   const firstVisibleTemplate = visibleForInit[0];
   activeId = requestedFlow || (firstVisibleTemplate ? firstVisibleTemplate.id : "");
   workingTemplate = activeId ? clone(Templates.get(activeId)) : null;
+  setupCreateButton();
   renderRoleSummary();
   renderList();
   renderEditor();

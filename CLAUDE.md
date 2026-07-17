@@ -26,7 +26,7 @@ A separate Freight Optimization workspace scans all eligible orders but creates 
 - Freight metrics, queues, and dashboards never appear on requester home.
 - Existing catalog request definitions and automatic team-queue routing are preserved.
 - Forms differ by request type; one dynamic form engine renders configured fields.
-- AI suggestions are visible and editable; low-confidence requests route to `Megan Delia - Triage`.
+- AI suggestions are visible and editable; low-confidence requests route to `Morgan Ellis - Triage`.
 - `Shipping is stopped` bypasses AI and creates a P1 immediately.
 - Production access comes from SSO. The visible role selector is demonstration-only.
 - Scan every order; do not create a freight ticket for every order.

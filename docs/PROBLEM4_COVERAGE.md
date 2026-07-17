@@ -22,7 +22,7 @@ The prototype is dependency-free HTML/CSS/JS. All classification and extraction 
 
 ## 2. Configurable queues and automated routing (category, priority, team, business rules)
 
-- **Where demonstrated:** Each request template carries catalog, queue, priority, SLA, and trigger phrases; classification routes to the existing team queue; low-confidence routes to `Megan Delia - Triage`. Flow Studio and Rules & Access configure queue, priority, thresholds, and routing rules without code.
+- **Where demonstrated:** Each request template carries catalog, queue, priority, SLA, and trigger phrases; classification routes to the existing team queue; low-confidence routes to `Morgan Ellis - Triage`. Flow Studio and Rules & Access configure queue, priority, thresholds, and routing rules without code.
 - **Files:** `templates.js`, `request-engine.js`, `request-engine-v2.js`, `admin-templates.js` (Flow Studio), `admin-rules-access.js`, `layout.js`.
 - **Status:** **Implemented.** Routing by category/template, priority, and team; business rules via the safe-routing confidence threshold and routing/approval rules.
 - **Demo appearance:** Classification card shows Route + Priority; Admin changes a queue/threshold and Smart Request immediately reflects it.

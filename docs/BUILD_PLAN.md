@@ -24,7 +24,7 @@ Deliver a credible end-to-end prototype, not a production replacement platform.
 ### Day 2: ticket intake
 - Test printer, slow laptop, access, freight-related, and unclear requests.
 - Confirm created tickets persist and appear in My tickets and Ticket queues.
-- Confirm low-confidence routing to Megan Delia - Triage.
+- Confirm low-confidence routing to Morgan Ellis - Triage.
 
 ### Day 3: critical incident
 - Test the P1 form with warehouse users.

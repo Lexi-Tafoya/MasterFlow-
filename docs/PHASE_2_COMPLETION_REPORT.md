@@ -98,7 +98,7 @@ A queue-owned engine that assigns each incoming request to the right person **af
 
 - **Recommendation preview grammar** — for a queue with no mapped owned flow, the "After" text read *"the 'the request' intake…"* Fixed to *"The intake for this request type…"*.
 - **Stale role name** — "IT Queue & Category Manager" persisted in Reporting, Governance, Flow Studio feedback, and the Project Summary; unified to "Queue Manager."
-- **Governance H1** — "Megan Platform Governance" softened to "Platform Governance" (Megan Delia remains the Administrator persona).
+- **Governance H1** — "Morgan Platform Governance" softened to "Platform Governance" (Morgan Ellis remains the Administrator persona).
 - **Existing saved state** — added a non-destructive migration so new collections (assignment rules, availability, improvements) appear without forcing a reset.
 
 No regressions were introduced; the requester experience from Phase 1 (classification, duplicate awareness, clarification, review, P1 fast lane) was retested and remains intact.

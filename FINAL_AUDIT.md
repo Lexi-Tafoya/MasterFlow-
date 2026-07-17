@@ -35,7 +35,7 @@ capabilities or destabilizing the demo path.**
   `store.js` (`getRole`/`setRole`, whitelist + safe default). Storage key
   `masterflowDemoRole`.
 - **Admin personas:** inside the Administration workspace a second persona
-  switch (`platform-admin` = Megan, `category-owner`, `queue-manager`) drives
+  switch (`platform-admin` = Morgan, `category-owner`, `queue-manager`) drives
   governance permissions. This is how the "IT Queue & Category Manager" and
   "Enterprise Administrator" personas are realized today.
 - **Request engine:** v2 **wraps** v1 (v1 is a dependency, not a competitor).
@@ -100,7 +100,7 @@ data was found. The new `project-summary.js` writes only via `textContent`.
   `notice-*`, `badge-*`). No new visual system introduced.
 - **Freight de-emphasized** to a single honest line under Prototype boundaries.
 - **Four personas** presented (Regular user, Ticket receiver, IT Queue &
-  Category Manager, Megan Delia — Enterprise Administrator), with an honest note
+  Category Manager, Morgan Ellis — Enterprise Administrator), with an honest note
   on how they map to the demo-view + admin persona switch.
 - **Explicit 40/30/30 judging alignment**, business impact first tiebreaker.
 - **Added `assets/js/pages/project-summary.js`** — small, defensive, dynamic

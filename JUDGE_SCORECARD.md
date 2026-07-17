@@ -75,8 +75,8 @@ Legend — Status: ✅ Working · 🟡 Working with caveat · ⏸ Deferred (docu
 ### 9. Proposal governance & publication
 - **Problem:** Flow changes need control, not ad-hoc edits.
 - **Solution:** Proposal → governed review → publish that **mutates the real template**.
-- **Page:** `admin-templates.html` (feedback/proposal) + `admin-rules-access.html` (Megan).
-- **Evidence:** Megan approves & publishes; the actual request flow changes; result recorded.
+- **Page:** `admin-templates.html` (feedback/proposal) + `admin-rules-access.html` (Morgan).
+- **Evidence:** Morgan approves & publishes; the actual request flow changes; result recorded.
 - **Impact/Tech/Usability:** High / High / Med
 - **Status:** 🟡 Working; governance-only change types record `applied:false` truthfully.
 
@@ -114,7 +114,7 @@ Legend — Status: ✅ Working · 🟡 Working with caveat · ⏸ Deferred (docu
 
 ### 14. Role consolidation & protected controls
 - **Problem:** Controls must be protected without hand-maintaining every intake.
-- **Solution:** Four working personas; governed fields locked below Megan.
+- **Solution:** Four working personas; governed fields locked below Morgan.
 - **Page:** All pages (role gating in `layout.js`) + `admin-rules-access.html`.
 - **Evidence:** Role change reveals/hides workspaces; governed fields disabled for managers.
 - **Impact/Tech/Usability:** High / High / High

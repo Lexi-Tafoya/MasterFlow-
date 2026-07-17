@@ -522,7 +522,7 @@
     const names = Store.getState().tickets
       .map((ticket) => ticket.assignee)
       .filter((name) => name && name !== "Unassigned");
-    names.push(Store.CURRENT_USER.name, "Jordan Kim", "Priya Shah", "Megan Delia");
+    names.push(Store.CURRENT_USER.name, "Jordan Kim", "Priya Shah", "Morgan Ellis");
     return [...new Set(names)].sort();
   }
 

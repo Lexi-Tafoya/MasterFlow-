@@ -129,7 +129,7 @@
     );
   }
 
-  function isMegan() {
+  function isMorgan() {
     return (
       role() ===
       "platform-admin"
@@ -155,7 +155,7 @@
   }
 
   function scoped(items) {
-    return isMegan()
+    return isMorgan()
       ? items
       : items.filter(
           inManagerScope
@@ -317,7 +317,7 @@
 
               <div>
                 <small>
-                  Pending Megan
+                  Pending Morgan
                 </small>
 
                 <strong id="flowPendingProposalMetric">
@@ -478,13 +478,13 @@
                     </option>
 
                     <option value="governed">
-                      Governed — send to Megan
+                      Governed — send to Morgan
                     </option>
                   </select>
 
                   <small>
                     Queue, SLA, priority, approval, P1, and safety
-                    changes require Megan.
+                    changes require Morgan.
                   </small>
                 </div>
               </div>
@@ -711,7 +711,7 @@
   }
 
   function proposalActions(item) {
-    if (!isMegan()) {
+    if (!isMorgan()) {
       return "";
     }
 
@@ -912,20 +912,20 @@
 
     roleBadge.className =
       `badge ${
-        isMegan()
+        isMorgan()
           ? "badge-purple"
           : "badge-teal"
       }`;
 
     roleBadge.textContent =
-      isMegan()
-        ? "Megan governance"
+      isMorgan()
+        ? "Morgan governance"
         : "Category manager";
 
     document.getElementById(
       "flowImprovementDescription"
     ).textContent =
-      isMegan()
+      isMorgan()
         ? (
             "Review company-wide feedback and decide " +
             "governed request-flow changes."
@@ -938,14 +938,14 @@
     document.getElementById(
       "flowProposalListDescription"
     ).textContent =
-      isMegan()
+      isMorgan()
         ? (
             "Approve, reject, and publish governed proposals " +
             "submitted by category managers."
           )
         : (
             "Low-risk improvements publish directly; " +
-            "governed changes wait for Megan."
+            "governed changes wait for Morgan."
           );
 
     document.getElementById(
@@ -1036,7 +1036,7 @@
       "flowProposalSubmit"
     ).textContent =
       governed
-        ? "Send to Megan"
+        ? "Send to Morgan"
         : "Publish improvement";
   }
 
@@ -1336,7 +1336,7 @@
         outcome:
           risk === "governed"
             ? (
-                "Submitted to Megan for " +
+                "Submitted to Morgan for " +
                 "enterprise approval."
               )
             : applicationOutcome
@@ -1416,7 +1416,7 @@
         now;
 
       proposal.decisionBy =
-        "Megan Delia";
+        "Morgan Ellis";
 
       UI.showToast(
         "Governed proposal approved."
@@ -1451,7 +1451,7 @@
         now;
 
       proposal.decisionBy =
-        "Megan Delia";
+        "Morgan Ellis";
 
       proposal.decisionReason =
         reason;
@@ -1463,7 +1463,7 @@
             "rejected",
 
           outcome:
-            `Rejected by Megan Delia: ${reason}`
+            `Rejected by Morgan Ellis: ${reason}`
         }
       );
 
@@ -1503,7 +1503,7 @@
         now;
 
       proposal.publishedBy =
-        "Megan Delia";
+        "Morgan Ellis";
 
       proposal.appliedToTemplate =
         result.applied;
@@ -1518,7 +1518,7 @@
             "published",
 
           outcome:
-            `Published by Megan Delia. ${result.summary}`
+            `Published by Morgan Ellis. ${result.summary}`
         }
       );
 
@@ -1662,7 +1662,7 @@
           proposal.requiresApproval
             ? (
                 "Governed proposal " +
-                "sent to Megan."
+                "sent to Morgan."
               )
             : proposal.appliedToTemplate
               ? (

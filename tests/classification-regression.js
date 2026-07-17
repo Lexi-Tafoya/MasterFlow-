@@ -148,6 +148,42 @@ for (const testCase of CORPUS) {
   });
 }
 
+/*
+ * Store-layer checks for Queue-Manager-created flows (createFlow / deleteFlow /
+ * reset). These guard the create-a-flow feature: a created flow must classify
+ * to itself, must not disturb built-in classification, and must be removable.
+ */
+const storeChecks = [];
+function storeCheck(name, condition) {
+  storeChecks.push({ name, pass: Boolean(condition) });
+  if (!condition) failures += 1;
+}
+(function runStoreChecks() {
+  if (typeof Templates.createFlow !== "function") {
+    storeCheck("createFlow exists", false);
+    return;
+  }
+  const baseCount = Templates.getAll().length;
+  const flow = Templates.createFlow({
+    name: "Regression Mount Request",
+    queue: "IT Information",
+    keywords: ["regression mount request", "test monitor mount"],
+    questions: [{ question: "Which mount?", type: "select", options: "Desk | Wall" }]
+  });
+  storeCheck("createFlow returns a flow with expected id", flow && flow.id === "qm-regression-mount-request");
+  storeCheck("getAll grows by one after create", Templates.getAll().length === baseCount + 1);
+  storeCheck("created flow has governed default priority", flow && flow.priority === "P3 - Normal");
+  const routed = Templates.classify("I have a regression mount request");
+  storeCheck("created flow classifies to itself", (routed.suggestedTemplate ? routed.suggestedTemplate.id : routed.template.id) === flow.id);
+  const laptop = Templates.classify("my laptop is slow");
+  storeCheck("created flow does not disturb built-in routing", (laptop.suggestedTemplate ? laptop.suggestedTemplate.id : laptop.template.id) === "laptop-performance");
+  Templates.deleteFlow(flow.id);
+  storeCheck("deleteFlow removes the created flow", Templates.getAll().length === baseCount);
+  Templates.createFlow({ name: "Reset Test Flow", queue: "IT Help Desk", keywords: ["reset test flow"] });
+  Templates.reset();
+  storeCheck("reset clears created flows", Templates.getAll().length === baseCount);
+})();
+
 /* ------------------------------- reporting ------------------------------- */
 const pad = (value, width) => String(value).padEnd(width).slice(0, width);
 console.log("");
@@ -173,13 +209,21 @@ for (const row of rows) {
   }
 }
 console.log("-".repeat(112));
+
+console.log("Created-flow store checks (createFlow / deleteFlow / reset)");
+for (const check of storeChecks) {
+  console.log("  " + (check.pass ? "PASS" : "FAIL") + "  " + check.name);
+}
+console.log("-".repeat(112));
+
+const totalCases = CORPUS.length + storeChecks.length;
 console.log(
   (failures === 0 ? "ALL PASS" : failures + " FAILURE(S)") +
     "  —  " +
-    (CORPUS.length - failures) +
+    (totalCases - failures) +
     "/" +
-    CORPUS.length +
-    " cases passed"
+    totalCases +
+    " checks passed"
 );
 console.log("");
 

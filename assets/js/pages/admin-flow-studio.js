@@ -1948,7 +1948,7 @@
             .stopImmediatePropagation();
 
           UI.showToast(
-            "Only Megan Delia can reset company request-flow configuration."
+            "Only Morgan Ellis can reset company request-flow configuration."
           );
         },
         true

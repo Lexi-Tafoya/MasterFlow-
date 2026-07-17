@@ -32,7 +32,7 @@ The solution should:
 - Self-service guidance should be offered before submission but must not prevent ticket creation.
 - Shipping-stopping incidents need a separate, fast P1 path with clear required fields and immediate routing.
 - Every ticket needs a stable number for reference.
-- Unclear requests should route to Megan Delia’s triage queue.
+- Unclear requests should route to Morgan Ellis’s triage queue.
 - Managers can assign tickets to team members or themselves; authorized team members can self-assign.
 - AI can suggest priority and severity, but authorized managers can correct it.
 - Requests involving cost can trigger approval above a configurable threshold.

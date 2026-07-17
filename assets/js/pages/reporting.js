@@ -1014,7 +1014,7 @@
 
       setText(
         "reportingScopeDescription",
-        "Megan can review performance across every request flow, queue, feedback signal, and governed improvement."
+        "Morgan can review performance across every request flow, queue, feedback signal, and governed improvement."
       );
 
       if (governance) {
@@ -1686,7 +1686,7 @@
     let owner =
       scope ===
       "enterprise"
-        ? "Megan Delia"
+        ? "Morgan Ellis"
         : "Queue Manager";
 
     if (gaps.length) {
@@ -2025,7 +2025,7 @@
           "Assign the closest category owner and improve recognition or routing guidance.",
 
         owner:
-          "Megan Delia"
+          "Morgan Ellis"
       });
     }
 
@@ -2100,7 +2100,7 @@
           owner:
             scope ===
             "enterprise"
-              ? "Megan Delia (Administrator)"
+              ? "Morgan Ellis (Administrator)"
               : "Queue Manager"
         });
       }

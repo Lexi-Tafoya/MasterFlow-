@@ -151,7 +151,7 @@
           queue: "Enterprise Triage",
           requester: "Taylor Jones",
           department: "Receiving",
-          assignee: "Megan Delia",
+          assignee: "Morgan Ellis",
           status: "Triage",
           createdAt: new Date(now - 3.5 * 60 * 60 * 1000).toISOString(),
           updatedAt: new Date(now - 2.9 * 60 * 60 * 1000).toISOString(),
@@ -177,7 +177,7 @@
             reason: "Classification confidence (42%) was below the 70% safe-routing threshold.",
             reasonType: "low-confidence",
             enteredAt: new Date(now - 3.5 * 60 * 60 * 1000).toISOString(),
-            owner: "Megan Delia",
+            owner: "Morgan Ellis",
             candidates: [
               { category: "Report an issue to Help Desk", queue: "IT Help Desk", templateId: "printer-connectivity", confidence: 42 },
               { category: "Systems Intake", queue: "Business Enablement - Systems Intake", templateId: "systems-intake", confidence: 31 }
@@ -449,25 +449,25 @@
       },
       flowImprovements: [],
       classificationFeedback: [
-        { id: "cf-seed-1", phrase: "printer stopped working at my station", originalCategory: "Needs classification", originalConfidence: 48, correctedCategory: "IT Information / Report an issue to Help Desk", correctedQueue: "IT Help Desk", reason: "Printer issue confirmed from requester clarification.", by: "Megan Delia", at: new Date(now - 26 * 60 * 60 * 1000).toISOString(), sentToFlowStudio: false },
-        { id: "cf-seed-2", phrase: "printer not printing labels", originalCategory: "Needs classification", originalConfidence: 52, correctedCategory: "IT Information / Report an issue to Help Desk", correctedQueue: "IT Help Desk", reason: "Original description was too ambiguous; confirmed printer connectivity.", by: "Megan Delia", at: new Date(now - 20 * 60 * 60 * 1000).toISOString(), sentToFlowStudio: false }
+        { id: "cf-seed-1", phrase: "printer stopped working at my station", originalCategory: "Needs classification", originalConfidence: 48, correctedCategory: "IT Information / Report an issue to Help Desk", correctedQueue: "IT Help Desk", reason: "Printer issue confirmed from requester clarification.", by: "Morgan Ellis", at: new Date(now - 26 * 60 * 60 * 1000).toISOString(), sentToFlowStudio: false },
+        { id: "cf-seed-2", phrase: "printer not printing labels", originalCategory: "Needs classification", originalConfidence: 52, correctedCategory: "IT Information / Report an issue to Help Desk", correctedQueue: "IT Help Desk", reason: "Original description was too ambiguous; confirmed printer connectivity.", by: "Morgan Ellis", at: new Date(now - 20 * 60 * 60 * 1000).toISOString(), sentToFlowStudio: false }
       ],
       employees: [
-        { id: "emp-megan", name: "Megan Delia", employeeId: "ME-1001", email: "megan.delia@masterelectronics.com", department: "Business Enablement", team: "Platform Governance", site: "Phoenix HQ", manager: "COO", role: "Enterprise Administrator", queues: [], managerQueues: [], ownedCategories: [], flowStudio: false, assignmentRules: false, reporting: true, admin: true, active: true },
-        { id: "emp-jkim", name: "Jordan Kim", employeeId: "ME-4471", email: "jordan.kim@masterelectronics.com", department: "IT", team: "IT Help Desk", site: "Phoenix DC", manager: "Megan Delia", role: "Service Team Member", queues: ["IT Help Desk"], managerQueues: [], ownedCategories: ["Report an issue to Help Desk"], flowStudio: false, assignmentRules: false, reporting: false, admin: false, active: true },
-        { id: "emp-tmorgan", name: "Taylor Morgan", employeeId: "ME-4472", email: "taylor.morgan@masterelectronics.com", department: "IT", team: "IT Help Desk", site: "Phoenix DC", manager: "Megan Delia", role: "Queue Manager", queues: ["IT Help Desk", "IT Information"], managerQueues: ["IT Help Desk", "IT Information"], ownedCategories: ["Report an issue to Help Desk", "Printer Ink Request", "New IT Hardware Request"], flowStudio: true, assignmentRules: true, reporting: true, admin: false, active: true },
-        { id: "emp-pshah", name: "Priya Shah", employeeId: "ME-4488", email: "priya.shah@masterelectronics.com", department: "IT", team: "Systems Intake", site: "Phoenix DC", manager: "Megan Delia", role: "Service Team Member", queues: ["Business Enablement - Systems Intake"], managerQueues: [], ownedCategories: ["Systems Intake"], flowStudio: false, assignmentRules: false, reporting: false, admin: false, active: true },
+        { id: "emp-morgan", name: "Morgan Ellis", employeeId: "ME-1001", email: "morgan.ellis@masterelectronics.com", department: "Business Enablement", team: "Platform Governance", site: "Phoenix HQ", manager: "COO", role: "Enterprise Administrator", queues: [], managerQueues: [], ownedCategories: [], flowStudio: false, assignmentRules: false, reporting: true, admin: true, active: true },
+        { id: "emp-jkim", name: "Jordan Kim", employeeId: "ME-4471", email: "jordan.kim@masterelectronics.com", department: "IT", team: "IT Help Desk", site: "Phoenix DC", manager: "Morgan Ellis", role: "Service Team Member", queues: ["IT Help Desk"], managerQueues: [], ownedCategories: ["Report an issue to Help Desk"], flowStudio: false, assignmentRules: false, reporting: false, admin: false, active: true },
+        { id: "emp-tmorgan", name: "Taylor Morgan", employeeId: "ME-4472", email: "taylor.morgan@masterelectronics.com", department: "IT", team: "IT Help Desk", site: "Phoenix DC", manager: "Morgan Ellis", role: "Queue Manager", queues: ["IT Help Desk", "IT Information"], managerQueues: ["IT Help Desk", "IT Information"], ownedCategories: ["Report an issue to Help Desk", "Printer Ink Request", "New IT Hardware Request"], flowStudio: true, assignmentRules: true, reporting: true, admin: false, active: true },
+        { id: "emp-pshah", name: "Priya Shah", employeeId: "ME-4488", email: "priya.shah@masterelectronics.com", department: "IT", team: "Systems Intake", site: "Phoenix DC", manager: "Morgan Ellis", role: "Service Team Member", queues: ["Business Enablement - Systems Intake"], managerQueues: [], ownedCategories: ["Systems Intake"], flowStudio: false, assignmentRules: false, reporting: false, admin: false, active: true },
         { id: "emp-crivera", name: "Casey Rivera", employeeId: "ME-4490", email: "casey.rivera@masterelectronics.com", department: "IT", team: "IT Information", site: "Phoenix DC", manager: "Taylor Morgan", role: "Service Team Member", queues: ["IT Information"], managerQueues: [], ownedCategories: ["New IT Hardware Request"], flowStudio: false, assignmentRules: false, reporting: false, admin: false, active: true },
         { id: "emp-mreed", name: "Marcus Reed", employeeId: "ME-4501", email: "marcus.reed@masterelectronics.com", department: "Facilities", team: "Facilities Ops", site: "Phoenix DC", manager: "D. Chen", role: "Service Team Member", queues: ["Facilities"], managerQueues: [], ownedCategories: ["Equipment Out of Service", "HVAC"], flowStudio: false, assignmentRules: false, reporting: false, admin: false, active: true },
         { id: "emp-dbrooks", name: "Devon Brooks", employeeId: "ME-4520", email: "devon.brooks@masterelectronics.com", department: "IT", team: "IT Help Desk", site: "New York DC", manager: "Taylor Morgan", role: "Service Team Member", queues: [], managerQueues: [], ownedCategories: [], flowStudio: false, assignmentRules: false, reporting: false, admin: false, active: false }
       ],
       accessRequests: [
         { id: "areq-1", employeeId: "emp-crivera", employeeName: "Casey Rivera", requested: "Work access — Printer Connectivity in IT Help Desk", queue: "IT Help Desk", categories: ["Report an issue to Help Desk"], reason: "Cross-training to cover Help Desk printer tickets.", requestedBy: "Taylor Morgan", manager: "Taylor Morgan", submittedAt: new Date(now - 18 * 60 * 60 * 1000).toISOString(), risk: "Low", status: "pending" },
-        { id: "areq-2", employeeId: "emp-pshah", employeeName: "Priya Shah", requested: "Queue Manager — IT Help Desk", queue: "IT Help Desk", categories: ["Report an issue to Help Desk"], reason: "Covering for the team lead during a two-week leave.", requestedBy: "Megan Delia", manager: "Megan Delia", submittedAt: new Date(now - 5 * 60 * 60 * 1000).toISOString(), risk: "Medium", status: "pending" }
+        { id: "areq-2", employeeId: "emp-pshah", employeeName: "Priya Shah", requested: "Queue Manager — IT Help Desk", queue: "IT Help Desk", categories: ["Report an issue to Help Desk"], reason: "Covering for the team lead during a two-week leave.", requestedBy: "Morgan Ellis", manager: "Morgan Ellis", submittedAt: new Date(now - 5 * 60 * 60 * 1000).toISOString(), risk: "Medium", status: "pending" }
       ],
       accessAudit: [
-        { id: "aud-1", employeeName: "Taylor Morgan", change: "Granted Queue Manager authority", scope: "IT Help Desk, IT Information", by: "Megan Delia", at: new Date(now - 40 * 24 * 60 * 60 * 1000).toISOString(), reason: "Promoted to Queue Manager." },
-        { id: "aud-2", employeeName: "Devon Brooks", change: "Removed queue access", scope: "IT Help Desk", by: "Megan Delia", at: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(), reason: "Transferred to a different site; access pending re-grant." }
+        { id: "aud-1", employeeName: "Taylor Morgan", change: "Granted Queue Manager authority", scope: "IT Help Desk, IT Information", by: "Morgan Ellis", at: new Date(now - 40 * 24 * 60 * 60 * 1000).toISOString(), reason: "Promoted to Queue Manager." },
+        { id: "aud-2", employeeName: "Devon Brooks", change: "Removed queue access", scope: "IT Help Desk", by: "Morgan Ellis", at: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(), reason: "Transferred to a different site; access pending re-grant." }
       ]
     };
   }

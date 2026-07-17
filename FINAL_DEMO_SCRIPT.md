@@ -44,11 +44,11 @@ that capability is deferred (see FINAL_AUDIT.md §9).
 10. Switch **Demo view → Administrator** → **Request templates**.
 11. As the **Queue/Category Manager** persona, capture a recurring intake problem
     and create an **improvement proposal**.
-12. Switch to the **Megan / Enterprise Administrator** persona → **Rules & access**.
+12. Switch to the **Morgan / Enterprise Administrator** persona → **Rules & access**.
     - Review the proposal: affected flow, before/after, impacted queue, why her
       approval is required.
 13. **Approve & publish** → **the actual request template changes.**
-    - _Say:_ "Managers improve their own flows; Megan governs anything that
+    - _Say:_ "Managers improve their own flows; Morgan governs anything that
       touches enterprise controls."
 
 ## Act 5 — Proof (any operations view)

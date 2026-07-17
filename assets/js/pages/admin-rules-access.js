@@ -695,7 +695,7 @@
                           ${escapeHtml(
                             proposal.decisionBy ||
                             proposal.publishedBy ||
-                            "Megan Delia"
+                            "Morgan Ellis"
                           )}
                         </span>
 
@@ -1315,13 +1315,13 @@
         now;
 
       proposal.decisionBy =
-        "Megan Delia";
+        "Morgan Ellis";
 
       updateLinkedFeedback(
         proposal,
         {
           outcome:
-            "Approved by Megan Delia and awaiting publication."
+            "Approved by Morgan Ellis and awaiting publication."
         }
       );
 
@@ -1358,7 +1358,7 @@
         now;
 
       proposal.decisionBy =
-        "Megan Delia";
+        "Morgan Ellis";
 
       proposal.decisionReason =
         reason;
@@ -1370,7 +1370,7 @@
             "rejected",
 
           outcome:
-            `Rejected by Megan Delia: ${reason}`
+            `Rejected by Morgan Ellis: ${reason}`
         }
       );
 
@@ -1410,7 +1410,7 @@
         now;
 
       proposal.publishedBy =
-        "Megan Delia";
+        "Morgan Ellis";
 
       proposal.appliedToTemplate =
         result.applied;
@@ -1425,7 +1425,7 @@
             "published",
 
           outcome:
-            `Published by Megan Delia. ${result.summary}`
+            `Published by Morgan Ellis. ${result.summary}`
         }
       );
 
@@ -1553,7 +1553,7 @@
       );
 
       UI.showToast(
-        "Megan’s governance thresholds were saved."
+        "Morgan’s governance thresholds were saved."
       );
     }
   );
