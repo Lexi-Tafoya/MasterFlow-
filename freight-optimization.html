@@ -6,12 +6,11 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="MasterFlow Freight Optimization workspace for Queue Managers: review modeled freight savings, guardrails, and time-boxed decisions.">
+  <meta name="description" content="MasterFlow Freight Optimization workspace for Queue Managers: scheduled-order intake, consolidation candidates, rate comparison, anomalies, modeled savings, guardrails, and time-boxed decisions.">
   <title>MasterFlow - Freight Optimization</title>
   <link rel="stylesheet" href="assets/css/styles.css?v=rc3">
   <link rel="stylesheet" href="assets/css/FREIGHT_OPTIMIZATION.css?v=rc3">
 </head>
-
 <body class="workspace-page freight-optimization-page" data-page="freight-optimization">
   <div class="content-shell">
     <main>
@@ -19,115 +18,298 @@
         <div>
           <div class="eyebrow">Queue Manager · Logistics</div>
           <h1>Freight Optimization</h1>
-          <p>Every eligible order is scanned. Only actionable exceptions become work for Sales, Logistics, or Operations — one decision at a time, with guardrails and an automatic release deadline.</p>
+          <p>Every eligible order is scanned through read-only ERP and website feeds. Only actionable exceptions become work for Sales, Logistics, or Operations.</p>
         </div>
-        <div class="page-actions">
-          <span class="badge badge-purple">Simulated order feed</span>
-          <button class="btn btn-ghost" type="button" id="freightResetScenario">Reset freight scenario</button>
-        </div>
+        <div class="page-actions"><span class="badge badge-purple">Simulated order feed</span></div>
       </div>
 
       <div class="notice notice-info">
         <span aria-hidden="true">i</span>
         <div>
           <strong>Prototype boundary — fictional, modeled data.</strong>
-          <p>Opportunities, costs, and savings are simulated and MODELED (published-base-rate estimates), not verified freight invoices. No live ERP, TMS, carrier, or order-management system is contacted. No customer email or shipping change is sent. Scan every order; create work only when a person must decide, approve, investigate, or communicate.</p>
+          <p>All orders, rates, and savings are simulated and MODELED (published-base-rate estimates), not verified freight invoices. No live ERP, TMS, carrier, or order-management system is contacted, and no customer email or shipping change is sent. Uploaded CSVs are parsed in your browser only.</p>
         </div>
       </div>
 
+      <div class="notice notice-info mt-12"><span aria-hidden="true">i</span><div><strong>Scan every order; do not create a ticket for every order.</strong><p>A work item is created only when someone must decide, approve, investigate, or communicate before cost is incurred.</p></div></div>
+
+      <section class="card mt-18" aria-labelledby="scheduledOrderImportTitle">
+        <div class="card-header">
+          <div><h2 id="scheduledOrderImportTitle">Lines Pulled intake</h2><p>Load one or more scheduled-order CSV reports to validate and classify the freight-review population.</p></div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" type="button" id="scheduledOrderChooseFiles">Choose CSV reports</button>
+            <button class="btn btn-ghost" type="button" id="scheduledOrderReloadRemembered" hidden disabled>Reload remembered files</button>
+            <button class="btn btn-secondary" type="button" id="scheduledOrderDownload" disabled>Download review CSV</button>
+            <button class="btn btn-ghost" type="button" id="scheduledOrderClear" disabled>Clear</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <input id="scheduledOrderFiles" type="file" accept=".csv,text/csv" multiple hidden>
+          <div class="notice notice-info"><span aria-hidden="true">i</span><div><strong>Read-only intake</strong><p>SOFTZERO lines stay visible as flagged. Lines with ORDER COMPLETE = C are excluded. Uploading a report does not update ERP, send customer communication, or replace the simulated freight opportunities below. A sample file is available at <code>sample-data/lines-pulled-sample.csv</code>.</p></div></div>
+          <p class="small muted mt-12" id="scheduledOrderImportStatus">No reports loaded. Choose one or more Lines Pulled CSV files.</p>
+          <div id="scheduledOrderImportMessages"></div>
+
+          <section class="kpi-grid mt-18" id="scheduledOrderSummary" aria-label="Scheduled-order import summary" hidden>
+            <div class="kpi"><div class="kpi-label">Imported rows</div><div class="kpi-value" id="scheduledOrderTotalCount">0</div><div class="kpi-meta">Across selected files</div></div>
+            <div class="kpi"><div class="kpi-label">Actionable now</div><div class="kpi-value" id="scheduledOrderActionableCount">0</div><div class="kpi-meta good">Fully allocated</div></div>
+            <div class="kpi"><div class="kpi-label">Eligible</div><div class="kpi-value" id="scheduledOrderEligibleCount">0</div><div class="kpi-meta good">No parser warnings</div></div>
+            <div class="kpi"><div class="kpi-label">Flagged</div><div class="kpi-value" id="scheduledOrderFlaggedCount">0</div><div class="kpi-meta">Visible for follow-up</div></div>
+            <div class="kpi"><div class="kpi-label">Excluded</div><div class="kpi-value" id="scheduledOrderExcludedCount">0</div><div class="kpi-meta">Completed lines</div></div>
+            <div class="kpi"><div class="kpi-label">Invalid</div><div class="kpi-value" id="scheduledOrderInvalidCount">0</div><div class="kpi-meta">Data correction needed</div></div>
+            <div class="kpi"><div class="kpi-label">Destination confirmed</div><div class="kpi-value" id="scheduledOrderDestinationConfirmedCount">0</div><div class="kpi-meta good">Explicit complete destination</div></div>
+            <div class="kpi"><div class="kpi-label">Destination inferred</div><div class="kpi-value" id="scheduledOrderDestinationInferredCount">0</div><div class="kpi-meta">Country inferred from US state</div></div>
+            <div class="kpi"><div class="kpi-label">Destination review</div><div class="kpi-value" id="scheduledOrderDestinationReviewCount">0</div><div class="kpi-meta">Not grouped automatically</div></div>
+          </section>
+
+          <div id="scheduledOrderResults" hidden>
+            <div class="toolbar mt-18">
+              <div class="toolbar-left"><input class="control search-control" id="scheduledOrderSearch" type="search" placeholder="Search file, control, customer, part, or issue" aria-label="Search imported scheduled-order lines"></div>
+              <div class="toolbar-right"><select class="control" id="scheduledOrderDispositionFilter" aria-label="Filter imported scheduled-order lines"><option value="review">Review population</option><option value="all">All imported rows</option><option value="eligible">Eligible</option><option value="flagged">Flagged</option><option value="excluded">Excluded</option><option value="invalid">Invalid</option></select></div>
+            </div>
+            <p class="small muted mt-12" id="scheduledOrderTableMeta"></p>
+          </div>
+        </div>
+        <div class="table-wrap" id="scheduledOrderResultsTable" hidden>
+          <table>
+            <thead><tr><th scope="col">Source</th><th scope="col">Control / customer</th><th scope="col">Destination</th><th scope="col">Part / quantity</th><th scope="col">Print / due</th><th scope="col">Allocation</th><th scope="col">Complete</th><th scope="col">Resale</th><th scope="col">Margin</th><th scope="col">Disposition</th><th scope="col">Issues</th></tr></thead>
+            <tbody id="scheduledOrderBody"><tr><td colspan="11"><div class="empty-state">Choose CSV reports to build the scheduled-order review population.</div></td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card mt-18" id="scheduledOrderCandidates" aria-labelledby="scheduledOrderCandidateTitle" hidden>
+        <div class="card-header">
+          <div><h2 id="scheduledOrderCandidateTitle">Destination-aware freight-review candidates</h2><p>Same-customer, same-destination, same-warehouse, same-day releases that may warrant consolidation or service review.</p></div>
+          <div class="page-actions"><button class="btn btn-secondary" type="button" id="scheduledOrderCandidateDownload" disabled>Download candidate CSV</button></div>
+        </div>
+        <div class="card-body">
+          <div class="notice notice-warning"><span aria-hidden="true">!</span><div><strong>Candidate only, not a shipping decision</strong><p>Destination is now part of the grouping rule. Open a candidate to enter zone, package, weight, and dimension inputs for a published base-rate comparison. Actual freight cost, fuel, accessorials, discounts, and authorization are still required before savings can be verified.</p></div></div>
+          <p class="small muted mt-12" id="scheduledOrderCandidateStatus">Load Lines Pulled reports to build grouped candidates.</p>
+
+          <section class="kpi-grid mt-18" id="scheduledOrderCandidateSummary" aria-label="Grouped freight-review candidate summary" hidden>
+            <div class="kpi"><div class="kpi-label">Candidate groups</div><div class="kpi-value" id="scheduledOrderCandidateCount">0</div><div class="kpi-meta">Two or more releases</div></div>
+            <div class="kpi"><div class="kpi-label">Ready now</div><div class="kpi-value" id="scheduledOrderCandidateReadyCount">0</div><div class="kpi-meta good">At least two actionable releases</div></div>
+            <div class="kpi"><div class="kpi-label">Partial</div><div class="kpi-value" id="scheduledOrderCandidatePartialCount">0</div><div class="kpi-meta">One actionable release</div></div>
+            <div class="kpi"><div class="kpi-label">Waiting</div><div class="kpi-value" id="scheduledOrderCandidateWaitingCount">0</div><div class="kpi-meta">No allocated releases</div></div>
+            <div class="kpi"><div class="kpi-label">Mixed services</div><div class="kpi-value" id="scheduledOrderCandidateMixedCount">0</div><div class="kpi-meta">Multiple SHIP VIA values</div></div>
+            <div class="kpi"><div class="kpi-label">Destination review</div><div class="kpi-value" id="scheduledOrderCandidateDestinationReviewCount">0</div><div class="kpi-meta">Rows not grouped automatically</div></div>
+            <div class="kpi"><div class="kpi-label">Order value in groups</div><div class="kpi-value" id="scheduledOrderCandidateValue">$0</div><div class="kpi-meta">Original extended resale</div></div>
+            <div class="kpi"><div class="kpi-label">Published comparisons</div><div class="kpi-value" id="scheduledOrderCandidateQuotedCount">0</div><div class="kpi-meta">Saved in this browser tab</div></div>
+          </section>
+
+          <div class="toolbar mt-18">
+            <div class="toolbar-left"><input class="control search-control" id="scheduledOrderCandidateSearch" type="search" placeholder="Search customer, control, service, part, or reason" aria-label="Search grouped freight-review candidates"></div>
+            <div class="toolbar-right"><select class="control" id="scheduledOrderCandidateFilter" aria-label="Filter grouped freight-review candidates"><option value="all">All candidates</option><option value="needs-decision">Needs decision</option><option value="high">High priority</option><option value="ready">Ready now</option><option value="partial">Partial</option><option value="waiting">Waiting</option><option value="mixed">Mixed services</option></select></div>
+          </div>
+          <p class="small muted mt-12" id="scheduledOrderCandidateTableMeta"></p>
+          <div class="toolbar mt-12" id="scheduledOrderCandidateBulkToolbar" hidden>
+            <div class="toolbar-left"><span class="small muted" id="scheduledOrderCandidateBulkCount"></span></div>
+            <div class="toolbar-right" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select class="control" id="scheduledOrderCandidateBulkReason" aria-label="Bulk decision reason"><option value="">Choose a reason</option></select>
+              <input class="control" id="scheduledOrderCandidateBulkNote" type="text" placeholder="Optional note (a default note is used if blank)">
+              <label id="scheduledOrderCandidateBulkExportLabel" hidden style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="scheduledOrderCandidateBulkExportConfirm"><span class="small">Export/hazmat compliance reviewed for all selected export shipments</span></label>
+              <label id="scheduledOrderCandidateBulkAgreementLabel" hidden style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="scheduledOrderCandidateBulkAgreementConfirm"><span class="small">Customer agrees to the revised delivery date for all selected at-risk shipments</span></label>
+              <input class="control" id="scheduledOrderCandidateBulkInitials" type="text" maxlength="8" placeholder="Initials" style="max-width:110px" hidden>
+              <button class="btn btn-primary btn-sm" type="button" id="scheduledOrderCandidateBulkApprove" disabled>Mass approve</button>
+              <button class="btn btn-secondary btn-sm" type="button" id="scheduledOrderCandidateBulkDeny" disabled>Mass deny</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap" id="scheduledOrderCandidateTable" hidden>
+          <table>
+            <thead><tr><th scope="col"><input type="checkbox" id="scheduledOrderCandidateSelectAll" aria-label="Select all quoted candidates"></th><th scope="col">Priority</th><th scope="col">Customer / destination / print date</th><th scope="col">Releases / lines</th><th scope="col">Ship methods</th><th scope="col">Value / margin</th><th scope="col">Readiness</th><th scope="col">Quote status</th><th scope="col">Recommendation</th><th scope="col">Action</th></tr></thead>
+            <tbody id="scheduledOrderCandidateBody"><tr><td colspan="10"><div class="empty-state">Load Lines Pulled reports to build grouped freight-review candidates.</div></td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card mt-18" id="rateCardLibrary" aria-labelledby="rateCardLibraryTitle">
+        <div class="card-header">
+          <div><h2 id="rateCardLibraryTitle">Carrier rate-card library</h2><p>Load the private normalized carrier rate-card CSV to validate published Domestic, Import, and Export base rates.</p></div>
+          <div class="page-actions">
+            <input id="rateCardFiles" type="file" accept=".csv,text/csv" multiple hidden>
+            <button class="btn btn-secondary" type="button" id="rateCardChooseFiles">Choose normalized rate CSV</button>
+            <button class="btn btn-ghost" type="button" id="rateCardReloadRemembered" hidden disabled>Reload remembered file</button>
+            <button class="btn btn-ghost" type="button" id="rateCardClear" disabled>Clear</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="notice notice-info"><span aria-hidden="true">i</span><div><strong>Private, read-only reference data</strong><p>The selected rate file stays in this browser session and is not saved to MasterFlow or GitHub. Published rates exclude fuel and accessorial charges. A sample file is available at <code>sample-data/rate-card-sample.csv</code>.</p></div></div>
+          <p class="small muted mt-12" id="rateCardStatus">No rate cards loaded. Choose the private normalized carrier rate-card CSV.</p>
+          <div id="rateCardMessages"></div>
+
+          <section class="kpi-grid mt-18" id="rateCardSummary" aria-label="Carrier rate-card summary" hidden>
+            <div class="kpi"><div class="kpi-label">Valid rate rows</div><div class="kpi-value" id="rateCardRowCount">0</div><div class="kpi-meta">Published zone and weight prices</div></div>
+            <div class="kpi"><div class="kpi-label">Services</div><div class="kpi-value" id="rateCardServiceCount">0</div><div class="kpi-meta">Distinct service tables</div></div>
+            <div class="kpi"><div class="kpi-label">Zones</div><div class="kpi-value" id="rateCardZoneCount">0</div><div class="kpi-meta">Rate-type and zone combinations</div></div>
+            <div class="kpi"><div class="kpi-label">Domestic rows</div><div class="kpi-value" id="rateCardDomesticCount">0</div><div class="kpi-meta">Outbound within US48</div></div>
+            <div class="kpi"><div class="kpi-label">Import rows</div><div class="kpi-value" id="rateCardImportCount">0</div><div class="kpi-meta">Inbound to US48</div></div>
+            <div class="kpi"><div class="kpi-label">Export rows</div><div class="kpi-value" id="rateCardExportCount">0</div><div class="kpi-meta">Outbound from US48</div></div>
+          </section>
+
+          <div class="notice notice-warning mt-18"><span aria-hidden="true">!</span><div><strong>Candidate pricing is not automatic yet</strong><p id="rateCardCandidateStatus">Load scheduled orders to map candidate groups to Domestic or Export rate categories.</p></div></div>
+
+          <div class="dialog-section mt-18">
+            <h3>Manual published base-rate lookup</h3>
+            <p class="small muted">Use a known carrier zone and billable weight to validate the normalized library. This does not calculate fuel, accessorials, negotiated discounts, package count, dimensional weight, or final savings.</p>
+            <div class="field-row mt-12">
+              <div class="field"><label for="rateLookupType">Rate category</label><select class="select" id="rateLookupType"><option value="">Choose category</option><option value="DOMESTIC">Domestic</option><option value="EXPORT">Export</option><option value="IMPORT">Import</option></select></div>
+              <div class="field"><label for="rateLookupService">Carrier service</label><select class="select" id="rateLookupService"><option value="">Choose service</option></select></div>
+            </div>
+            <div class="field-row mt-12">
+              <div class="field"><label for="rateLookupZone">Zone</label><select class="select" id="rateLookupZone"><option value="">Choose zone</option></select></div>
+              <div class="field"><label for="rateLookupPackage">Package type</label><select class="select" id="rateLookupPackage"><option value="">Choose package type</option></select></div>
+            </div>
+            <div class="field-row mt-12">
+              <div class="field"><label for="rateLookupWeight">Billable weight (lb)</label><input class="input" id="rateLookupWeight" type="number" min="0" step="0.1" placeholder="Example: 25"></div>
+              <div class="field" style="justify-content:flex-end"><label aria-hidden="true">&nbsp;</label><button class="btn btn-primary" type="button" id="rateLookupButton">Look up published base rate</button></div>
+            </div>
+            <div class="mt-12" id="rateLookupResult"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card mt-18" id="freightAnomalies" aria-labelledby="freightAnomaliesTitle">
+        <div class="card-header">
+          <div><h2 id="freightAnomaliesTitle">Freight cost anomalies</h2><p>Unsupervised statistical screening (z-score vs peer groups) that flags freight figures that look unusually high compared to order value or margin.</p></div>
+        </div>
+        <div class="card-body">
+          <div class="notice notice-info"><span aria-hidden="true">i</span><div><strong>Screening aid, not a shipping decision</strong><p>This flags published base-rate freight figures that are statistically unusual within Domestic or Export peer groups (or fixed screening thresholds when too few candidates are quoted). It is not a final freight quote, verified savings amount, or shipping decision.</p></div></div>
+          <p class="small muted mt-12" id="freightAnomalySummary">Quote candidates from the freight-review candidate table above to enable anomaly screening.</p>
+          <div class="toolbar mt-12" id="freightAnomalyBulkToolbar" hidden>
+            <div class="toolbar-left"><span class="small muted" id="freightAnomalyBulkCount"></span></div>
+            <div class="toolbar-right" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select class="control" id="freightAnomalyBulkReason" aria-label="Bulk decision reason"><option value="">Choose a reason</option></select>
+              <input class="control" id="freightAnomalyBulkNote" type="text" placeholder="Optional note (a default note is used if blank)">
+              <label id="freightAnomalyBulkExportLabel" hidden style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="freightAnomalyBulkExportConfirm"><span class="small">Export/hazmat compliance reviewed for all selected export shipments</span></label>
+              <label id="freightAnomalyBulkAgreementLabel" hidden style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="freightAnomalyBulkAgreementConfirm"><span class="small">Customer agrees to the revised delivery date for all selected at-risk shipments</span></label>
+              <input class="control" id="freightAnomalyBulkInitials" type="text" maxlength="8" placeholder="Initials" style="max-width:110px" hidden>
+              <button class="btn btn-primary btn-sm" type="button" id="freightAnomalyBulkApprove" disabled>Mass approve</button>
+              <button class="btn btn-secondary btn-sm" type="button" id="freightAnomalyBulkDeny" disabled>Mass deny</button>
+            </div>
+          </div>
+          <div class="table-wrap mt-12" id="freightAnomalyTableWrap" hidden>
+            <table>
+              <thead><tr><th scope="col"><input type="checkbox" id="freightAnomalySelectAll" aria-label="Select all flagged candidates"></th><th scope="col">Candidate</th><th scope="col">Rate category</th><th scope="col">Freight (current published base)</th><th scope="col">Order value</th><th scope="col">Margin</th><th scope="col">Freight / value</th><th scope="col">Freight / margin</th><th scope="col">Why it was flagged</th><th scope="col">Review</th></tr></thead>
+              <tbody id="freightAnomalyBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="card mt-18" id="freightCostBreakdown" aria-labelledby="freightCostBreakdownTitle">
+        <div class="card-header">
+          <div><h2 id="freightCostBreakdownTitle">Freight cost breakdown</h2><p>Published base-rate freight cost for quoted candidates, grouped by customer, warehouse, carrier, and product.</p></div>
+        </div>
+        <div class="card-body">
+          <div class="notice notice-info"><span aria-hidden="true">i</span><div><strong>Quoted candidates only</strong><p>These totals cover only candidates with a saved published base-rate comparison. Supplier and sales-channel breakdowns are not shown because the Lines Pulled data feed has no supplier or sales-channel column. The product breakdown attributes a candidate's full freight total to every product it contains, so multi-product candidates count toward more than one row.</p></div></div>
+          <p class="small muted mt-12" id="freightCostBreakdownSummary">Quote candidates from the freight-review candidate table above to see this breakdown.</p>
+          <div class="grid grid-2 mt-18" id="freightCostBreakdownGrid" hidden>
+            <div><h3 class="small">By customer</h3><div class="chart-bars" id="freightCostByCustomer"></div></div>
+            <div><h3 class="small">By warehouse</h3><div class="chart-bars" id="freightCostByWarehouse"></div></div>
+            <div class="mt-18"><h3 class="small">By carrier / service</h3><div class="chart-bars" id="freightCostByCarrier"></div></div>
+            <div class="mt-18"><h3 class="small">By product</h3><div class="chart-bars" id="freightCostByProduct"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card mt-18" id="freightSavingsReport" aria-labelledby="freightSavingsReportTitle">
+        <div class="card-header">
+          <div><h2 id="freightSavingsReportTitle">Freight savings &amp; decisions</h2><p>Modeled savings for Master and customers, completed actions, and savings by zone and carrier.</p></div>
+        </div>
+        <div class="card-body">
+          <div class="notice notice-info"><span aria-hidden="true">i</span><div><strong>Modeled, not verified.</strong><p>Seeded-scenario savings come from the opportunities below. Approved, verified, and denied figures come from decisions recorded on quoted CSV candidates in this browser tab. No amount here is a booked freight invoice.</p></div></div>
+
+          <h3 class="small mt-12">Seeded scenario — modeled savings split</h3>
+          <section class="kpi-grid mt-12" aria-label="Seeded scenario savings">
+            <div class="kpi"><div class="kpi-label">Master internal savings</div><div class="kpi-value good" id="fsrSeedMasterSavings">$0</div><div class="kpi-meta">Sum of open opportunities</div></div>
+            <div class="kpi"><div class="kpi-label">Customer savings</div><div class="kpi-value" id="fsrSeedCustomerSavings">$0</div><div class="kpi-meta">Modeled pass-through</div></div>
+            <div class="kpi"><div class="kpi-label">Opportunities held</div><div class="kpi-value" id="fsrSeedHeldCount">0</div><div class="kpi-meta">Time-boxed for action</div></div>
+            <div class="kpi"><div class="kpi-label">Released unchanged</div><div class="kpi-value" id="fsrSeedReleasedCount">0</div><div class="kpi-meta">Original method retained</div></div>
+          </section>
+
+          <h3 class="small mt-18">Quoted CSV candidates — recorded decisions</h3>
+          <p class="small muted mt-12" id="fsrCandidateSummary">Quote and decide candidates above to populate approved, verified, and denied savings.</p>
+          <section class="kpi-grid mt-12" id="fsrCandidateKpis" aria-label="Candidate decision savings" hidden>
+            <div class="kpi"><div class="kpi-label">Approved savings (Master)</div><div class="kpi-value good" id="fsrApprovedSavings">$0</div><div class="kpi-meta">Modeled, not yet verified</div></div>
+            <div class="kpi"><div class="kpi-label">Verified savings</div><div class="kpi-value good" id="fsrVerifiedSavings">$0</div><div class="kpi-meta">Confirmed after action</div></div>
+            <div class="kpi"><div class="kpi-label">Approved actions</div><div class="kpi-value" id="fsrApprovedCount">0</div><div class="kpi-meta">Consolidations approved</div></div>
+            <div class="kpi"><div class="kpi-label">Denied actions</div><div class="kpi-value" id="fsrDeniedCount">0</div><div class="kpi-meta">Kept as-is</div></div>
+          </section>
+          <div class="grid grid-2 mt-18" id="fsrBreakdownGrid" hidden>
+            <div><h3 class="small">Approved savings by zone</h3><div class="chart-bars" id="fsrByZone"></div></div>
+            <div><h3 class="small">Approved savings by carrier</h3><div class="chart-bars" id="fsrByCarrier"></div></div>
+          </div>
+          <div class="table-wrap mt-18" id="fsrDecisionHistoryWrap" hidden>
+            <table>
+              <thead><tr><th scope="col">Decided</th><th scope="col">Customer / destination</th><th scope="col">Decision</th><th scope="col">Amount</th><th scope="col">By</th></tr></thead>
+              <tbody id="fsrDecisionHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <div class="page-heading mt-18">
+        <div><h2>ABI173 scenario workspace</h2><p>A self-contained walkthrough using seeded fictional opportunities (ABI173, NORT41, METRO9). It is not connected to the Lines Pulled CSV pipeline above — kept as its own required demo flow.</p></div>
+        <div class="page-actions"><span class="badge badge-gray">Seeded demo data</span></div>
+      </div>
+
       <section class="kpi-grid mt-18" aria-label="Freight opportunity summary">
-        <div class="kpi">
-          <div class="kpi-label">Open opportunities</div>
-          <div class="kpi-value" id="freightOpenCount">0</div>
-          <div class="kpi-meta">Require human action</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Potential savings</div>
-          <div class="kpi-value" id="freightPotentialSavings">$0</div>
-          <div class="kpi-meta good">Open reviewed value (modeled)</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Waiting on Sales</div>
-          <div class="kpi-value" id="freightSalesCount">0</div>
-          <div class="kpi-meta">Customer communication queue</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Captured in demo</div>
-          <div class="kpi-value" id="freightApprovedSavings">$0</div>
-          <div class="kpi-meta good">Held for action (modeled, not yet verified)</div>
-        </div>
+        <div class="kpi"><div class="kpi-label">Open opportunities</div><div class="kpi-value" id="freightOpenCount">0</div><div class="kpi-meta">Require human action</div></div>
+        <div class="kpi"><div class="kpi-label">Potential savings</div><div class="kpi-value" id="freightPotentialSavings">$0</div><div class="kpi-meta good">Open reviewed value</div></div>
+        <div class="kpi"><div class="kpi-label">Waiting on Sales</div><div class="kpi-value" id="freightSalesCount">0</div><div class="kpi-meta">Customer communication queue</div></div>
+        <div class="kpi"><div class="kpi-label">Approved in demo</div><div class="kpi-value" id="freightApprovedSavings">$0</div><div class="kpi-meta good">Potential, not yet verified</div></div>
       </section>
 
       <div class="grid grid-2 mt-18">
         <section class="card">
-          <div class="card-header">
-            <div>
-              <h2>Actionable opportunities</h2>
-              <p>Sorted by decision deadline, service risk, and expected value.</p>
-            </div>
-          </div>
+          <div class="card-header"><div><h2>Actionable opportunities</h2><p>Sorted by decision deadline, service risk, and expected value.</p></div></div>
           <div class="card-body">
             <div class="toolbar">
-              <div class="toolbar-left">
-                <input class="control search-control" id="freightSearch" type="search" placeholder="Search customer, order, or recommendation" aria-label="Search freight opportunities">
-              </div>
-              <div class="toolbar-right">
-                <label class="sr-only" for="freightStatusFilter">Filter freight opportunities</label>
-                <select class="control" id="freightStatusFilter" aria-label="Filter freight opportunities">
-                  <option value="open">Open opportunities</option>
-                  <option value="all">All opportunities</option>
-                  <option value="sales">Waiting on Sales</option>
-                  <option value="decided">Final decisions</option>
-                </select>
-              </div>
+              <div class="toolbar-left"><input class="control search-control" id="freightSearch" type="search" placeholder="Search customer, order, or recommendation" aria-label="Search freight opportunities"></div>
+              <div class="toolbar-right"><select class="control" id="freightStatusFilter" aria-label="Filter freight opportunities"><option value="open">Open opportunities</option><option value="all">All opportunities</option><option value="sales">Waiting on Sales</option><option value="decided">Final decisions</option></select></div>
             </div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr>
-                  <th scope="col">Customer / order</th>
-                  <th scope="col">Current</th>
-                  <th scope="col">Proposed</th>
-                  <th scope="col">Current cost</th>
-                  <th scope="col">Savings</th>
-                  <th scope="col">Confidence</th>
-                  <th scope="col">Decision rule</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Action</th>
-                </tr>
-              </thead>
-              <tbody id="freightBody">
-                <tr><td colspan="9"><div class="empty-state">Loading freight opportunities…</div></td></tr>
-              </tbody>
+              <thead><tr><th scope="col">Customer / order</th><th scope="col">Current</th><th scope="col">Proposed</th><th scope="col">Current cost</th><th scope="col">Savings</th><th scope="col">Confidence</th><th scope="col">Decision rule</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead>
+              <tbody id="freightBody"></tbody>
             </table>
           </div>
         </section>
 
         <aside class="card policy-card">
-          <div class="card-header">
-            <div>
-              <h2>Current prototype policy</h2>
-              <p>Demonstration thresholds. In production these come from governed Rules &amp; access.</p>
-            </div>
-          </div>
+          <div class="card-header"><div><h2>Current prototype policy</h2><p>Authorized administrators change these values in Enterprise Governance.</p></div></div>
           <div class="card-body">
             <div class="policy-row"><label><span>Minimum savings for review</span><strong id="policyMinimumSavings">$250</strong></label></div>
             <div class="policy-row"><label><span>Normal review confidence</span><strong id="policyManualConfidence">70%</strong></label></div>
             <div class="policy-row"><label><span>Possible auto-action confidence</span><strong id="policyAutoConfidence">90%</strong></label></div>
             <div class="policy-row"><label><span>Annual savings target</span><strong id="policySavingsTarget">$200,000</strong></label></div>
-            <div class="notice notice-warning mt-12">
-              <span aria-hidden="true">!</span>
-              <div>
-                <strong>No indefinite holds</strong>
-                <p>Every hold requires a named owner, cutoff, and automatic-release action.</p>
-              </div>
-            </div>
+            <div class="notice notice-warning mt-12"><span aria-hidden="true">!</span><div><strong>No indefinite holds</strong><p>Every hold requires a named owner, cutoff, and automatic release action.</p></div></div>
           </div>
         </aside>
       </div>
     </main>
   </div>
+
+  <dialog id="scheduledOrderCandidateDialog" aria-labelledby="scheduledOrderCandidateDialogTitle">
+    <div class="dialog-header">
+      <div><h2 id="scheduledOrderCandidateDialogTitle">Freight-review candidate</h2><p id="scheduledOrderCandidateDialogSubtitle"></p></div>
+      <button class="close-button" type="button" data-close-scheduled-candidate aria-label="Close">×</button>
+    </div>
+    <div class="dialog-body" id="scheduledOrderCandidateDialogBody"></div>
+    <div class="dialog-body" id="scheduledOrderCandidateQuoteReadiness" style="padding-top:0"></div>
+    <div class="dialog-footer"><button class="btn btn-secondary" type="button" data-close-scheduled-candidate>Close</button></div>
+  </dialog>
+
+  <dialog id="freightAnomalyReviewDialog" aria-labelledby="freightAnomalyReviewDialogTitle">
+    <div class="dialog-header">
+      <div><h2 id="freightAnomalyReviewDialogTitle">Freight cost anomaly review</h2><p id="freightAnomalyReviewDialogSubtitle"></p></div>
+      <button class="close-button" type="button" data-close-anomaly-review aria-label="Close">×</button>
+    </div>
+    <div class="dialog-body" id="freightAnomalyReviewDialogBody"></div>
+    <div class="dialog-footer"><button class="btn btn-secondary" type="button" data-close-anomaly-review>Close</button></div>
+  </dialog>
 
   <dialog id="freightDialog" aria-labelledby="freightDialogTitle">
     <div class="dialog-header">
@@ -136,11 +318,7 @@
     </div>
     <div class="dialog-body" id="freightDialogBody"></div>
     <div class="dialog-body" style="padding-top:0">
-      <div class="field">
-        <label for="freightDecisionNote">Internal decision note</label>
-        <textarea class="textarea" id="freightDecisionNote" placeholder="Record the reason, customer constraint, or next step."></textarea>
-        <small>No real customer email or ERP update occurs in this prototype.</small>
-      </div>
+      <div class="field"><label for="freightDecisionNote">Internal decision note</label><textarea class="textarea" id="freightDecisionNote" placeholder="Record the reason, customer constraint, or next step."></textarea><small>No real customer email or ERP update occurs in this prototype.</small></div>
     </div>
     <div class="dialog-footer">
       <button class="btn btn-secondary" type="button" id="freightRelease">Release unchanged</button>
@@ -151,7 +329,18 @@
 
   <script src="assets/js/store.js?v=rc3" defer></script>
   <script src="assets/js/layout.js?v=rc3" defer></script>
-  <script src="assets/js/data/freight-optimization-data.js?v=rc3" defer></script>
+  <script src="assets/js/file-handle-store.js?v=rc3" defer></script>
+  <script src="assets/js/scheduled-order-parser.js?v=rc3" defer></script>
+  <script src="assets/js/freight-rate-card-library.js?v=rc3" defer></script>
+  <script src="assets/js/freight-quote-readiness.js?v=rc3" defer></script>
+  <script src="assets/js/freight-decision-panel.js?v=rc3" defer></script>
+  <script src="assets/js/freight-anomaly-detection.js?v=rc3" defer></script>
+  <script src="assets/js/freight-cost-summary-store.js?v=rc3" defer></script>
   <script src="assets/js/pages/freight-optimization.js?v=rc3" defer></script>
+  <script src="assets/js/pages/freight-scheduled-order-import.js?v=rc3" defer></script>
+  <script src="assets/js/pages/freight-scheduled-order-candidates.js?v=rc3" defer></script>
+  <script src="assets/js/pages/freight-rate-card-library.js?v=rc3" defer></script>
+  <script src="assets/js/pages/freight-quote-readiness.js?v=rc3" defer></script>
+  <script src="assets/js/pages/freight-savings-report.js?v=rc3" defer></script>
 </body>
 </html>
