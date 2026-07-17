@@ -77,6 +77,15 @@
       title: "Reporting",
       subtitle: "Measure service performance, request quality, and SLA outcomes."
     },
+    "freight-optimization": {
+      href: "freight-optimization.html",
+      label: "Freight Optimization",
+      icon: "⇄",
+      group: "Operations",
+      roles: ["receiver"],
+      title: "Freight Optimization",
+      subtitle: "Review modeled freight savings, guardrails, and time-boxed shipping decisions."
+    },
     "admin-templates": {
       href: "admin-templates.html",
       label: "Flow Studio",
@@ -193,7 +202,10 @@
   // Member is a receiver-role persona, so role alone cannot gate this — the
   // active persona must also be checked, both for nav visibility and for
   // direct-URL access. A Member works tickets from the Work Center instead.
-  const PERSONA_RESTRICTED_PAGES = new Set(["reporting", "ticket-queues"]);
+  // Freight Optimization is Queue-Manager-only: receiver role AND manager
+  // persona. Standard Service Team Members, requesters, and administrators
+  // must not see the nav item and must be redirected on direct URL access.
+  const PERSONA_RESTRICTED_PAGES = new Set(["reporting", "ticket-queues", "freight-optimization"]);
 
   function activeServicePersona() {
     return window.localStorage.getItem("masterflowServicePersona") === "member" ? "member" : "manager";

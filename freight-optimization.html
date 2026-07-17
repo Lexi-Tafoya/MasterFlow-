@@ -6,9 +6,152 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=reporting.html">
-  <title>MasterFlow</title>
-  <script>window.location.replace("reporting.html");</script>
+  <meta name="description" content="MasterFlow Freight Optimization workspace for Queue Managers: review modeled freight savings, guardrails, and time-boxed decisions.">
+  <title>MasterFlow - Freight Optimization</title>
+  <link rel="stylesheet" href="assets/css/styles.css?v=rc3">
+  <link rel="stylesheet" href="assets/css/FREIGHT_OPTIMIZATION.css?v=rc3">
 </head>
-<body></body>
+
+<body class="workspace-page freight-optimization-page" data-page="freight-optimization">
+  <div class="content-shell">
+    <main>
+      <div class="page-heading">
+        <div>
+          <div class="eyebrow">Queue Manager · Logistics</div>
+          <h1>Freight Optimization</h1>
+          <p>Every eligible order is scanned. Only actionable exceptions become work for Sales, Logistics, or Operations — one decision at a time, with guardrails and an automatic release deadline.</p>
+        </div>
+        <div class="page-actions">
+          <span class="badge badge-purple">Simulated order feed</span>
+          <button class="btn btn-ghost" type="button" id="freightResetScenario">Reset freight scenario</button>
+        </div>
+      </div>
+
+      <div class="notice notice-info">
+        <span aria-hidden="true">i</span>
+        <div>
+          <strong>Prototype boundary — fictional, modeled data.</strong>
+          <p>Opportunities, costs, and savings are simulated and MODELED (published-base-rate estimates), not verified freight invoices. No live ERP, TMS, carrier, or order-management system is contacted. No customer email or shipping change is sent. Scan every order; create work only when a person must decide, approve, investigate, or communicate.</p>
+        </div>
+      </div>
+
+      <section class="kpi-grid mt-18" aria-label="Freight opportunity summary">
+        <div class="kpi">
+          <div class="kpi-label">Open opportunities</div>
+          <div class="kpi-value" id="freightOpenCount">0</div>
+          <div class="kpi-meta">Require human action</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Potential savings</div>
+          <div class="kpi-value" id="freightPotentialSavings">$0</div>
+          <div class="kpi-meta good">Open reviewed value (modeled)</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Waiting on Sales</div>
+          <div class="kpi-value" id="freightSalesCount">0</div>
+          <div class="kpi-meta">Customer communication queue</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Captured in demo</div>
+          <div class="kpi-value" id="freightApprovedSavings">$0</div>
+          <div class="kpi-meta good">Held for action (modeled, not yet verified)</div>
+        </div>
+      </section>
+
+      <div class="grid grid-2 mt-18">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Actionable opportunities</h2>
+              <p>Sorted by decision deadline, service risk, and expected value.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="toolbar">
+              <div class="toolbar-left">
+                <input class="control search-control" id="freightSearch" type="search" placeholder="Search customer, order, or recommendation" aria-label="Search freight opportunities">
+              </div>
+              <div class="toolbar-right">
+                <label class="sr-only" for="freightStatusFilter">Filter freight opportunities</label>
+                <select class="control" id="freightStatusFilter" aria-label="Filter freight opportunities">
+                  <option value="open">Open opportunities</option>
+                  <option value="all">All opportunities</option>
+                  <option value="sales">Waiting on Sales</option>
+                  <option value="decided">Final decisions</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Customer / order</th>
+                  <th scope="col">Current</th>
+                  <th scope="col">Proposed</th>
+                  <th scope="col">Current cost</th>
+                  <th scope="col">Savings</th>
+                  <th scope="col">Confidence</th>
+                  <th scope="col">Decision rule</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody id="freightBody">
+                <tr><td colspan="9"><div class="empty-state">Loading freight opportunities…</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="card policy-card">
+          <div class="card-header">
+            <div>
+              <h2>Current prototype policy</h2>
+              <p>Demonstration thresholds. In production these come from governed Rules &amp; access.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="policy-row"><label><span>Minimum savings for review</span><strong id="policyMinimumSavings">$250</strong></label></div>
+            <div class="policy-row"><label><span>Normal review confidence</span><strong id="policyManualConfidence">70%</strong></label></div>
+            <div class="policy-row"><label><span>Possible auto-action confidence</span><strong id="policyAutoConfidence">90%</strong></label></div>
+            <div class="policy-row"><label><span>Annual savings target</span><strong id="policySavingsTarget">$200,000</strong></label></div>
+            <div class="notice notice-warning mt-12">
+              <span aria-hidden="true">!</span>
+              <div>
+                <strong>No indefinite holds</strong>
+                <p>Every hold requires a named owner, cutoff, and automatic-release action.</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="freightDialog" aria-labelledby="freightDialogTitle">
+    <div class="dialog-header">
+      <div><h2 id="freightDialogTitle">Freight opportunity</h2><p id="freightDialogSubtitle"></p></div>
+      <button class="close-button" type="button" data-close-freight aria-label="Close">×</button>
+    </div>
+    <div class="dialog-body" id="freightDialogBody"></div>
+    <div class="dialog-body" style="padding-top:0">
+      <div class="field">
+        <label for="freightDecisionNote">Internal decision note</label>
+        <textarea class="textarea" id="freightDecisionNote" placeholder="Record the reason, customer constraint, or next step."></textarea>
+        <small>No real customer email or ERP update occurs in this prototype.</small>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" id="freightRelease">Release unchanged</button>
+      <button class="btn btn-secondary" type="button" id="freightSales">Send draft to sales owner</button>
+      <button class="btn btn-primary" type="button" id="freightHold">Approve time-boxed hold</button>
+    </div>
+  </dialog>
+
+  <script src="assets/js/store.js?v=rc3" defer></script>
+  <script src="assets/js/layout.js?v=rc3" defer></script>
+  <script src="assets/js/data/freight-optimization-data.js?v=rc3" defer></script>
+  <script src="assets/js/pages/freight-optimization.js?v=rc3" defer></script>
+</body>
 </html>
