@@ -1900,6 +1900,28 @@
 
   const FILLER = /\b(?:really|very|super|extremely|totally|kinda|sorta)\b/g;
 
+  /*
+   * Generic words that carry no template-distinguishing meaning.
+   *
+   * The keyword fallback in score() may award a weak signal for
+   * overlapping individual words when a full keyword phrase is not
+   * present. These filler and ultra-generic problem words are excluded
+   * from that fallback so a single shared word (for example "not",
+   * "issue", or "problem") cannot nudge an unrelated template over the
+   * routing floor. Strong signals still come from exact keyword and
+   * alias phrase matches, which are unaffected by this list.
+   */
+  const FALLBACK_STOPWORDS = new Set([
+    "the", "and", "for", "with", "this", "that", "from", "are", "was",
+    "were", "has", "have", "had", "you", "your", "our", "its", "not",
+    "but", "all", "any", "can", "cannot", "will", "would", "should",
+    "does", "did", "been", "into", "than", "then", "there", "here",
+    "they", "them", "when", "what", "which", "who", "how", "please",
+    "just", "very", "really", "some", "about", "issue", "issues",
+    "problem", "problems", "thing", "something", "someone", "anything",
+    "help"
+  ]);
+
   function normalize(text) {
     let value = String(text || "").toLowerCase();
     CONTRACTIONS.forEach(([pattern, replacement]) => {
@@ -2005,17 +2027,29 @@
             );
           }
 
-          const matches =
+          /*
+           * Fallback partial-word scoring (hardened, Recommendation R7).
+           *
+           * Only DISTINCTIVE overlapping words earn fallback points:
+           * generic filler is excluded via FALLBACK_STOPWORDS. This
+           * removes the fragile behavior where a shared filler word (for
+           * example "not", "issue", or "problem") could push an unrelated
+           * template over the routing floor, while still crediting real
+           * topical overlap ("printer", "scanner", "forklift"). Strong
+           * signals continue to come from exact keyword and alias matches.
+           */
+          const distinctiveMatches =
             normalizedPhrase
               .split(" ")
               .filter(
                 (word) =>
                   word.length > 2 &&
+                  !FALLBACK_STOPWORDS.has(word) &&
                   input.includes(word)
               )
               .length;
 
-          return total + matches * 2;
+          return total + distinctiveMatches * 2;
         },
         0
       );

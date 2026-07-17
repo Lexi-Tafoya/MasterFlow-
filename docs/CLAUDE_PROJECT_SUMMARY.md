@@ -1,5 +1,7 @@
 # MasterFlow compact project summary
 
+> **Superseded** — this compact summary predates the final scope decision to focus MasterFlow entirely on **Problem #4 (Ticketing System Replacement)**. Sections below (product thesis, freight operating rules, ABI173) describe Freight Optimization as a live second module; in the current build it is intentionally an isolated redirect stub and is **out of the judged scope**. For current scope see `README.md`, the in-app **Project Summary** page, and `docs/MASTERFLOW_CAPABILITY_INVENTORY.md`.
+
 ## Business problem
 
 Master Electronics spends more than $300,000 annually on ServiceNow but primarily needs usable ticket intake, queues, SLAs, email-style communication, knowledge, workflows, approvals, reporting, roles, migration, AI assistance, lower administration cost, and easy configuration.

@@ -134,7 +134,7 @@
 
   const roleDescriptions = {
     requester: "Submit and track requests",
-    receiver: "Work requests and manage queue operations",
+    receiver: "Work requests — includes Queue Manager and Service Team Member views",
     admin: "Manage enterprise governance and platform controls"
   };
 

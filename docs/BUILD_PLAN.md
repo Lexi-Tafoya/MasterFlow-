@@ -1,5 +1,7 @@
 # One-week build plan
 
+> **Superseded** — this one-week build plan predates the final scope decision to focus MasterFlow entirely on **Problem #4 (Ticketing System Replacement)**. It still lists Freight Optimization (ABI173, the Day 4 freight decision) as an in-scope module; in the current build, Freight Optimization is intentionally an isolated redirect stub and is **out of the judged scope**. For current scope see `README.md`, the in-app **Project Summary** page, and `docs/MASTERFLOW_CAPABILITY_INVENTORY.md`.
+
 ## Goal
 
 Deliver a credible end-to-end prototype, not a production replacement platform.

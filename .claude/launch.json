@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["serve.py", "--port", "8000"],
       "port": 8000
+    },
+    {
+      "name": "masterflow-8010",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["serve.py", "--port", "8010"],
+      "port": 8010
     }
   ]
 }
