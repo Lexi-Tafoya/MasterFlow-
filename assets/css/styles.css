@@ -62,7 +62,13 @@ a:focus-visible {
   z-index: 60;
   height: var(--topbar-height);
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  /* minmax(0, 1fr), not a bare 1fr: a bare 1fr track has an implicit
+     min-width of auto, so it will never shrink below the width the page
+     title/subtitle need as unwrapped (white-space: nowrap) text — that
+     pushed this column wide enough to overlap the centered brand name.
+     minmax(0, ...) lets the track actually shrink so the ellipsis
+     truncation on .page-context p can take effect. */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 16px;
   padding: 0 22px;
@@ -76,8 +82,16 @@ a:focus-visible {
   display: flex;
   align-items: center;
 }
-.topbar-left { gap: 14px; min-width: 0; justify-self: start; }
-.topbar-right { gap: 9px; justify-self: end; }
+/*
+ * justify-self: start/end (rather than the grid default, stretch) let
+ * these items size to their own content and ignore the track width —
+ * that's what let a long page subtitle grow past its column and
+ * overlap the centered brand name. Left as stretch (the default) so
+ * the item is actually clamped to its track; justify-content keeps
+ * the same left/right visual alignment of the content inside it.
+ */
+.topbar-left { gap: 14px; min-width: 0; justify-content: flex-start; }
+.topbar-right { gap: 9px; justify-content: flex-end; }
 .topbar-brandname {
   justify-self: center;
   display: flex;
