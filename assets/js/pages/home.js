@@ -276,6 +276,40 @@
       `${result.confidence || 0}%`
     );
 
+    /*
+     * The percent badge above measures information completeness
+     * (required fields answered), not classification confidence.
+     * A request can be 100% complete while still needing routing
+     * review (General Triage). This status makes that distinction
+     * explicit instead of leaving a bare confidence number to be
+     * misread against the completeness badge.
+     */
+    const routingStatusEl =
+      document.getElementById(
+        "understandingRoutingStatus"
+      );
+
+    if (routingStatusEl) {
+      const routingReady =
+        result.template.id !==
+          "general-triage" &&
+        Number(result.confidence || 0) >=
+          Number(
+            result.confidenceThreshold || 70
+          );
+
+      routingStatusEl.textContent =
+        routingReady
+          ? "Routing ready"
+          : "Routing review needed";
+
+      routingStatusEl.className =
+        "badge " +
+        (routingReady
+          ? "badge-green"
+          : "badge-amber");
+    }
+
     setText(
       "understandingCollected",
       `${answered} of ${total}`

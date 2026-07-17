@@ -449,7 +449,8 @@
   function analyzeTicket(ticket) {
     const gaps = informationGaps(ticket);
     const identifiers = keyIdentifiers(ticket);
-    const routingReady = Number(ticket.classificationConfidence || 0) >= 70 && !/triage/i.test(ticket.queue || "");
+    const classificationThreshold = Number(Store.getState().settings.ticketClassificationThreshold || 70);
+    const routingReady = Number(ticket.classificationConfidence || 0) >= classificationThreshold && !/triage/i.test(ticket.queue || "");
 
     let workLabel = "Ready to work";
     let workClass = "badge-green";

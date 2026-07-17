@@ -187,11 +187,13 @@
     return Store.getRole();
   }
 
-  // MasterFlow Intelligence (reporting.html) is limited to Queue Managers and
-  // Enterprise Administrators. A Service Team Member is a receiver-role
-  // persona, so role alone cannot gate this — the active persona must also
-  // be checked, both for nav visibility and for direct-URL access.
-  const PERSONA_RESTRICTED_PAGES = new Set(["reporting"]);
+  // MasterFlow Intelligence (reporting.html) and the Queue Manager dashboard
+  // (ticket-queues.html — queue-level reporting, coverage, and controls) are
+  // limited to Queue Managers and Enterprise Administrators. A Service Team
+  // Member is a receiver-role persona, so role alone cannot gate this — the
+  // active persona must also be checked, both for nav visibility and for
+  // direct-URL access. A Member works tickets from the Work Center instead.
+  const PERSONA_RESTRICTED_PAGES = new Set(["reporting", "ticket-queues"]);
 
   function activeServicePersona() {
     return window.localStorage.getItem("masterflowServicePersona") === "member" ? "member" : "manager";

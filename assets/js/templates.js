@@ -33,13 +33,13 @@
     {
       id: "printer-connectivity",
       name: "Report an issue to Help Desk",
-      description: "Report a printer, laptop, network, software, or workstation issue.",
+      description: "Report a printer, network, software, or workstation issue.",
       catalog: "IT Information",
       queue: "IT Help Desk",
       priority: "P3 - Normal",
       responseSlaHours: 4,
       resolutionSlaHours: 16,
-      keywords: ["connect to printer", "printer not working", "printer issue", "cannot print", "can't print", "printer offline", "zebra printer", "laptop slow", "computer slow"],
+      keywords: ["connect to printer", "printer not working", "printer issue", "cannot print", "can't print", "printer offline", "zebra printer"],
       article: {
         title: "Try reconnecting to a network printer",
         summary: "Confirm the printer is online and note its printer name or IP address before submitting."
@@ -49,6 +49,51 @@
         { id: "printerName", label: "Printer Name or IP", type: "text", required: false, recommended: true, recommendedHint: "the exact printer name or IP helps IT resolve this faster", placeholder: "Example: PHX-PRN-22", extractor: "printerName" },
         { id: "workstation", label: "Warehouse or Workstation", type: "text", required: true, placeholder: "Example: PHX P-14", extractor: "location" },
         { id: "impact", label: "How is work affected?", type: "select", required: true, options: ["", "Work can continue", "Work is slowed", "One station is stopped", "Shipping is stopped"], extractor: "impact" },
+        { id: "description", label: "Describe the Issue", type: "textarea", required: true, extractor: "description" },
+        { id: "requestedFor", label: "Requested For", type: "user", required: true, profileValue: "name", locked: true },
+        { id: "attachments", label: "Attachments", type: "attachment", required: false }
+      ]
+    },
+    {
+      id: "laptop-performance",
+      name: "Laptop or Computer Performance Issue",
+      description: "Report a slow, freezing, or unresponsive laptop or desktop computer.",
+      catalog: "IT Information",
+      queue: "IT Help Desk",
+      priority: "P3 - Normal",
+      responseSlaHours: 4,
+      resolutionSlaHours: 16,
+      keywords: ["laptop slow", "computer slow", "pc slow", "slow laptop", "slow computer", "laptop freezing", "computer freezing", "laptop performance", "computer performance"],
+      article: {
+        title: "Before you submit a slow-laptop request",
+        summary: "Save your work and restart the laptop once. If the problem continues, MasterFlow will gather what IT needs to begin work."
+      },
+      fields: [
+        { id: "shortDescription", label: "Short Description", type: "text", required: true, extractor: "shortDescription" },
+        { id: "assetNumber", label: "Laptop or Asset Number", type: "text", required: false, recommended: true, recommendedHint: "the asset number or device name helps IT resolve this faster", placeholder: "Example: PHX-LT-118", extractor: "assetNumber" },
+        { id: "description", label: "Describe the Issue", type: "textarea", required: true, extractor: "description" },
+        { id: "requestedFor", label: "Requested For", type: "user", required: true, profileValue: "name", locked: true },
+        { id: "attachments", label: "Attachments", type: "attachment", required: false }
+      ]
+    },
+    {
+      id: "receiving-scanner-issue",
+      name: "Receiving Scanner Issue",
+      description: "Report a handheld, station-mounted, or wireless scanner that is not working correctly.",
+      catalog: "IT Information",
+      queue: "IT Help Desk",
+      priority: "P3 - Normal",
+      responseSlaHours: 4,
+      resolutionSlaHours: 16,
+      keywords: ["scanner not reading", "scanner issue", "barcode scanner", "scanner disconnected", "scanner error", "receiving scanner", "handheld scanner issue"],
+      article: {
+        title: "Before you submit a scanner request",
+        summary: "Confirm the scanner has power and try a known-good barcode to separate a label issue from a device issue."
+      },
+      fields: [
+        { id: "shortDescription", label: "Short Description", type: "text", required: true, extractor: "shortDescription" },
+        { id: "location", label: "Receiving Area or Work Location", type: "text", required: true, placeholder: "Example: Receiving Dock B", extractor: "location" },
+        { id: "assetNumber", label: "Scanner Asset Number", type: "text", required: false, recommended: true, recommendedHint: "the asset number helps IT locate the exact device", placeholder: "Example: SCN-204", extractor: "assetNumber" },
         { id: "description", label: "Describe the Issue", type: "textarea", required: true, extractor: "description" },
         { id: "requestedFor", label: "Requested For", type: "user", required: true, profileValue: "name", locked: true },
         { id: "attachments", label: "Attachments", type: "attachment", required: false }
@@ -156,6 +201,30 @@
       ]
     },
     {
+      id: "shared-folder-access",
+      name: "Shared Folder or Drive Access",
+      description: "Request new, changed, or restored access to a shared folder, drive, or SharePoint site.",
+      catalog: "Business Enablement",
+      queue: "Business Enablement - Systems Intake",
+      priority: "P3 - Normal",
+      responseSlaHours: 8,
+      resolutionSlaHours: 48,
+      keywords: ["shared folder", "shared drive", "network drive", "file share", "sharepoint access", "folder access", "drive access", "folder permission"],
+      article: {
+        title: "Before you request folder access",
+        summary: "Know the exact folder or site name, the access level you need, and the business reason. MasterFlow will confirm the rest."
+      },
+      fields: [
+        { id: "shortDescription", label: "Short Description", type: "text", required: true, extractor: "shortDescription" },
+        { id: "resourceName", label: "Folder, Drive, or Site", type: "text", required: true, placeholder: "Example: Sales shared folder", extractor: "resourceName" },
+        { id: "accessLevel", label: "Access Level Needed", type: "select", required: true, options: ["", "View only", "Edit", "Upload", "Full control", "Not sure"], extractor: "accessLevel" },
+        { id: "businessReason", label: "Business Reason", type: "textarea", required: true, placeholder: "Why is this access needed?" },
+        { id: "ccUser", label: "Requesting On Behalf Of (optional)", type: "user", required: false },
+        { id: "requestedFor", label: "Requested For", type: "user", required: true, profileValue: "name", locked: true },
+        { id: "attachments", label: "Attachments", type: "attachment", required: false }
+      ]
+    },
+    {
       id: "facilities-hvac",
       name: "HVAC",
       description: "Report a problem with air conditioning or heating.",
@@ -233,7 +302,7 @@
           type: "text",
           required: true,
           placeholder: "Example: Packaging Line 2",
-          extractor: "location"
+          extractor: "hardwareLocation"
         },
         {
           id: "quantity",
@@ -360,32 +429,6 @@
       "work printer stopped",
       "printer issue",
       "printer problem",
-      "scanner will not read",
-      "scanner does not read",
-      "will not read anything",
-      "does not read anything",
-      "not reading",
-      "cannot read",
-      "reads nothing",
-      "laptop running slow",
-      "computer running slow",
-      "running slow",
-      "runs slow",
-      "runs slowly",
-      "laptop slow",
-      "laptop is slow",
-      "computer slow",
-      "computer is slow",
-      "pc slow",
-      "pc is slow",
-      "machine is slow",
-      "system is slow",
-      "slow laptop",
-      "slow computer",
-      "slow pc",
-      "slow performance",
-      "so slow",
-      "too slow",
       "keeps eating the labels",
       "eating the labels",
       "paper jam",
@@ -409,7 +452,47 @@
       "prints blank",
       "faded print",
       "streaked print",
-      "poor print quality",
+      "poor print quality"
+    ],
+
+    "laptop-performance": [
+      "laptop running slow",
+      "computer running slow",
+      "running slow",
+      "runs slow",
+      "runs slowly",
+      "laptop slow",
+      "laptop is slow",
+      "my laptop is slow",
+      "computer slow",
+      "computer is slow",
+      "my computer is slow",
+      "pc slow",
+      "pc is slow",
+      "machine is slow",
+      "system is slow",
+      "slow laptop",
+      "slow computer",
+      "slow pc",
+      "slow performance",
+      "so slow",
+      "too slow",
+      "laptop freezing",
+      "computer freezing",
+      "laptop keeps freezing",
+      "computer keeps freezing",
+      "laptop is frozen",
+      "computer is frozen"
+    ],
+
+    "receiving-scanner-issue": [
+      "scanner will not read",
+      "scanner does not read",
+      "will not read anything",
+      "does not read anything",
+      "not reading",
+      "cannot read",
+      "reads nothing",
       "scanner not working",
       "scanner issue",
       "barcode scanner not working",
@@ -420,7 +503,10 @@
       "scanner broken",
       "scanner is broken",
       "scanner is not working",
-      "scanner does not work"
+      "scanner does not work",
+      "receiving scanner is not reading",
+      "receiving scanner will not read",
+      "scanner at receiving"
     ],
 
     "equipment-out-of-service": [
@@ -513,19 +599,6 @@
     ],
 
     "systems-intake": [
-      "shared folder",
-      "shared drive",
-      "network drive",
-      "file share",
-      "shared sales folder",
-      "access to the shared",
-      "access to a shared",
-      "access to shared",
-      "folder access",
-      "drive access",
-      "need access to",
-      "request access to",
-      "access request",
       "oms issue",
       "oms not updating",
       "oms not refreshing",
@@ -538,9 +611,28 @@
       "system issue",
       "system not updating",
       "system not refreshing",
-      "access request",
       "data correction",
       "system enhancement"
+    ],
+
+    "shared-folder-access": [
+      "shared folder",
+      "shared drive",
+      "network drive",
+      "file share",
+      "shared sales folder",
+      "access to the shared",
+      "access to a shared",
+      "access to shared",
+      "folder access",
+      "drive access",
+      "need access to",
+      "need access to the",
+      "request access to",
+      "access request",
+      "sharepoint access",
+      "permission to the folder",
+      "folder permission"
     ],
 
     "facilities-hvac": [
@@ -835,6 +927,168 @@
               "all users",
               "whole area"
             ]
+          }
+        }
+      ]
+    },
+
+    "laptop-performance": {
+      requiredForWork: [
+        "scopeOfSlowness",
+        "startTime",
+        "currentImpact",
+        "symptomDetail",
+        "restarted"
+      ],
+
+      suggestedFirstAction:
+        "Confirm what feels slow, when it began, and current impact, then restart the device once and check CPU, memory, storage, and pending updates before escalating.",
+
+      questions: [
+        {
+          id: "scopeOfSlowness",
+          label: "What feels slow",
+          reportLabel: "What feels slow",
+          question: "What feels slow?",
+          why: "This separates a single misbehaving application from a whole-device or network problem.",
+          type: "select",
+          options: ["Everything", "One application", "Internet or network", "Startup or login", "Not sure"],
+          signals: {
+            "Everything": ["everything is slow", "whole laptop is slow", "whole computer is slow", "entire laptop", "entire computer"],
+            "One application": ["one application", "one app", "specific application", "specific program"],
+            "Internet or network": ["internet is slow", "network is slow", "wifi is slow", "browsing is slow"],
+            "Startup or login": ["slow to start", "slow startup", "slow to log in", "slow login", "slow boot"]
+          }
+        },
+        {
+          id: "startTime",
+          label: "When it began",
+          reportLabel: "When the slowness began",
+          question: "When did it begin?",
+          why: "This helps IT correlate the problem with a recent update, event, or gradual decline.",
+          type: "select",
+          options: ["Today", "Within the last few days", "More than a week ago", "It has gradually become worse", "Not sure"],
+          signals: {
+            "Today": ["started today", "since today", "this morning"],
+            "Within the last few days": ["last few days", "past few days", "since yesterday"],
+            "More than a week ago": ["more than a week", "for weeks", "for a while"],
+            "It has gradually become worse": ["gradually", "getting worse", "slowly gotten worse"]
+          }
+        },
+        {
+          id: "currentImpact",
+          label: "Current impact",
+          reportLabel: "Business impact",
+          question: "What is the current impact on your work?",
+          why: "Impact determines how urgently this needs to be worked.",
+          type: "select",
+          options: ["Inconvenient but I can work", "Work is significantly slowed", "I cannot complete my work", "Multiple employees are affected"],
+          signals: {
+            "I cannot complete my work": ["cannot work", "can't work", "completely blocked", "unable to work"],
+            "Work is significantly slowed": ["significantly slowed", "really slowing me down", "major delay"],
+            "Multiple employees are affected": ["multiple employees", "several employees", "the whole team", "everyone on the team"]
+          }
+        },
+        {
+          id: "symptomDetail",
+          label: "Freezing, crashing, or errors",
+          reportLabel: "Freezing, crashing, overheating, or errors",
+          question: "Does the device freeze, crash, overheat, or show an error?",
+          why: "These symptoms point to different root causes and may require an immediate safety precaution.",
+          type: "select",
+          options: ["No freezing or crashing", "It freezes", "It crashes or restarts unexpectedly", "It overheats", "It shows an error message", "Not sure"],
+          signals: {
+            "It freezes": ["freezes", "freezing", "locks up", "locking up"],
+            "It crashes or restarts unexpectedly": ["crashes", "crashing", "restarts on its own", "reboots on its own", "shuts down on its own"],
+            "It overheats": ["overheats", "overheating", "very hot", "too hot to touch"],
+            "It shows an error message": ["error message", "error code", "blue screen"]
+          }
+        },
+        {
+          id: "restarted",
+          label: "Restarted already",
+          reportLabel: "Whether the device has been restarted",
+          question: "Have you restarted the laptop?",
+          why: "A restart rules out a large set of common, low-effort causes before IT investigates further.",
+          type: "select",
+          options: ["Yes, it did not help", "Yes, it helped temporarily", "No, not yet"],
+          signals: {
+            "Yes, it did not help": ["restarted", "already restarted", "rebooted", "already rebooted", "tried restarting"],
+            "No, not yet": ["have not restarted", "haven't restarted", "not restarted yet"]
+          }
+        }
+      ]
+    },
+
+    "receiving-scanner-issue": {
+      requiredForWork: [
+        "equipmentType",
+        "symptomDetail",
+        "scopeOfImpact",
+        "startTime"
+      ],
+
+      suggestedFirstAction:
+        "Confirm the scanner type and exact symptom, then verify power, connection, and a known-good barcode before escalating.",
+
+      questions: [
+        {
+          id: "equipmentType",
+          label: "Scanner type",
+          reportLabel: "Scanner type",
+          question: "What type of scanner is affected?",
+          why: "Not every scanner belongs to a numbered station — this identifies the correct equipment context.",
+          type: "select",
+          options: ["Handheld scanner", "Station-mounted scanner", "Scanner connected to a computer", "Mobile or wireless scanner", "Not sure"],
+          signals: {
+            "Handheld scanner": ["handheld", "hand held", "hand-held", "handheld scanner"],
+            "Station-mounted scanner": ["station-mounted", "station mounted", "mounted at the station", "fixed scanner", "fixed-mount"],
+            "Scanner connected to a computer": ["connected to a computer", "connected to my computer", "plugged into a computer", "usb scanner", "wired to"],
+            "Mobile or wireless scanner": ["wireless scanner", "mobile scanner", "bluetooth scanner", "wifi scanner", "cordless scanner"]
+          }
+        },
+        {
+          id: "symptomDetail",
+          label: "What happens when scanning",
+          reportLabel: "Observed scanner behavior",
+          question: "What happens when you scan?",
+          why: "The exact symptom tells the receiving team whether this is a label, device, or connection problem.",
+          type: "select",
+          options: ["Nothing happens", "It beeps but no data appears", "It shows an error", "It reads the wrong value", "It disconnects", "It only fails on some labels", "Not sure"],
+          signals: {
+            "Nothing happens": ["nothing happens", "does nothing", "no response"],
+            "It beeps but no data appears": ["beeps but no data", "beeps but nothing", "beep with no data"],
+            "It shows an error": ["shows an error", "error message", "error code"],
+            "It reads the wrong value": ["wrong value", "wrong number", "incorrect value", "reads incorrectly", "sends incorrect information"],
+            "It disconnects": ["disconnects", "keeps disconnecting", "loses connection", "drops connection"],
+            "It only fails on some labels": ["some labels", "certain labels", "only some barcodes", "some barcode types"]
+          }
+        },
+        {
+          id: "scopeOfImpact",
+          label: "Scope",
+          reportLabel: "Whether one or multiple scanners are affected",
+          question: "Is one scanner affected, or multiple scanners?",
+          why: "Multiple affected scanners may point to a shared system or network problem rather than one device.",
+          type: "select",
+          options: ["One scanner", "Multiple scanners", "Not sure"],
+          signals: {
+            "One scanner": ["one scanner", "just this scanner", "only this scanner", "a single scanner"],
+            "Multiple scanners": ["multiple scanners", "several scanners", "all the scanners", "every scanner"]
+          }
+        },
+        {
+          id: "startTime",
+          label: "When it began",
+          reportLabel: "When the problem began",
+          question: "When did the problem begin?",
+          why: "This helps distinguish a new failure from an ongoing, known issue.",
+          type: "select",
+          options: ["Today", "Within the last few days", "More than a week ago", "Not sure"],
+          signals: {
+            "Today": ["started today", "since today", "this morning"],
+            "Within the last few days": ["last few days", "past few days", "since yesterday"],
+            "More than a week ago": ["more than a week", "for weeks", "for a while"]
           }
         }
       ]
@@ -1207,6 +1461,47 @@
       ]
     },
 
+    "shared-folder-access": {
+      requiredForWork: [
+        "accessSituation",
+        "accessDuration"
+      ],
+
+      suggestedFirstAction:
+        "Confirm whether this is new access, broken existing access, or a permission change, then verify the resource owner and grant the requested level.",
+
+      questions: [
+        {
+          id: "accessSituation",
+          label: "Access situation",
+          reportLabel: "Type of access need",
+          question: "Is this new access, access that stopped working, a different permission level, or access for someone else?",
+          why: "This determines whether IT grants new permissions, repairs existing access, or confirms a request made on behalf of someone else.",
+          type: "select",
+          options: ["New access", "Existing access that stopped working", "Different permission level", "Access for another employee or team", "Not sure"],
+          signals: {
+            "New access": ["never had access", "don't have access", "do not have access", "new access", "first time"],
+            "Existing access that stopped working": ["used to have access", "stopped working", "lost access", "no longer able to open", "worked before"],
+            "Different permission level": ["change my access", "different permission", "upgrade my access", "more access", "higher level"],
+            "Access for another employee or team": ["for another employee", "for my team", "for a coworker", "on behalf of", "for someone else"]
+          }
+        },
+        {
+          id: "accessDuration",
+          label: "Duration needed",
+          reportLabel: "Temporary or permanent access",
+          question: "Is this temporary access or ongoing/permanent access?",
+          why: "Temporary access should be reviewed and removed on a schedule; permanent access follows standard ongoing-access approval.",
+          type: "select",
+          options: ["Temporary", "Permanent", "Not sure"],
+          signals: {
+            "Temporary": ["temporary", "just for", "short term", "until", "for a project"],
+            "Permanent": ["permanent", "ongoing", "indefinitely", "as part of my role"]
+          }
+        }
+      ]
+    },
+
     "facilities-hvac": {
       requiredForWork: [
         "affectedScope",
@@ -1313,89 +1608,18 @@
     },
 
     "new-it-hardware": {
-      requiredForWork: [
-        "requestPurpose",
-        "businessReason",
-        "costEstimateStatus"
-      ],
+      // requestPurpose, businessReason, and costEstimateStatus are already
+      // required fields on the template (routing questions), so they are
+      // gathered and phrased conversationally there. Duplicating them here
+      // as diagnostic questions with the same ids caused the same question
+      // to be asked twice (routing answers don't satisfy a diagnostic
+      // question with a matching id) — keep this profile empty for those.
+      requiredForWork: [],
 
       suggestedFirstAction:
         "Validate the hardware need, location, quantity, and cost information, then send the request through the configured manager or director approval route before fulfillment.",
 
-      questions: [
-        {
-          id: "requestPurpose",
-          label: "Request purpose",
-          reportLabel: "Why the hardware is needed",
-          question: "Is this a new or additional device, a replacement, or a shared team device?",
-          why: "The purpose determines whether an existing asset, replacement reason, or additional approval evidence may be needed.",
-          type: "select",
-          options: [
-            "New / additional device",
-            "Replacement device",
-            "Shared team device",
-            "Not sure"
-          ],
-          signals: {
-            "New / additional device": [
-              "new scanner",
-              "another scanner",
-              "additional scanner",
-              "new laptop",
-              "new monitor",
-              "new printer"
-            ],
-            "Replacement device": [
-              "replacement scanner",
-              "replace scanner",
-              "replacement laptop",
-              "replacement monitor",
-              "replacement printer"
-            ],
-            "Shared team device": [
-              "shared scanner",
-              "team scanner",
-              "shared device"
-            ]
-          }
-        },
-        {
-          id: "businessReason",
-          label: "Business reason",
-          reportLabel: "Business need",
-          question: "What work will this hardware support, restore, or improve?",
-          why: "The receiving team and approver need a concise business reason before deciding whether to purchase or reassign equipment.",
-          type: "textarea",
-          options: []
-        },
-        {
-          id: "costEstimateStatus",
-          label: "Cost estimate status",
-          reportLabel: "Cost information",
-          question: "Do you know the estimated cost, or should the receiving team obtain a quote?",
-          why: "The amount determines whether manager or director approval is required.",
-          type: "select",
-          options: [
-            "Estimated cost provided",
-            "Quote required"
-          ],
-          signals: {
-            "Estimated cost provided": [
-              "estimated cost",
-              "cost is",
-              "quote is",
-              "dollars",
-              "usd"
-            ],
-            "Quote required": [
-              "need a quote",
-              "quote required",
-              "cost unknown",
-              "do not know the cost"
-            ]
-          }
-        }
-      ]
+      questions: []
     },
 
     "general-triage": {
@@ -1465,10 +1689,13 @@
   const WORK_TYPES = {
     "printer-ink": "Service request",
     "printer-connectivity": "Incident",
+    "laptop-performance": "Incident",
+    "receiving-scanner-issue": "Incident",
     "equipment-out-of-service": "Incident",
     "corrective-action-warehouse": "Incident",
     "stock-check-phoenix": "Service request",
     "systems-intake": "Change request",
+    "shared-folder-access": "Service request",
     "facilities-hvac": "Incident",
     "new-it-hardware": "Service request",
     "general-triage": "Needs triage"
@@ -1878,6 +2105,15 @@
         const match = input.match(/(?:at|near|by|in|located at)\s+([a-z0-9][a-z0-9\s#-]{2,60})/i);
         return match ? match[1].replace(/[.,]$/, "") : "";
       },
+      // Hardware requests are commonly phrased as "for <location>" ("a new
+      // scanner for Receiving Line 2") rather than "at/in <location>" — a
+      // dedicated extractor keeps that broader "for" match scoped to this
+      // one field instead of loosening the shared `location` extractor
+      // used by incident-style templates.
+      hardwareLocation: () => {
+        const match = input.match(/(?:at|near|by|in|located at|for)\s+([a-z0-9][a-z0-9\s#-]{2,60})/i);
+        return match ? match[1].replace(/[.,]$/, "").trim() : "";
+      },
       printerName: () => {
         const match = input.match(/\b(?:SM|PHX|CHI|WI|TO)[A-Z0-9-]*PR\d+\b/i) || input.match(/\b(?:Zebra|Brother|HP|Lexmark)\s+[A-Z0-9-]+\b/i);
         return match ? match[0] : "";
@@ -1937,7 +2173,18 @@
         if (/\$\s*[\d,]+|\b[\d,]+(?:\.\d{1,2})?\s*(?:dollars?|usd)\b/i.test(input)) return "Estimated cost provided";
         return "Quote required";
       },
-      requestKind: () => /enhancement|improve|new capability/i.test(input) ? "Enhancement" : (/access/i.test(input) ? "Access" : "Issue")
+      requestKind: () => /enhancement|improve|new capability/i.test(input) ? "Enhancement" : (/access/i.test(input) ? "Access" : "Issue"),
+      resourceName: () => {
+        const match = input.match(/(?:the|to)\s+(?:shared\s+)?([a-z0-9][a-z0-9\s#-]{2,50}?)\s+(?:shared\s+)?(?:folder|drive|site)\b/i) || input.match(/\bshared\s+([a-z0-9][a-z0-9\s#-]{2,50})\s+folder\b/i);
+        return match ? match[1].replace(/[.,]$/, "").replace(/^(?:the|a|an)\s+/i, "").trim() : "";
+      },
+      accessLevel: () => {
+        if (/full control/i.test(input)) return "Full control";
+        if (/upload/i.test(input)) return "Upload";
+        if (/edit|read.?write|modify/i.test(input)) return "Edit";
+        if (/view.?only|read.?only|just (?:view|look)/i.test(input)) return "View only";
+        return "";
+      }
     };
 
     const value = field.extractor && extractors[field.extractor] ? extractors[field.extractor](field) : "";

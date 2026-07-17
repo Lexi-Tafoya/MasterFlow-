@@ -103,10 +103,26 @@
     }
   };
 
-  let activeRoleId =
-    window.localStorage.getItem(
-      ROLE_STORAGE_KEY
-    ) || "platform-admin";
+  // Derived directly from the real Service Team persona rather than only
+  // read from ROLE_STORAGE_KEY — that key is corrected by
+  // admin-flow-studio.js's clampPersonaForRole, but script load order means
+  // this module's initial read can otherwise run first and capture a stale
+  // or missing value, which must never resolve to a publish-capable role
+  // for a Service Team Member.
+  let activeRoleId = (function initialRoleId() {
+    const appRole =
+      window.MasterFlowStore && window.MasterFlowStore.getRole
+        ? window.MasterFlowStore.getRole()
+        : "admin";
+    if (appRole !== "receiver") {
+      return window.localStorage.getItem(ROLE_STORAGE_KEY) || "platform-admin";
+    }
+    const servicePersona =
+      window.localStorage.getItem("masterflowServicePersona") === "member"
+        ? "member"
+        : "manager";
+    return servicePersona === "member" ? "queue-manager" : "category-owner";
+  })();
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }

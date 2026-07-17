@@ -384,10 +384,16 @@
     document.getElementById("priorityValue").textContent = activeTemplate.priority;
     document.getElementById("responseSlaValue").textContent = `${activeTemplate.responseSlaHours} business hour${activeTemplate.responseSlaHours === 1 ? "" : "s"}`;
     document.getElementById("resolutionSlaValue").textContent = `${activeTemplate.resolutionSlaHours} business hour${activeTemplate.resolutionSlaHours === 1 ? "" : "s"}`;
-    const isConfident = confidence >= threshold;
+    // Information completeness and routing/classification confidence are
+    // tracked separately below. A request can be 100% complete while
+    // still needing routing review — that is stated explicitly rather
+    // than folded into a single "confident" flag with one shared message.
+    const isLowConfidence = confidence < threshold;
+    const isTriageTemplate = activeTemplate.id === "general-triage";
+    const isConfident = !isLowConfidence && !isTriageTemplate;
     document.getElementById("routingSummary").textContent = isConfident
-      ? `Goes to ${activeTemplate.queue} · typically answered within ${activeTemplate.responseSlaHours} business hour${activeTemplate.responseSlaHours === 1 ? "" : "s"}.`
-      : `Going to Business Enablement Triage so a person can confirm where this belongs.`;
+      ? `MasterFlow is confident this belongs to ${activeTemplate.name} and will route it to ${activeTemplate.queue} · typically answered within ${activeTemplate.responseSlaHours} business hour${activeTemplate.responseSlaHours === 1 ? "" : "s"}.`
+      : `Request details are complete, but the destination still requires routing review. Going to Business Enablement Triage so a person can confirm where this belongs.`;
     const ring = document.getElementById("confidenceRing");
     ring.style.setProperty("--confidence", `${confidence}%`);
     ring.dataset.value = isConfident ? "✓" : `${confidence}%`;
@@ -395,9 +401,12 @@
     ring.classList.toggle("matched", isConfident);
 
     const alert = document.getElementById("confidenceAlert");
-    if (activeTemplate.id === "general-triage" || confidence < threshold) {
+    if (isLowConfidence) {
       alert.hidden = false;
       alert.innerHTML = `<span>!</span><div><strong>Human triage required</strong><p>The match is below the ${threshold}% safe-routing threshold. This request will go to Business Enablement Triage without asking you to start over.</p></div>`;
+    } else if (isTriageTemplate) {
+      alert.hidden = false;
+      alert.innerHTML = `<span>!</span><div><strong>Routing review, not a confidence issue</strong><p>This request is set to General Request - Needs Triage, so Business Enablement will confirm the destination queue. This is independent of how complete the request details are.</p></div>`;
     } else {
       alert.hidden = true;
     }

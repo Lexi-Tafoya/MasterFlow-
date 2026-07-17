@@ -589,6 +589,20 @@
       return "Which system is affected: MERP, OMS, SYQ, API, EDI, the website, or another system?";
     }
 
+    if (id === "businessreason") {
+      return template && template.id === "shared-folder-access"
+        ? "Why is this access needed?"
+        : "What work will this hardware support, restore, or improve?";
+    }
+
+    if (id === "resourcename") {
+      return "What is the exact name of the folder, drive, or SharePoint site?";
+    }
+
+    if (id === "accesslevel") {
+      return "What access level do you need: view only, edit, upload, or full control?";
+    }
+
     if (
       id === "requestkind"
     ) {

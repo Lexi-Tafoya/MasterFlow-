@@ -24,6 +24,15 @@
   /*
    * Service Team / Queue Manager may only use owned-flow personas.
    * The enterprise-governance persona stays with the Administrator.
+   *
+   * This role id is always derived from the real Service Team persona
+   * (masterflowServicePersona), never left to default. Previously a
+   * missing/stale value defaulted to "category-owner" (publish rights)
+   * regardless of persona, which let a Service Team Member who opened
+   * this page directly — without first visiting ticket-queues.html —
+   * publish template changes. A Member must always resolve to the
+   * read-only "queue-manager" role id here; only the Queue Manager
+   * persona may resolve to the publish-capable "category-owner" id.
    */
   (function clampPersonaForRole() {
     const appRole =
@@ -35,11 +44,20 @@
       const enterpriseOption = roleSelect.querySelector('option[value="platform-admin"]');
       if (enterpriseOption) enterpriseOption.remove();
     }
+    const servicePersona =
+      window.localStorage.getItem("masterflowServicePersona") === "member"
+        ? "member"
+        : "manager";
+    const expectedRoleId = servicePersona === "member" ? "queue-manager" : "category-owner";
     const stored = window.localStorage.getItem(ROLE_KEY);
-    if (!stored || stored === "platform-admin") {
-      window.localStorage.setItem(ROLE_KEY, "category-owner");
+    const needsCorrection =
+      !stored ||
+      stored === "platform-admin" ||
+      (servicePersona === "member" && stored !== "queue-manager");
+    if (needsCorrection) {
+      window.localStorage.setItem(ROLE_KEY, expectedRoleId);
     }
-    if (roleSelect) roleSelect.value = window.localStorage.getItem(ROLE_KEY) || "category-owner";
+    if (roleSelect) roleSelect.value = window.localStorage.getItem(ROLE_KEY) || expectedRoleId;
   })();
 
   const templateList =
